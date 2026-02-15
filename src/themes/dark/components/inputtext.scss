@@ -1,0 +1,31 @@
+:root {
+    --p-inputtext-padding-x: var(--p-form-field-padding-x);
+    --p-inputtext-padding-y: var(--p-form-field-padding-y);
+    --p-inputtext-border-radius: var(--p-form-field-border-radius);
+    --p-inputtext-focus-ring-width: var(--p-form-field-focus-ring-width);
+    --p-inputtext-focus-ring-style: var(--p-form-field-focus-ring-style);
+    --p-inputtext-focus-ring-color: var(--p-form-field-focus-ring-color);
+    --p-inputtext-focus-ring-offset: var(--p-form-field-focus-ring-offset);
+    --p-inputtext-focus-ring-shadow: var(--p-form-field-focus-ring-shadow);
+    --p-inputtext-transition-duration: var(--p-form-field-transition-duration);
+
+    --p-inputtext-background: var(--p-form-field-background);
+    --p-inputtext-border-color: var(--p-form-field-border-color);
+    --p-inputtext-hover-border-color: var(--p-form-field-hover-border-color);
+    --p-inputtext-focus-border-color: var(--p-form-field-focus-border-color);
+    --p-inputtext-color: var(--p-form-field-color);
+    --p-inputtext-placeholder-color: var(--p-form-field-placeholder-color);
+    --p-inputtext-shadow: var(--p-form-field-shadow);
+
+    --p-inputtext-invalid-border-color: var(--text-feedback-critical);
+}
+
+.p-inputtext {
+    line-height: 1.125;
+
+    &.p-invalid {
+        --p-inputtext-hover-border-color: var(--p-inputtext-invalid-border-color);
+
+        outline: 1px solid var(--p-inputtext-invalid-border-color);
+    }
+}

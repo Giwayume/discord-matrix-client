@@ -1,0 +1,15 @@
+:root {
+    --staticlabel-required-asterisk-color: var(--text-feedback-critical);
+}
+
+.p-staticlabel {
+    &:has(.p-inputtext[required]) {
+        label {
+            &:after {
+                content: '*';
+                color: var(--staticlabel-required-asterisk-color);
+                margin-left: 0.25rem;
+            }
+        }
+    }
+}

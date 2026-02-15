@@ -1,0 +1,40 @@
+:root {
+    --font-primary: "gg sans","Noto Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+
+    --radius-none: 0;
+    --radius-xs: 0.25rem;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-xxl: 2rem;
+    --radius-round: 2147483647px;
+
+    --p-transition-duration: 0.2;
+
+    --p-focus-ring-width: 0.125rem;
+    --p-focus-ring-style: solid;
+    --p-focus-ring-color: var(--blurple-50);
+    --p-focus-ring-offset: 0;
+    --p-focus-ring-shadow: none;
+
+    --p-form-field-font-size: 1rem;
+    --p-form-field-padding-x: 0.625rem;
+    --p-form-field-padding-y: 0.625rem;
+
+    --p-form-field-border-radius: var(--radius-sm);
+    --p-form-field-focus-ring-width: var(--p-focus-ring-width);
+    --p-form-field-focus-ring-style: var(--p-focus-ring-style);
+    --p-form-field-focus-ring-color: var(--p-focus-ring-color);
+    --p-form-field-focus-ring-offset: var(--p-focus-ring-offset);
+    --p-form-field-focus-ring-shadow: var(--p-focus-ring-shadow);
+    --p-form-field-transition-duration: var(--p-transition-duration);
+
+    --p-form-field-background: var(--input-background-default);
+    --p-form-field-border-color: var(--input-border-default);
+    --p-form-field-hover-border-color: var(--input-border-default);
+    --p-form-field-focus-border-color: var(--input-border-default);
+    --p-form-field-color: var(--text-default);
+    --p-form-field-placeholder-color: var(--input-placeholder-text-default);
+    --p-form-field-shadow: none;
+}

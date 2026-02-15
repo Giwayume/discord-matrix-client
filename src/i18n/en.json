@@ -1,0 +1,53 @@
+{
+    "errors": {
+        "rateLimited": "You are being rate limited. Please try again shortly.",
+        "unexpected": "An unexpected error occurred. Please try again later.",
+        "discoverHomeserver": {
+            "title": "Your homeserver is down.",
+            "schemaValidation": "We could not discover the server capabilities because the APIs responded in an unexpected format.",
+            "httpError": "The server rejected the request to discover its capabilities. This could be a temporary error."
+        }
+    },
+    "homeserverSelectionDialog": {
+        "title": "Change Homeserver",
+        "hostnameLabel": "Hostname",
+        "hostnameHelp": "Use your preferred Matrix homeserver if you have one, or host your own.",
+        "aboutHomeserversLink": "About homeservers"
+    },
+    "login": {
+        "title": "Welcome back!",
+        "subtitle": "We're so excited to see you again!",
+        "homeserverLabel": "Homeserver",
+        "homeserverLoading": "Talking to homeserver...",
+        "supportEmailLabel": "Support Email:",
+        "supportPageLabel": "Visit the Support Page",
+        "retryButton": "Retry",
+        "usernameLabel": "Username, Email, or Phone Number",
+        "usernameRequired": "Username is required.",
+        "passwordLabel": "Password",
+        "passwordRequired": "Password is required.",
+        "invalidUsernameOrPassword": "Login or password is invalid",
+        "forgotPasswordLink": "Forgot your password?",
+        "loginButton": "Log In",
+        "registerPrompt": "Need an account?",
+        "registerLink": "Register",
+        "userDeactivated": "Your account has been deactivated."
+    },
+    "register": {
+        "title": "Create an account",
+        "homeserverLabel": "Homeserver",
+        "homeserverLoading": "Talking to homeserver...",
+        "homeserverEditTitle": "Decide where your account is hosted",
+        "homeserverEditSubtitle": "We call the servers where you can host your account 'homeservers'. ",
+        "emailLabel": "Email",
+        "displayNameLabel": "Display Name",
+        "usernameLabel": "Username",
+        "usernameRequired": "Username is required.",
+        "usernameTaken": "Username is unavailable. Try adding numbers, letters, underscores _ , or periods.",
+        "usernameInvalid": "Please only use numbers, letters, dashes - , underscores _ , or periods.",
+        "passwordLabel": "Password",
+        "dateOfBirthLabel": "Date of Birth",
+        "createAccountButton": "Create Account",
+        "loginLink": "Already have an account? Log in"
+    }
+}

@@ -1,0 +1,13 @@
+:root {
+    --p-message-text-font-size: 1rem; // ?
+    --p-message-text-font-weight: normal; // ?
+
+    --p-message-content-padding: 0.5rem; // ?
+    --p-message-content-gap: 0.375rem;
+
+    --p-message-simple-content-padding: 0;
+    
+    --p-message-text-sm-font-size: 0.75rem;
+
+    --p-message-error-simple-color: var(--text-feedback-critical);
+}

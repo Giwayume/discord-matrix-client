@@ -1,0 +1,101 @@
+:root {
+    --p-button-padding-x: 0.9375rem;
+    --p-button-padding-y: 0.4375rem;
+    --p-button-border-radius: var(--radius-sm);
+
+    --p-button-focus-ring-width: var(--p-form-field-focus-ring-width);
+    --p-button-focus-ring-style: var(--p-form-field-focus-ring-style);
+    --p-button-focus-ring-color: var(--p-form-field-focus-ring-color);
+    --p-button-focus-ring-offset: 1px;
+    --p-button-focus-ring-shadow: var(--p-form-field-focus-ring-shadow);
+
+    --p-button-primary-background: var(--control-primary-background-default);
+    --p-button-primary-border-color: var(--control-primary-border-default);
+    --p-button-primary-color: var(--control-primary-text-default);
+    --p-button-primary-hover-background: var(--control-primary-background-hover);
+    --p-button-primary-hover-border-color: var(--control-primary-border-hover);
+    --p-button-primary-hover-color: var(--control-primary-text-hover);
+    --p-button-primary-active-background: var(--control-primary-background-hover);
+    --p-button-primary-active-border-color: var(--control-primary-border-hover);
+    --p-button-primary-active-color: var(--control-primary-text-hover);
+
+    --p-button-primary-focus-ring-color: var(--p-form-field-focus-ring-color);
+    --p-button-primary-focus-ring-shadow: var(--p-form-field-focus-ring-shadow);
+}
+
+@keyframes p-button-loading-dot-flashing {
+    0% {
+        background-color: currentColor;
+    }
+    50% {
+        background-color: rgba(152, 128, 255, 0.2);
+    }
+    100% {
+        background-color: rgba(152, 128, 255, 0.2);
+    }
+}
+
+.p-button-loading-dots {
+    display: none;
+}
+
+.p-button-loading {
+    position: relative;
+
+    &:has(.p-button-loading-dots) {
+        &:before {
+            content: '';
+            position: absolute;
+            background: var(--p-button-primary-background);
+            border-radius: var(--p-button-border-radius);
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+        }
+    }
+
+    .p-button-loading-dots {
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background-color: currentColor;
+        color: currentColor;
+        animation: p-button-loading-dot-flashing 0.5s infinite linear alternate;
+        animation-delay: 0.25s;
+        transform: translate(-50%, -50%);
+
+        &:before, &:after {
+            content: "";
+            display: inline-block;
+            position: absolute;
+            top: 0;
+        }
+
+        &:before {
+            left: -15px;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background-color: currentColor;
+            color: currentColor;
+            animation: p-button-loading-dot-flashing 0.5s infinite alternate;
+            animation-delay: 0s;
+        }
+
+        &:after {
+            left: 15px;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background-color: currentColor;
+            color: currentColor;
+            animation: p-button-loading-dot-flashing 0.5s infinite alternate;
+            animation-delay: 0.5s;
+        }
+    }
+}

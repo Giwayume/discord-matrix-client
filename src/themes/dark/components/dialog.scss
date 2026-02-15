@@ -1,0 +1,43 @@
+:root {
+    --p-dialog-background: var(--background-surface-high);
+    --p-dialog-border-color: var(--border-subtle);
+    --p-dialog-border-radius: var(--radius-md);
+    --p-dialog-color: var(--text-default);
+
+    --p-dialog-header-padding: 1rem 2.5rem 0.5rem 1.5rem;
+    --p-dialog-title-font-size: 1.25rem;
+    --p-dialog-title-font-weight: 600;
+
+    --p-dialog-content-padding: 0 1.5rem;
+
+    --p-dialog-footer-padding: 1rem 1.5rem 0.5rem 1.5rem;
+    --p-dialog-footer-gap: 0.5rem;
+}
+
+.p-dialog {
+    padding: 0.5rem 0 1rem 0;
+}
+.p-dialog-close-button {
+    --p-button-icon-only-width: 2.5rem;
+    --p-button-text-secondary-color: var(--control-icon-only-icon-default);
+    --p-button-text-secondary-hover-background: var(--control-icon-only-background-hover);
+    --p-button-secondary-hover-border-color: var(--control-icon-only-border-hover);
+    --p-icon-size: 1.25rem;
+
+    position: absolute !important;
+    top: 0.5rem !important;
+    right: 0.5rem !important;
+
+    .p-dialog-title {
+        line-height: 1.5rem;
+    }
+
+    &.p-button-text.p-button-secondary:not(:disabled):hover {
+        border-color: var(--control-icon-only-border-hover);
+        color: var(--control-icon-only-icon-hover);
+    }
+
+    &.p-button-icon-only.p-button-rounded {
+        border-radius: var(--radius-sm);
+    }
+}
