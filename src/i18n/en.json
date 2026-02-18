@@ -2,17 +2,58 @@
     "errors": {
         "rateLimited": "You are being rate limited. Please try again shortly.",
         "unexpected": "An unexpected error occurred. Please try again later.",
+        "crash": {
+            "title": "Well, this is awkward",
+            "subtitle": "Looks like we had a problem displaying this page.",
+            "errorDetails": "Error Details:",
+            "reloadButton": "Reload",
+            "or": "or",
+            "logoutLink": "Logout"
+        },
         "discoverHomeserver": {
             "title": "Your homeserver is down.",
             "schemaValidation": "We could not discover the server capabilities because the APIs responded in an unexpected format.",
-            "httpError": "The server rejected the request to discover its capabilities. This could be a temporary error."
+            "httpError": "The server rejected the request to discover its capabilities. This could be a temporary error.",
+            "serverDown": "The server is either currently down, or it is not a matrix chat server. This could be a temporary error."
+        },
+        "profiles": {
+            "missingSessionData": "This session is missing required data in order to load the user profile. We recommend logging in again in order to fix this issue."
+        },
+        "sync": {
+            "schemaValidation": "We could not load the page because the sync API responded in an unexpected format.",
+            "httpError": "The server unexpectedly returned an error response when trying to sync chats. This could be a temporary error.",
+            "serverDown": "The server is not responding to sync requests. This could be a temporary error."
         }
+    },
+    "home": {
+        "title": "Friends"
     },
     "homeserverSelectionDialog": {
         "title": "Change Homeserver",
         "hostnameLabel": "Hostname",
         "hostnameHelp": "Use your preferred Matrix homeserver if you have one, or host your own.",
         "aboutHomeserversLink": "About homeservers"
+    },
+    "landing": {
+        "loading": "Reading session storage...",
+        "title": "Group Chat That Respects Your Privacy",
+        "subtitle": "Matrix is great for playing games and chilling with friends, or even building a worldwide community. Customize your own space to talk, play, and hang out.",
+        "loginButton": "Log In",
+        "registerButton": "Register"
+    },
+    "layout": {
+        "titleBarInbox": "Inbox",
+        "titleBarHelp": "Help",
+        "spaceAvatarAlt": "Space Avatar",
+        "directMessages": "Direct Messages",
+        "addSpace": "Add a Space",
+        "discover": "Discover",
+        "userStatusSettings": "User Status & Settings",
+        "mute": "Mute",
+        "unmute": "Unmute",
+        "deafen": "Deafen",
+        "undeafen": "Undeafen",
+        "userSettings": "User Settings"
     },
     "login": {
         "title": "Welcome back!",
@@ -33,12 +74,33 @@
         "registerLink": "Register",
         "userDeactivated": "Your account has been deactivated."
     },
+    "presence": {
+        "status": {
+            "online": "Online",
+            "offline": "Offline",
+            "unavailable": "Away"
+        }
+    },
     "register": {
         "title": "Create an account",
         "homeserverLabel": "Homeserver",
         "homeserverLoading": "Talking to homeserver...",
         "homeserverEditTitle": "Decide where your account is hosted",
         "homeserverEditSubtitle": "We call the servers where you can host your account 'homeservers'. ",
+        "guestRegistrationAllowed": "This homeserver allows guest registration.",
+        "kind": {
+            "guest": {
+                "icon": "pi pi-user-minus",
+                "title": "Guest",
+                "subtitle": "Join now with limited access"
+            },
+            "user": {
+                "icon": "pi pi-user",
+                "title": "User",
+                "subtitle": "Create a username & password with full access"
+            }
+        },
+        "continueButton": "Continue",
         "emailLabel": "Email",
         "displayNameLabel": "Display Name",
         "usernameLabel": "Username",
@@ -46,6 +108,8 @@
         "usernameTaken": "Username is unavailable. Try adding numbers, letters, underscores _ , or periods.",
         "usernameInvalid": "Please only use numbers, letters, dashes - , underscores _ , or periods.",
         "passwordLabel": "Password",
+        "passwordRequired": "Password is required.",
+        "passwordInvalid": "Please only use numbers, letters, dashes - , underscores _ , or periods.",
         "dateOfBirthLabel": "Date of Birth",
         "createAccountButton": "Create Account",
         "loginLink": "Already have an account? Log in"

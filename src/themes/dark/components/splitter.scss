@@ -1,0 +1,26 @@
+:root {
+    --p-splitter-border-color: transparent;
+    --p-splitter-background: transparent;
+    --p-border-radius-md: 0;
+    --p-splitter-color: inherit;
+
+    --p-splitter-gutter-background: transparent;
+
+    --p-splitter-handle-size: 0.5rem;
+    --p-splitter-handle-border-radius: var(--radius-sm);
+    --p-splitter-handle-background: transparent;
+}
+
+.p-splitter {
+    --p-border-radius-md: 0;
+
+    border: none !important;
+}
+
+.p-splitter-gutter {
+    border-top: 1px solid var(--app-frame-border);
+
+    &:hover {
+        background: var(--app-frame-border);
+    }
+}

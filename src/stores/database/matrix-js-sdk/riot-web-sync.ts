@@ -1,6 +1,5 @@
 /**
- * Element Web stores its tokens in an indexedDB called "matrix-react-sdk".
- * Not a fan of this naming, but in order for a smooth port, reusing it.
+ * Following the format of the matrix-js-sdk storage, but not using their code.
  */
 
 let database: IDBDatabase | null = null;
@@ -12,15 +11,19 @@ async function init(): Promise<void> {
         throw new Error('IndexedDB not available')
     }
     database = await new Promise((resolve, reject) => {
-        const request = indexedDB.open('matrix-react-sdk', 1)
+        const request = indexedDB.open('matrix-js-sdk:riot-web-sync', 1)
         request.onerror = reject
         request.onsuccess = (): void => {
             resolve(request.result)
         }
         request.onupgradeneeded = (): void => {
             const db = request.result
-            db.createObjectStore('pickleKey')
-            db.createObjectStore('account')
+            db.createObjectStore('accountData')
+            db.createObjectStore('client_options')
+            db.createObjectStore('oob_membership_events')
+            db.createObjectStore('sync')
+            db.createObjectStore('to_device_queue')
+            db.createObjectStore('users')
         }
     })
 }

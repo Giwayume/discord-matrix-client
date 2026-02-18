@@ -5,7 +5,7 @@
     </Button>
     <p class="text-sm mt-2">
         {{ t('login.registerPrompt') }}
-        <router-link :to="{ name: 'register' }">{{ t('login.registerLink') }}</router-link>
+        <RouterLink :to="{ name: 'register' }">{{ t('login.registerLink') }}</RouterLink>
     </p>
 </template>
 

@@ -1,7 +1,7 @@
 import camelcaseKeys from 'camelcase-keys';
 
 import type { CamelCase } from 'type-fest';
-import type { z } from 'zod';
+import { z } from 'zod';
 
 type CamelCaseOptions = {
   preserveConsecutiveUppercase?: boolean;
@@ -29,9 +29,20 @@ type CamelCasedPropertiesDeep<
             }
             : Value;
 
+/**
+ * Converts all object keys in a schema to camelCase, after the schema is validated as-is.
+ */
 export const camelizeSchema = <T extends z.ZodTypeAny>(
     zod: T,
 ): z.ZodType<CamelCasedPropertiesDeep<T["_output"]>> => 
     zod.transform((val) => {
         return camelcaseKeys(val as any, { deep: true, exclude: [/\./g] }) as CamelCasedPropertiesDeep<T["_output"]>
     })
+
+/**
+ * This is used to change the type of nested objects in an API response only.
+ * `camelizeSchema` could be used, but it's redundant, since the transform only needs to run on the top-level schema.
+ */
+export const camelizeSchemaWithoutTransform = <T extends z.ZodTypeAny>(
+    zod: T,
+): z.ZodType<CamelCasedPropertiesDeep<T["_output"]>> => zod as never

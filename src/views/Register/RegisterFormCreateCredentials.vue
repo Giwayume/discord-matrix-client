@@ -1,19 +1,34 @@
 <template>
     <div class="p-staticlabel flex flex-col gap-2 mt-5">
         <label for="register-username" class="text-(--text-strong)">{{ t('register.usernameLabel') }}</label>
-        <InputText id="register-username" v-model="formData.username" type="text" :invalid="v$.username.$invalid && v$.$dirty" required autocomplete="off" />
+        <InputText id="register-username" v-model.trim="formData.username" type="text" :invalid="v$.username.$invalid && v$.$dirty" required autocomplete="off" />
         <Message v-if="(v$.username.$invalid && v$.$dirty)" severity="error" size="small" variant="simple">
             <template #icon>
                 <svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="transparent" class=""></circle><path fill="var(--text-feedback-critical)" fill-rule="evenodd" d="M12 23a11 11 0 1 0 0-22 11 11 0 0 0 0 22Zm1.44-15.94L13.06 14a1.06 1.06 0 0 1-2.12 0l-.38-6.94a1 1 0 0 1 1-1.06h.88a1 1 0 0 1 1 1.06Zm-.19 10.69a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Z" clip-rule="evenodd" class=""></path></svg>
             </template>
             <template v-if="v$.username.required.$invalid">
-                {{ t('login.usernameRequired') }}
+                {{ t('register.usernameRequired') }}
             </template>
             <template v-if="v$.username.taken.$invalid">
-                {{ t('login.usernameTaken') }}
+                {{ t('register.usernameTaken') }}
             </template>
             <template v-else>
-                {{ t('login.usernameInvalid') }}
+                {{ t('register.usernameInvalid') }}
+            </template>
+        </Message>
+    </div>
+    <div class="p-staticlabel flex flex-col gap-2 mt-5">
+        <label for="register-password" class="text-(--text-strong)">{{ t('register.passwordLabel') }}</label>
+        <InputText id="register-password" v-model.trim="formData.password" type="password" :invalid="v$.password.$invalid && v$.$dirty" required autocomplete="off" />
+        <Message v-if="(v$.password.$invalid && v$.$dirty)" severity="error" size="small" variant="simple">
+            <template #icon>
+                <svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="transparent" class=""></circle><path fill="var(--text-feedback-critical)" fill-rule="evenodd" d="M12 23a11 11 0 1 0 0-22 11 11 0 0 0 0 22Zm1.44-15.94L13.06 14a1.06 1.06 0 0 1-2.12 0l-.38-6.94a1 1 0 0 1 1-1.06h.88a1 1 0 0 1 1 1.06Zm-.19 10.69a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Z" clip-rule="evenodd" class=""></path></svg>
+            </template>
+            <template v-if="v$.password.required.$invalid">
+                {{ t('register.passwordRequired') }}
+            </template>
+            <template v-else>
+                {{ t('register.passwordInvalid') }}
             </template>
         </Message>
     </div>
@@ -22,7 +37,7 @@
         <div class="p-button-loading-dots" />
     </Button>
     <p class="text-sm mt-5">
-        <router-link :to="{ name: 'login' }">{{ t('register.loginLink') }}</router-link>
+        <RouterLink :to="{ name: 'login' }">{{ t('register.loginLink') }}</RouterLink>
     </p>
 </template>
 

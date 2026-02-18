@@ -9,6 +9,8 @@
     --p-button-focus-ring-offset: 1px;
     --p-button-focus-ring-shadow: var(--p-form-field-focus-ring-shadow);
 
+    --p-button-icon-only-width: 2rem;
+
     --p-button-primary-background: var(--control-primary-background-default);
     --p-button-primary-border-color: var(--control-primary-border-default);
     --p-button-primary-color: var(--control-primary-text-default);
@@ -19,8 +21,16 @@
     --p-button-primary-active-border-color: var(--control-primary-border-hover);
     --p-button-primary-active-color: var(--control-primary-text-hover);
 
+    --p-button-text-primary-color: var(--control-primary-background-default);
+    --p-button-text-primary-hover-background: transparent;
+    --p-button-text-primary-hover: var(--control-primary-background-hover);
+
     --p-button-primary-focus-ring-color: var(--p-form-field-focus-ring-color);
     --p-button-primary-focus-ring-shadow: var(--p-form-field-focus-ring-shadow);
+
+    --p-button-text-secondary-color: var(--interactive-text-default);
+    --p-button-text-secondary-hover-background: var(--control-secondary-background-hover);
+    --p-button-text-secondary-hover-color: var(--interactive-text-hover);
 }
 
 @keyframes p-button-loading-dot-flashing {
@@ -33,6 +43,11 @@
     100% {
         background-color: rgba(152, 128, 255, 0.2);
     }
+}
+
+.p-button:hover {
+    --p-button-text-primary-color: var(--p-button-text-primary-hover-color);
+    --p-button-text-secondary-color: var(--p-button-text-secondary-hover-color);
 }
 
 .p-button-loading-dots {

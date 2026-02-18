@@ -26,7 +26,7 @@
                 <ProgressBar mode="indeterminate"></ProgressBar>
             </template>
             <!-- Error Message for Server Discovery -->
-            <template v-else-if="serverDiscoveryError">
+            <template v-else-if="serverDiscoveryError && serverDiscoveryErrorMessage">
                 <Message severity="error" variant="simple" class="mt-6">
                     {{ t('errors.discoverHomeserver.title') }}<br>
                     {{ serverDiscoveryErrorMessage }}
@@ -49,13 +49,14 @@
                 :loginError="loginError"
                 @update:formData="(event) => loginFormData = event"
             />
-            <LoginFormFallback v-else :homeserverBaseUrl="selectedServerHomeserverBaseUrl" :authType="flowStep" :session="loginSession" />
+            <LoginFormFallback v-else :homeserverBaseUrl="selectedServerHomeserverBaseUrl" :authType="flowStep" :session="loginSessionId" />
         </form>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '@/stores/config'
 import { useServerDiscovery, type ServerDiscovery } from '@/composables/server-discovery'
@@ -72,6 +73,7 @@ import ProgressBar from 'primevue/progressbar'
 
 import type { ClientConfig } from '@/types'
 
+const router = useRouter()
 const { t } = useI18n()
 const { buildConfig } = useConfigStore()
 
@@ -99,7 +101,7 @@ const homeserverSupportPageUrl = computed(() => {
 const { 
     loading: loginLoading,
     error: loginError,
-    session: loginSession,
+    sessionId: loginSessionId,
     login,
 } = useLogin({ serverDiscovery })
 
@@ -142,6 +144,9 @@ async function loginSubmit() {
     if (!await v$.value.$validate()) return
 
     await login(loginFormData.value)
+    if (!loginError.value) {
+        router.push({ name: 'home' })
+    }
 }
 </script>
 

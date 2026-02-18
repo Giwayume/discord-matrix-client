@@ -26,7 +26,7 @@
                 <ProgressBar mode="indeterminate"></ProgressBar>
             </template>
             <!-- Error Message for Server Discovery -->
-            <template v-else-if="serverDiscoveryError">
+            <template v-else-if="serverDiscoveryError && serverDiscoveryErrorMessage">
                 <Message severity="error" variant="simple" class="mt-6">
                     {{ t('errors.discoverHomeserver.title') }}<br>
                     {{ serverDiscoveryErrorMessage }}
@@ -43,6 +43,10 @@
                 </div>
             </template>
             <!-- Register Steps -->
+            <RegisterFormChooseGuestOrUser
+                v-else-if="registerKind == null && (serverDiscovery.registerFlows?.guest || serverDiscovery.guestRegisterResponse) && serverDiscovery.registerFlows?.user"
+                @update:registerKind="selectRegisterKind"
+            />
             <RegisterFormCreateCredentials
                 v-else
                 :loading="registerLoading"
@@ -61,6 +65,7 @@ import { useServerDiscovery, type ServerDiscovery } from '@/composables/server-d
 import { useRegister, type RegisterFormData } from '@/composables/register'
 
 import HomeserverSelectionDialog from './Login/HomeserverSelectionDialog.vue'
+import RegisterFormChooseGuestOrUser from './Register/RegisterFormChooseGuestOrUser.vue'
 import RegisterFormCreateCredentials from './Register/RegisterFormCreateCredentials.vue'
 
 import ProgressBar from 'primevue/progressbar'
@@ -106,6 +111,7 @@ const {
     register,
 } = useRegister({ serverDiscovery })
 
+const registerKind = ref<'guest' | 'user' | null>(null)
 const registerFormData = ref<RegisterFormData>({})
 
 onMounted(() => {
@@ -113,12 +119,20 @@ onMounted(() => {
 })
 
 function updateServerDiscovery(newServerDiscovery: ServerDiscovery) {
+    registerKind.value = null
     selectedServerClientConfig.value = newServerDiscovery.client ?? buildConfig.defaultServerConfig
     overrideServerDiscovery(newServerDiscovery)
 }
 
 function retryDiscoverServer() {
     discoverServer(selectedServerHomeserverBaseUrl.value)
+}
+
+function selectRegisterKind(newRegisterKind: 'guest' | 'user') {
+    if (newRegisterKind === 'guest' && serverDiscovery.value.guestRegisterResponse) {
+        
+    }
+    registerKind.value = newRegisterKind
 }
 
 function registerSubmit() {

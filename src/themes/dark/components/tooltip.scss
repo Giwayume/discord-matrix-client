@@ -1,0 +1,13 @@
+:root {
+    --p-tooltip-gutter: 6px;
+    --p-tooltip-max-width: 80vw;
+    --p-tooltip-background: var(--background-surface-high);
+    --p-tooltip-color: var(--text-default);
+    --p-tooltip-border-radius: var(--radius-sm);
+    --p-tooltip-padding: 0.5rem 0.75rem;
+    --p-tooltip-shadow: var(--legacy-elevation-high);
+}
+
+.p-tooltip-text {
+    font-size: 0.75rem;
+}

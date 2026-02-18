@@ -4,10 +4,11 @@ import { fetchJson } from '@/utils/fetch'
 import * as z from 'zod'
 
 import { useSessionStore } from '@/stores/session'
+import { useSyncStore } from '@/stores/sync'
 
 import {
-    ApiLegacyLoginResponseSchema, type ApiLegacyLoginResponse,
-    type ApiLoginRequestPassword
+    ApiV3LoginResponseSchema, type ApiV3LoginResponse,
+    type ApiV3LoginRequestPassword
 } from '@/types'
 import type { ServerDiscovery } from './server-discovery'
 
@@ -25,27 +26,32 @@ export function useLogin(options: {
 
     const error = ref<Error | null>(null)
 
-    const session = ref<string | undefined>(undefined)
+    const sessionId = ref<string | undefined>(undefined)
 
     async function login(formData?: LoginFormData) {
         loading.value = true
 
-        const matrixBaseUrl = serverDiscovery.value.baseUrl ?? ''
+        const matrixBaseUrl = serverDiscovery.value.homeserverBaseUrl ?? ''
 
         try {
-            const { accessToken, deviceId, refreshToken, userId } = storeToRefs(useSessionStore())
+            const sessionStore = useSessionStore()
+            const { deviceId, homeserverBaseUrl } = storeToRefs(sessionStore)
+            const { setFromApiV3LoginResponse: setSessionFromApiV3LoginResponse } = sessionStore
 
+            let loginResponse: ApiV3LoginResponse | undefined = undefined
             // Return from authDone fallback
-            if (!formData && session.value) {
-                await fetchJson(`${matrixBaseUrl}/_matrix/client/v3/login`, {
+            if (!formData && sessionId.value) {
+                loginResponse = await fetchJson(`${matrixBaseUrl}/_matrix/client/v3/login`, {
                     method: 'POST',
                     body: JSON.stringify({
-                        session: session.value,
+                        session: sessionId.value,
                     }),
                 })
-            } else if (formData?.password) {
+            }
+            // Password authentication
+            else if (formData?.password) {
                 const identifierString = formData.username ?? ''
-                let identifier: ApiLoginRequestPassword['identifier'] = {
+                let identifier: ApiV3LoginRequestPassword['identifier'] = {
                     type: 'm.id.user',
                     user: identifierString,
                 }
@@ -66,7 +72,7 @@ export function useLogin(options: {
                         phone: identifierString,
                     }
                 }
-                const loginResponse = await fetchJson<ApiLegacyLoginResponse>(
+                loginResponse = await fetchJson<ApiV3LoginResponse>(
                     `${matrixBaseUrl}/_matrix/client/v3/login`, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -74,19 +80,18 @@ export function useLogin(options: {
                             identifier,
                             password: formData.password,
                             device_id: deviceId.value,
-                            session: session.value,
-                        } satisfies ApiLoginRequestPassword),
-                        jsonSchema: ApiLegacyLoginResponseSchema,
+                            session: sessionId.value,
+                        } satisfies ApiV3LoginRequestPassword),
+                        jsonSchema: ApiV3LoginResponseSchema,
                     }
                 )
-
-                accessToken.value = loginResponse.accessToken
-                deviceId.value = loginResponse.deviceId
-                refreshToken.value = loginResponse.refreshToken
-                userId.value = loginResponse.userId
             }
-
-            await new Promise((resolve) => setTimeout(resolve, 500))
+            if (loginResponse) {
+                const { reset: resetSync } = useSyncStore()
+                await resetSync()
+                homeserverBaseUrl.value = matrixBaseUrl
+                setSessionFromApiV3LoginResponse(loginResponse)
+            }
         } catch (e) {
             console.error(e)
             error.value = e as Error
@@ -109,5 +114,5 @@ export function useLogin(options: {
         window.removeEventListener('message', onPostMessage)
     })
 
-    return { loading, error, session, login }
+    return { loading, error, sessionId, login }
 }

@@ -12,14 +12,14 @@
                 <label for="homeserver-host" class="text-(--text-strong)">{{ t('homeserverSelectionDialog.hostnameLabel') }}</label>
                 <InputText
                     id="homeserver-host"
-                    v-model="formData.homeserverBaseUrl"
+                    v-model.trim="formData.homeserverBaseUrl"
                     type="text"
                     :invalid="v$.homeserverBaseUrl.$invalid && v$.$dirty"
                     autocomplete="off"
                     :placeholder="defaultHomeserverUrl"
-                    @input="serverDiscoveryError && resetServerDiscovery()"
+                    @input="hostChanged"
                 />
-                <Message v-if="(v$.homeserverBaseUrl.$invalid && v$.$dirty)" severity="error" size="small" variant="simple">
+                <Message v-if="(v$.homeserverBaseUrl.$invalid && v$.$dirty) && serverDiscoveryErrorMessage" severity="error" size="small" variant="simple">
                     <template #icon>
                         <svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="transparent" class=""></circle><path fill="var(--text-feedback-critical)" fill-rule="evenodd" d="M12 23a11 11 0 1 0 0-22 11 11 0 0 0 0 22Zm1.44-15.94L13.06 14a1.06 1.06 0 0 1-2.12 0l-.38-6.94a1 1 0 0 1 1-1.06h.88a1 1 0 0 1 1 1.06Zm-.19 10.69a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Z" clip-rule="evenodd" class=""></path></svg>
                     </template>
@@ -106,7 +106,7 @@ const {
     serverDiscovery,
     reset: resetServerDiscovery,
     load: discoverServer,
-} = useServerDiscovery('register')
+} = useServerDiscovery(props.scenario)
 
 const formData = reactive({
     homeserverBaseUrl: '',
@@ -134,6 +134,10 @@ function resetForm() {
     }
 }
 
+function hostChanged() {
+    serverDiscoveryError && resetServerDiscovery()
+}
+
 async function submitHomeserver() {
     if (!await v$.value.$validate()) return
 
@@ -144,6 +148,8 @@ async function submitHomeserver() {
             emit('update:serverDiscovery', serverDiscovery.value)
             emit('update:visible', false)
         }
+    } else {
+        emit('update:visible', false)
     }
 }
 </script>

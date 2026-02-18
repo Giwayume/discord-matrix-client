@@ -1,4 +1,7 @@
+export * from './api-events'
 export * from './api-legacy-authentication'
+export * from './api-rooms'
+export * from './api-user-data'
 export * from './api-versions'
 export * from './secret-storage'
 export * from './well-known'

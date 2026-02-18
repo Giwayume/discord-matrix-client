@@ -1,0 +1,37 @@
+:root {
+    --p-toggleswitch-width: 3rem;
+    --p-toggleswitch-height: 1.5rem;
+    --p-toggleswitch-border-radius: var(--radius-lg);
+    --p-toggleswitch-border-width: 1px;
+    --p-toggleswitch-border-color: rgba(151, 151, 159, 0.2);
+    --p-toggleswitch-background: var(--input-background-default);
+    --p-toggleswitch-transition-duration: var(--p-transition-duration);
+    --p-toggleswitch-slide-duration: var(--p-transition-duration);
+    --p-toggleswitch-shadow: none;
+
+    --p-toggleswitch-hover-background: var(--input-background-default);
+    --p-toggleswitch-hover-border-color: rgba(151, 151, 159, 0.4);
+
+    --p-toggleswitch-checked-background: var(--control-primary-background-default);
+    --p-toggleswitch-checked-border-color: rgba(151, 151, 159, 0.12);
+    
+    --p-toggleswitch-handle-background: var(--text-strong);
+    --p-toggleswitch-handle-border-radius: var(--radius-round);
+    --p-toggleswitch-handle-color: var(--background-surface-high);
+    --p-toggleswitch-handle-size: 1rem;
+    --p-toggleswitch-gap: 0.25rem;
+
+    --p-toggleswitch-handle-hover-background: var(--text-strong);
+    --p-toggleswitch-handle-hover-color: var(--background-surface-high);
+
+    --p-toggleswitch-handle-checked-background: var(--text-strong);
+    --p-toggleswitch-handle-checked-color: var(--background-surface-high);
+
+    --p-toggleswitch-checked-hover-background: var(--control-primary-background-hover);
+    --p-toggleswitch-checked-hover-border-color: rgba(151, 151, 159, 0.12);
+
+    --p-toggleswitch-handle-checked-hover-background: var(--text-strong);
+    --p-toggleswitch-handle-checked-hover-color: var(--background-surface-high);
+
+    --p-toggleswitch-handle-disabled-background: rgba(151, 151, 159, 0.4);
+}

@@ -1,38 +1,38 @@
 import * as z from 'zod'
 import { camelizeSchema } from '@/utils/zod'
 
-export interface ApiLoginIdentifierUser {
+export interface ApiV3LoginIdentifierUser {
     type: 'm.id.user';
     user: string;
 }
 
-export interface ApiLoginIdentifierThirdParty {
+export interface ApiV3LoginIdentifierThirdParty {
     type: 'm.id.thirdparty';
     medium: string;
     address: string;
 }
 
-export interface ApiLoginIdentifierPhone {
+export interface ApiV3LoginIdentifierPhone {
     type: 'm.id.phone';
     country: string;
     phone: string;
 }
 
-export interface ApiLoginRequestPassword {
+export interface ApiV3LoginRequestPassword {
     type: 'm.login.password';
-    identifier: ApiLoginIdentifierUser | ApiLoginIdentifierThirdParty | ApiLoginIdentifierPhone,
+    identifier: ApiV3LoginIdentifierUser | ApiV3LoginIdentifierThirdParty | ApiV3LoginIdentifierPhone,
     password: string;
     device_id?: string;
     session?: string;
 }
 
-export interface ApiLoginRequestRecaptcha {
+export interface ApiV3LoginRequestRecaptcha {
     type: 'm.login.recaptcha';
     response: string;
     session?: string;
 }
 
-export interface ApiLoginRequestEmailIdentity {
+export interface ApiV3LoginRequestEmailIdentity {
     type: 'm.login.email.identity';
     threepid_creds: {
         sid: string;
@@ -43,7 +43,7 @@ export interface ApiLoginRequestEmailIdentity {
     session?: string;
 }
 
-export interface ApiLoginRequestMsisdn {
+export interface ApiV3LoginRequestMsisdn {
     type: 'm.login.msisdn';
     threepid_creds: {
         sid: string;
@@ -54,22 +54,22 @@ export interface ApiLoginRequestMsisdn {
     session?: string;
 }
 
-export interface ApiLoginRequestDummy {
+export interface ApiV3LoginRequestDummy {
     type: 'm.login.dummy';
     session?: string;
 }
 
-export interface ApiLoginRequestApplicationService {
+export interface ApiV3LoginRequestApplicationService {
     type: 'm.login.application_service';
-    identifier: ApiLoginIdentifierUser;
+    identifier: ApiV3LoginIdentifierUser;
 }
 
-export interface ApiLoginRequestToken {
+export interface ApiV3LoginRequestToken {
     type: 'm.login.token';
     token: string;
 }
 
-export const ApiLegacyLoginResponseSchema = camelizeSchema(z.object({
+export const ApiV3LoginResponseSchema = camelizeSchema(z.object({
     access_token: z.string(),
     device_id: z.string(),
     expires_in_ms: z.number().optional(),
@@ -83,12 +83,12 @@ export const ApiLegacyLoginResponseSchema = camelizeSchema(z.object({
         'm.identity_server': z.object({
             base_url: z.url(),
         }).optional(),
-    }),
+    }).optional(),
 }))
 
-export type ApiLegacyLoginResponse = z.infer<typeof ApiLegacyLoginResponseSchema>
+export type ApiV3LoginResponse = z.infer<typeof ApiV3LoginResponseSchema>
 
-export const ApiLoginFlowsSchema = camelizeSchema(z.object({
+export const ApiV3LoginFlowsSchema = camelizeSchema(z.object({
     flows: z.array(
         z.object({
             type: z.string(),
@@ -97,10 +97,21 @@ export const ApiLoginFlowsSchema = camelizeSchema(z.object({
     )
 }))
 
-export type ApiLoginFlows = z.infer<typeof ApiLoginFlowsSchema>
+export type ApiV3LoginFlows = z.infer<typeof ApiV3LoginFlowsSchema>
 
+export interface ApiV3RefreshLoginRequest {
+    refresh_token: string;
+}
 
-export interface ApiRegisterRequest {
+export const ApiV3RefreshLoginResponseSchema = camelizeSchema(z.object({
+    access_token: z.string(),
+    expires_in_ms: z.number().optional(),
+    refresh_token: z.string().optional(),
+}))
+
+export type ApiV3RefreshLoginResponse = z.infer<typeof ApiV3RefreshLoginResponseSchema>
+
+export interface ApiV3RegisterRequest {
     auth?: {
         session?: string;
         type?: string;
@@ -113,7 +124,18 @@ export interface ApiRegisterRequest {
     username?: string;
 }
 
-export const ApiRegisterFlowsSchema = camelizeSchema(z.object({
+export const ApiV3RegisterResponseSchema = camelizeSchema(z.object({
+    access_token: z.string().optional(),
+    device_id: z.string().optional(),
+    expires_in_ms: z.number().optional(),
+    home_server: z.string().optional(),
+    refresh_token: z.string().optional(),
+    user_id: z.string(),
+}))
+
+export type ApiV3RegisterResponse = z.infer<typeof ApiV3RegisterResponseSchema>
+
+export const ApiV3RegisterFlowsSchema = camelizeSchema(z.object({
     completed: z.array(z.string()).optional(),
     flows: z.object({
         stages: z.array(z.string()),
@@ -124,4 +146,4 @@ export const ApiRegisterFlowsSchema = camelizeSchema(z.object({
     session: z.string().optional(),
 }))
 
-export type ApiRegisterFlows = z.infer<typeof ApiRegisterFlowsSchema>
+export type ApiV3RegisterFlows = z.infer<typeof ApiV3RegisterFlowsSchema>

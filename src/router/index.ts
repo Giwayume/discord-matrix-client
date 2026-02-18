@@ -5,19 +5,29 @@ const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
         {
+            name: 'landing',
+            path: '/',
+            component: () => import('@/views/Landing.vue'),
+        },
+        {
             name: 'login',
             path: '/login',
-            component: defineAsyncComponent(() => import('@/views/Login.vue')),
+            component: () => import('@/views/Login.vue'),
         },
         {
             name: 'register',
             path: '/register',
-            component: defineAsyncComponent(() => import('@/views/Register.vue')),
+            component: () => import('@/views/Register.vue'),
         },
         {
             name: 'forgot-password',
             path: '/forgot-password',
-            component: defineAsyncComponent(() => import('@/views/ForgotPassword.vue')),
+            component: () => import('@/views/ForgotPassword.vue'),
+        },
+        {
+            name: 'home',
+            path: '/home',
+            component: () => import('@/views/Home.vue'),
         }
     ],
 })

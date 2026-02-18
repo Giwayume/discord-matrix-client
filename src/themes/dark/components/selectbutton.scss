@@ -1,0 +1,48 @@
+:root {
+    --p-selectbutton-border-radius: var(--radius-md);
+}
+
+.p-selectbutton {
+    --p-togglebutton-background: var(--background-base-lower);
+    --p-togglebutton-border-color: var(--background-base-lower);
+    --p-togglebutton-border-radius: var(--radius-md);
+    --p-togglebutton-color: var(--interactive-text-default);
+    --p-togglebutton-padding: 0;
+    --p-togglebutton-transition-duration: var(--p-transition-duration);
+
+    --p-togglebutton-hover-background: var(--background-base-lower);
+    --p-togglebutton-hover-color: var(--interactive-text-default);
+
+    --p-togglebutton-checked-background: var(--background-base-lower);
+    --p-togglebutton-checked-border-color: var(--border-normal);
+    --p-togglebutton-checked-color: white;
+
+    --p-togglebutton-content-padding: 0.75rem 1rem;
+    --p-togglebutton-content-border-radius: var(--radius-sm);
+    --p-togglebutton-gap: 0.5rem;
+
+    --p-togglebutton-content-checked-background: var(--background-mod-normal);
+    --p-togglebutton-content-checked-shadow: 0 0 0 1px var(--border-normal);
+
+    background: var(--background-base-lower);
+    border-radius: var(--radius-md);
+    gap: 0.5rem;
+    padding: 0.5rem;
+
+    .p-togglebutton {
+        --p-selectbutton-border-radius: var(--radius-sm);
+        border-radius: var(--radius-sm) !important;
+
+        &:not(.p-togglebutton-checked):hover {
+            .p-togglebutton-content {
+                background: var(--background-mod-subtle);
+            }
+        }
+    }
+
+    &.w-full {
+        .p-togglebutton {
+            flex: 1;
+        }
+    }
+}

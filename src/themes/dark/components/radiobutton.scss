@@ -1,0 +1,22 @@
+:root {
+    --p-radiobutton-width: 1.25rem;
+    --p-radiobutton-height: 1.25rem;
+    --p-radiobutton-background: var(--radio-background-default);
+    --p-radiobutton-border-color: var(--radio-border-default);
+    --p-radiobutton-transition-duration: var(--p-transition-duration);
+    --p-radiobutton-shadow: none;
+
+    --p-radiobutton-icon-size: 0.5rem;
+
+    --p-radiobutton-hover-background: var(--radio-background-hover);
+    --p-radiobutton-hover-border-color: var(--radio-border-hover);
+
+    --p-radiobutton-checked-background: var(--radio-background-selected-default);
+    --p-radiobutton-checked-border-color: var(--radio-border-selected-default);
+    --p-radiobutton-icon-checked-color: white;
+
+    --p-radiobutton-checked-hover-background: var(--radio-background-selected-hover);
+    --p-radiobutton-checked-hover-border-color: var(--radio-border-selected-hover);
+
+    --p-radiobutton-icon-checked-hover-color: var(--radio-thumb-background-active);
+}

@@ -1,14 +1,44 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 
+import { onLogout } from '@/composables/logout'
 import { usePickleKey } from '@/composables/pickle-key'
 import { decryptAesHmacSha2EncryptedData } from '@/utils/secret-storage'
 import { loadTableKey as loadMatrixReactSdkTableKey, saveTableKey as saveMatrixReactSdkTableKey } from './database/matrix-react-sdk'
 
-import type { AesHmacSha2EncryptedData } from '@/types'
+import type { AesHmacSha2EncryptedData, ApiV3LoginResponse } from '@/types'
 
 export const useSessionStore = defineStore('session', () => {
     const { get: getPickleKey } = usePickleKey()
+
+    /* User ID */
+    const userId = ref<string | undefined>(localStorage.getItem('mx_user_id') ?? undefined)
+    watch(() => userId.value, (userId) => {
+        if (userId != null) {
+            localStorage.setItem('mx_user_id', userId)
+        } else {
+            localStorage.removeItem('mx_user_id')
+        }
+    })
+
+    /* Device ID */
+    const deviceId = ref<string | undefined>(localStorage.getItem('mx_device_id') ?? undefined)
+    watch(() => deviceId.value, (deviceId) => {
+        if (deviceId != null) {
+            localStorage.setItem('mx_device_id', deviceId)
+        } else {
+            localStorage.removeItem('mx_device_id')
+        }
+    })
+
+    /* Retrieve storage encryption key */
+    const userDevicePickleKey = ref<string | undefined>()
+    watch(() => [userId.value, deviceId.value], () => {
+        if (!userId.value) return
+        getPickleKey(userId.value, deviceId.value ?? '').then((pickleKey) => {
+            userDevicePickleKey.value = pickleKey ?? undefined
+        })
+    }, { immediate: true })
 
     /* Access Token */
     const accessToken = ref<string | AesHmacSha2EncryptedData | undefined>(localStorage.getItem('mx_access_token') ?? undefined)
@@ -69,34 +99,6 @@ export const useSessionStore = defineStore('session', () => {
         }
     }, { immediate: true })
 
-    /* Decrypted Refresh Token */
-    const decryptedRefreshToken = ref<string | undefined>()
-    watch(() => [refreshToken.value, userDevicePickleKey.value], async () => {
-        if (Object.prototype.toString.call(refreshToken.value) === '[object Object]') {
-            if (userDevicePickleKey.value) {
-                decryptAesHmacSha2EncryptedData(
-                    userDevicePickleKey.value,
-                    refreshToken.value as AesHmacSha2EncryptedData,
-                    'refresh_token'
-                ).then((decryptedValue) => {
-                    decryptedRefreshToken.value = decryptedValue
-                })
-            }
-        } else {
-            decryptedRefreshToken.value = refreshToken.value as string
-        }
-    }, { immediate: true })
-
-    /* Device ID */
-    const deviceId = ref<string | undefined>(localStorage.getItem('mx_device_id') ?? undefined)
-    watch(() => deviceId.value, (deviceId) => {
-        if (deviceId != null) {
-            localStorage.setItem('mx_device_id', deviceId)
-        } else {
-            localStorage.removeItem('mx_device_id')
-        }
-    })
-
     /* Refresh Token */
     const refreshToken = ref<string | AesHmacSha2EncryptedData | undefined>(localStorage.getItem('mx_refresh_token') ?? undefined)
     const refreshTokenLoading = ref<boolean>(false)
@@ -138,23 +140,64 @@ export const useSessionStore = defineStore('session', () => {
         }
     })
 
-    /* User ID */
-    const userId = ref<string | undefined>(localStorage.getItem('mx_user_id') ?? undefined)
-    watch(() => userId.value, (userId) => {
-        if (userId != null) {
-            localStorage.setItem('mx_user_id', userId)
+    /* Decrypted Refresh Token */
+    const decryptedRefreshToken = ref<string | undefined>()
+    watch(() => [refreshToken.value, userDevicePickleKey.value], async () => {
+        if (Object.prototype.toString.call(refreshToken.value) === '[object Object]') {
+            if (userDevicePickleKey.value) {
+                decryptAesHmacSha2EncryptedData(
+                    userDevicePickleKey.value,
+                    refreshToken.value as AesHmacSha2EncryptedData,
+                    'refresh_token'
+                ).then((decryptedValue) => {
+                    decryptedRefreshToken.value = decryptedValue
+                })
+            }
         } else {
-            localStorage.removeItem('mx_user_id')
+            decryptedRefreshToken.value = refreshToken.value as string
+        }
+    }, { immediate: true })
+
+    /* Homeserver URL */
+    const homeserverBaseUrl = ref<string | undefined>(localStorage.getItem('mx_hs_url') ?? undefined)
+    watch(() => homeserverBaseUrl.value, (homeserverBaseUrl) => {
+        if (homeserverBaseUrl != null) {
+            localStorage.setItem('mx_hs_url', homeserverBaseUrl)
+        } else {
+            localStorage.removeItem('mx_hs_url')
         }
     })
+    
+    /* Is a guest session */
+    const isGuest = ref<boolean>(localStorage.getItem('mx_is_guest') == 'true')
+    watch(() => isGuest.value, (isGuest) => {
+        localStorage.setItem('mx_is_guest', `${isGuest}`)
+    })
 
-    const userDevicePickleKey = ref<string | undefined>()
-    watch(() => [userId.value, deviceId.value], () => {
-        if (!userId.value) return
-        getPickleKey(userId.value, deviceId.value ?? '').then((pickleKey) => {
-            userDevicePickleKey.value = pickleKey ?? undefined
-        })
-    }, { immediate: true })
+    /* Check if anything is loading from storage */
+    const loading = computed(() => {
+        return accessTokenLoading.value || refreshTokenLoading.value
+    })
+
+    const hasAuthenticatedSession = computed(() => {
+        return !!(accessToken.value || refreshToken.value)
+    })
+
+    /** Convert Legacy Login API Response to Session */
+    function setFromApiV3LoginResponse(loginResponse: ApiV3LoginResponse) {
+        accessToken.value = loginResponse.accessToken
+        deviceId.value = loginResponse.deviceId
+        refreshToken.value = loginResponse.refreshToken
+        userId.value = loginResponse.userId
+    }
+
+    /** Clear all state and navigate to the login page. */
+    onLogout(() => {
+        accessToken.value = undefined
+        refreshToken.value = undefined
+        userId.value = undefined
+        isGuest.value = false
+    })
 
     return {
         accessToken,
@@ -163,9 +206,14 @@ export const useSessionStore = defineStore('session', () => {
         decryptedAccessToken,
         decryptedRefreshToken,
         deviceId,
+        hasAuthenticatedSession,
+        homeserverBaseUrl,
+        isGuest,
+        loading,
         refreshToken,
         refreshTokenLoading,
         refreshTokenError,
+        setFromApiV3LoginResponse,
         userId,
     }
 })
