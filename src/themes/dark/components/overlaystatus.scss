@@ -54,3 +54,9 @@
 .p-overlaystatus--lower {
     --p-overlaystatus-border-color: var(--background-base-lower);
 }
+
+.p-overlaystatus--small .p-overlaystatus-indicator {
+    transform: scale(0.625);
+    right: -0.25rem;
+    bottom: -0.25rem;
+}

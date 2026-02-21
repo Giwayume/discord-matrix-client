@@ -5,12 +5,20 @@
     --p-avatar-background: var(--background-base-lower);
     --p-avatar-color: var(--text-default);
     --p-avatar-border-radius: var(--radius-sm);
+    --p-avatar-icon-size: 1rem;
 
     --p-avatar-lg-width: 2rem;
     --p-avatar-lg-height: 2rem;
     --p-avatar-lg-font-size: 1rem;
+    --p-avatar-lg-icon-size: 1rem;
 
     --p-avatar-xl-width: 3rem;
     --p-avatar-xl-height: 3rem;
     --p-avatar-xl-font-size: 1rem;
+    --p-avatar-xl-icon-size: 1.75rem;
+}
+
+.p-avatar-full {
+    --p-avatar-width: 100%;
+    --p-avatar-height: 100%;
 }

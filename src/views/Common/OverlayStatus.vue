@@ -1,7 +1,11 @@
 <template>
-    <div class="p-overlaystatus" :class="['p-overlaystatus--' + props.status, 'p-overlaystatus--' + props.level]">
+    <div class="p-overlaystatus" :class="[
+        'p-overlaystatus--' + props.status,
+        'p-overlaystatus--' + props.level,
+        'p-overlaystatus--' + props.size,
+    ]">
         <slot />
-        <div class="p-overlaystatus-indicator"></div>
+        <div v-show="!invisible" class="p-overlaystatus-indicator"></div>
     </div>
 </template>
 
@@ -17,6 +21,14 @@ const props = defineProps({
         type: String as PropType<'low' | 'lower' | 'lowest'>,
         default: 'lowest',
     },
+    size: {
+        type: String as PropType<'small' | 'medium'>,
+        default: 'medium',
+    },
+    invisible: {
+        type: Boolean,
+        default: false,
+    }
 })
 
 </script>

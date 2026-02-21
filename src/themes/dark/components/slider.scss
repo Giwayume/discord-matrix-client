@@ -1,0 +1,30 @@
+:root {
+    --p-slider-track-size: 0.25rem;
+    --p-slider-track-background: var(--slider-track-background);
+    --p-slider-track-border-radius: 0.25rem;
+    
+    --p-slider-range-background: var(--background-brand);
+
+    --p-slider-handle-height: 16px;
+    --p-slider-handle-width: 16px;
+    --p-slider-handle-background: var(--white);
+    --p-slider-handle-border-radius: var(--radius-round);
+    --p-slider-handle-hover-background: var(--white);
+
+    --p-slider-handle-content-width: 10rem;
+    --p-slider-handle-content-height: 4px;
+    --p-slider-handle-content-background: var(--white);
+    --p-slider-handle-content-border-radius: 0.25rem;
+    --p-slider-handle-content-hover-background: var(--white);
+
+    --p-slider-transition-duration: var(--p-transition-duration);
+}
+
+.p-slider-handle {
+    transition: background var(--p-slider-transition-duration), color var(--p-slider-transition-duration), border-color var(--p-slider-transition-duration), box-shadow var(--p-slider-transition-duration), outline-color var(--p-slider-transition-duration), transform var(--p-slider-transition-duration) !important;
+    transform: scale(1);
+}
+
+.p-slider-handle:hover {
+    transform: scale(1.25);
+}

@@ -1,6 +1,6 @@
 <template>
     <Application :title="t('home.title')" titleIcon="pi pi-users">
-        <template v-slot:sidebar-list>
+        <template #sidebar-list>
             <SidebarListDirectMessages />
         </template>
         <MainHeader>

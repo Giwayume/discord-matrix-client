@@ -118,7 +118,7 @@ export const useProfileStore = defineStore('profile', () => {
     return {
         authenticatedUserAvatarUrl,
         authenticatedUserDisplayName,
-        profiles: computed(() => profiles),
+        profiles: computed(() => profiles.value),
         profilesLoading,
         profilesLoadError,
         populateFromApiV3SyncResponse,

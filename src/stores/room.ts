@@ -1,8 +1,9 @@
 import { computed, ref, toRaw } from 'vue'
-import { defineStore } from 'pinia'
+import { defineStore, storeToRefs } from 'pinia'
 import { redactEvent } from '@/utils/event'
 
 import { useBroadcast } from '@/composables/broadcast'
+import { useSessionStore } from '@/stores/session'
 
 import {
     loadTableKey as loadDiscortixTableKey,
@@ -10,6 +11,11 @@ import {
 } from '@/stores/database/discortix'
 
 import {
+    type RoomSummary,
+    type InvitedRoom,
+    type KnockedRoom,
+    type JoinedRoom,
+    type LeftRoom,
     eventContentSchemaByType,
     type ApiV3SyncAccountDataEvent,
     type ApiV3SyncClientEventWithoutRoomId,
@@ -19,81 +25,6 @@ import {
     type ApiV3SyncRoomSummary,
     type EventRoomRedactionContent,
 } from '@/types'
-
-interface RoomSummary {
-    avatarUrl?: string;
-    creator: string;
-    heroes: string[];
-    id: string;
-    joinedMemberCount: number;
-    name: string;
-    roomVersion: string;
-}
-
-interface RoomTimelineEvent {
-    // ???
-}
-
-type EventDataRecordFrom<
-    M extends Record<string, any>
-> = {
-    [K in string]: K extends keyof M ? M[K] : any;
-};
-
-type ApiV3SyncStrippedStateEventRecordFrom<
-    M extends Record<string, any>
-> = {
-    [K in string]: ApiV3SyncStrippedStateEvent<
-        K extends keyof M ? M[K] : any
-    >[];
-};
-
-type ApiV3SyncClientEventWithoutRoomIdRecordFrom<
-    M extends Record<string, any>
-> = {
-    [K in string]: ApiV3SyncClientEventWithoutRoomId<
-        K extends keyof M ? M[K] : any
-    >[];
-};
-
-interface ReadReceipt {
-    eventId: string;
-    threadId?: string;
-    ts?: number;
-}
-
-interface InvitedRoom {
-    stateEventsByType: ApiV3SyncStrippedStateEventRecordFrom<typeof eventContentSchemaByType>;
-}
-
-interface KnockedRoom {
-    stateEventsByType: ApiV3SyncStrippedStateEventRecordFrom<typeof eventContentSchemaByType>;
-}
-
-interface JoinedRoom {
-    accountData: EventDataRecordFrom<typeof eventContentSchemaByType>;
-    readRecepts: Record<string, ReadReceipt>;
-    stateEventsById: Record<string, ApiV3SyncClientEventWithoutRoomId>;
-    stateEventsByType: ApiV3SyncClientEventWithoutRoomIdRecordFrom<typeof eventContentSchemaByType>;
-    summary: ApiV3SyncRoomSummary;
-    timeline: Array<RoomTimelineEvent>;
-    typingUserIds: string[];
-    unreadNotifications: {
-        highlightCount: number;
-        notificationCount: number;
-    };
-    unreadThreadNotifications: Record<string, {
-        highlightCount: number;
-        notificationCount: number;
-    }>;
-}
-
-interface LeftRoom {
-    accountData: EventDataRecordFrom<typeof eventContentSchemaByType>;
-    stateEventsById: Record<string, ApiV3SyncClientEventWithoutRoomId>;
-    stateEventsByType: ApiV3SyncClientEventWithoutRoomIdRecordFrom<typeof eventContentSchemaByType>;
-    timeline: Array<RoomTimelineEvent>;
-}
 
 function isRoomStateEventType(type: string) {
     return /^(m\.room|m\.space)/.test(type)
@@ -244,6 +175,7 @@ function populateEphemeralRoomEvents(room: JoinedRoom, events: Array<{ content: 
 
 export const useRoomStore = defineStore('room', () => {
     const { isLeader } = useBroadcast()
+    const { userId: currentUserId } = storeToRefs(useSessionStore())
 
     const roomsLoading = ref<boolean>(true)
     const roomsLoadError = ref<Error | null>(null)
@@ -294,6 +226,7 @@ export const useRoomStore = defineStore('room', () => {
 
                 if (!invited.value[roomId]) {
                     invited.value[roomId] = {
+                        roomId,
                         stateEventsByType: {},
                     }
                 }
@@ -328,6 +261,7 @@ export const useRoomStore = defineStore('room', () => {
 
                 if (!knocked.value[roomId]) {
                     knocked.value[roomId] = {
+                        roomId,
                         stateEventsByType: {},
                     }
                 }
@@ -362,6 +296,7 @@ export const useRoomStore = defineStore('room', () => {
 
                 if (!joined.value[roomId]) {
                     joined.value[roomId] = {
+                        roomId,
                         accountData: left.value[roomId]?.accountData ?? {},
                         readRecepts: {},
                         stateEventsByType: {},
@@ -439,6 +374,7 @@ export const useRoomStore = defineStore('room', () => {
 
                 if (!left.value[roomId]) {
                     left.value[roomId] = {
+                        roomId,
                         accountData: joined.value[roomId]?.accountData ?? {},
                         stateEventsByType: {},
                         stateEventsById: {},
@@ -529,17 +465,19 @@ export const useRoomStore = defineStore('room', () => {
             if (spaceParentEvent) continue
             const roomVersion = roomCreateEvent.content.roomVersion ?? '1'
 
-            let heroes: string[] = room.summary?.['m.heroes'] ?? []
+            let heroes: string[] = (room.summary?.['m.heroes'] ?? []).filter((userId) => userId !== currentUserId.value)
             let joinedMemberCount = room.summary?.['m.joined_member_count']
             if (heroes.length === 0 || !joinedMemberCount) {
-                const memberJoinEvents = roomMemberEvents.filter(
-                    (event) => event.sender && event.content.membership === 'join'
+                const memberEvents = roomMemberEvents.filter(
+                    (event) => event.stateKey && (event.content.membership === 'join' || event.content.membership === 'invite')
                 )
                 if (heroes.length === 0) {
-                    heroes = memberJoinEvents.map((event) => event.sender ?? '')
+                    heroes = memberEvents.filter((event) => event.stateKey !== currentUserId.value).map((event) => event.stateKey ?? '')
                 }
                 if (!joinedMemberCount) {
-                    joinedMemberCount = memberJoinEvents.length
+                    joinedMemberCount = memberEvents.filter(
+                        (event) => event.content.membership === 'join'
+                    ).length
                 }
             }
 

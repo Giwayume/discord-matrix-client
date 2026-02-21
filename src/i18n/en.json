@@ -1,6 +1,28 @@
 {
+    "cropImageDialog": {
+        "title": "Edit Image",
+        "imageAlt": "Image Preview",
+        "resetLink": "Reset",
+        "cancelButton": "Cancel",
+        "applyButton": "Apply",
+        "zoomLevel": "Zoom Level",
+        "rotate": "Rotate"
+    },
     "dialog": {
         "close": "Close dialog"
+    },
+    "editGroup": {
+        "title": "Edit Group",
+        "groupName": "Group Name",
+        "roomAvatar": "Room Avatar",
+        "editRoomAvatar": "Edit Room Avatar",
+        "groupNotFound": "Group not found. Did you leave the group?",
+        "cancelButton": "Cancel",
+        "saveButton": "Save"
+    },
+    "editGroupIcon": {
+        "title": "Change Icon",
+        "uploadImage": "Upload Image"
     },
     "errors": {
         "rateLimited": "You are being rate limited. Please try again shortly.",
@@ -137,6 +159,22 @@
         "dateOfBirthLabel": "Date of Birth",
         "createAccountButton": "Create Account",
         "loginLink": "Already have an account? Log in"
+    },
+    "room": {
+        "directMessageHistoryBeginning": "This is the beginning of your direct message history with {displayname}.",
+        "groupMessageHistoryBeginning": "Welcome to the beginning of the {users} group.",
+        "removeFriendButton": "Remove Friend",
+        "blockButton": "Block",
+        "editGroupIconButton": "Edit Group Icon",
+        "inviteFriendsButton": "Invite Friends",
+        "editGroupButton": "Edit Group"
+    },
+    "roomSettings": {
+        "title": {
+            "group": "Edit Group",
+            "space": "Space Settings",
+            "room": "Room Settings"
+        }
     },
     "userSettings": {
         "search": "Search",

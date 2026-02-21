@@ -6,7 +6,7 @@
                     <template v-slot="{ src }">
                         <Avatar :image="src" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
                     </template>
-                    <template v-slot:error>
+                    <template #error>
                         <Avatar icon="pi pi-user" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
                     </template>
                 </AuthenticatedImage>

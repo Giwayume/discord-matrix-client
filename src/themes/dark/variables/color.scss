@@ -11,6 +11,7 @@
     --neutral-23: hsl(231.429 calc(1*4.348%) 68.431%/1);
     --neutral-35: hsl(233.333 calc(1*3.704%) 52.353%/1);
     --neutral-37: hsl(233.333 calc(1*3.557%) 49.608%/1);
+    --neutral-55: hsl(234 calc(1*6.579%) 29.804%/1);
     --neutral-64: hsl(232.5 calc(1*6.557%) 23.922%/1);
     --neutral-73: hsl(230 calc(1*6.383%) 18.431%/1);
     --neutral-76: hsl(240 calc(1*5.882%) 16.667%/1);
@@ -52,6 +53,7 @@
     --background-base-low: var(--neutral-82);
     --background-base-lower: var(--neutral-86);
     --background-base-lowest: var(--neutral-92);
+    --background-brand: var(--blurple-50);
     --background-feedback-critical: hsl(var(--opacity-red-8-hsl)/0.0784313725490196);
     --background-mod-muted: hsl(var(--opacity-4-hsl)/0.0392156862745098);
     --background-mod-normal: hsl(var(--opacity-16-hsl)/0.1607843137254902);
@@ -126,9 +128,13 @@
     --radio-border-selected-hover: var(--border-subtle);
     --radio-thumb-background-active: var(--neutral-1);
 
+    --slider-track-background: var(--neutral-55);
+
     --text-default: var(--neutral-10);
     --text-strong: var(--neutral-1);
     --text-muted: var(--neutral-23);
     --text-brand: var(--blurple-26);
     --text-feedback-critical: var(--red-new-22);
+
+    --white: white;
 }

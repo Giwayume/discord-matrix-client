@@ -13,7 +13,7 @@
                 }"
                 class="-mr-2"
             >
-                <template v-slot:item="{ item, props }">
+                <template #item="{ item, props }">
                     <a
                         class="p-menu-item-link"
                         :class="{ 'p-menu-item-link-active': item.key === selectedMenuItem?.key }"
@@ -48,26 +48,26 @@
                 }"
                 class="-mr-2 !min-w-auto"
             >
-                <template v-slot:item="{ item, props }">
+                <template #item="{ item, props }">
                     <a
                         class="p-menu-item-link sidebar-list__direct-message"
-                        :class="{ 'p-menu-item-link-active': item.key === selectedMenuItem?.key }"
+                        :class="{ 'p-menu-item-link-active': item.key === route.params.roomId }"
                         tabindex="-1"
                     >
                         <span class="p-menu-item-label flex gap-3 max-w-full">
-                            <OverlayStatus level="lowest" :status="item.presence" class="w-8 h-8">
+                            <OverlayStatus level="lowest" :status="item.presence" :invisible="item.isGroup" class="w-8 h-8">
                                 <AuthenticatedImage :mxcUri="item.avatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
                                     <template v-slot="{ src }">
                                         <Avatar :image="src" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
                                     </template>
-                                    <template v-slot:error>
-                                        <Avatar icon="pi pi-user" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
+                                    <template #error>
+                                        <Avatar :icon="item.isGroup ? 'pi pi-users' : 'pi pi-user'" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
                                     </template>
                                 </AuthenticatedImage>
                             </OverlayStatus>
                             <div class="flex flex-col justify-center overflow-hidden">
-                                <div class="overflow-hidden text-nowrap text-ellipsis leading-4">{{ item.displayname ?? item.label }}</div>
-                                <div 
+                                <div class="overflow-hidden text-nowrap text-ellipsis leading-5 -mb-[2px]">{{ item.displayname ?? item.label }}</div>
+                                <div
                                     v-if="item.statusMessage"
                                     v-tooltip.top="{ value: item.statusMessage }"
                                     class="overflow-hidden text-nowrap text-ellipsis text-xs leading-4 -mt-[2px]"
@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useProfileStore } from '@/stores/profile'
@@ -110,9 +110,10 @@ import vTooltip from 'primevue/tooltip'
 import type { MenuItem } from 'primevue/menuitem'
 
 const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const { directMessageRooms } = storeToRefs(useRoomStore())
-const { profiles } = useProfileStore()
+const { profiles } = storeToRefs(useProfileStore())
 
 const selectedMenuItem = ref<MenuItem | null>(null)
 
@@ -132,10 +133,16 @@ const directChatItems = computed<MenuItem[]>(() => {
         return {
             key: room.id,
             label: userId,
-            displayname: profile?.displayname,
-            avatarUrl: profile?.avatarUrl,
+            isGroup: room.heroes.length > 1,
+            displayname: room.heroes.map(
+                (userId) => profiles.value[userId ?? '']?.displayname ?? userId
+            ).filter((displayName) => !!displayName).join(', '),
+            avatarUrl: room.heroes.length > 1 ? undefined : profile?.avatarUrl,
             presence: profile?.presence,
-            statusMessage: profile?.statusMessage,
+            statusMessage: room.heroes.length > 1 ? undefined : profile?.statusMessage,
+            command(event) {
+                router.push({ name: 'room', params: { roomId: event.item.key } })
+            },
         }
     })
 })

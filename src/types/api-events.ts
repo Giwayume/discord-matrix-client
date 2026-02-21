@@ -126,7 +126,7 @@ export const EventRoomPowerLevelsContentSchema = z.object({
     users: z.record(z.string(), z.number()).optional(),
     usersDefault: z.number().optional(),
 })
-export type EventRoomPowerLevels = z.infer<typeof EventRoomPowerLevelsContentSchema>
+export type EventRoomPowerLevelsContent = z.infer<typeof EventRoomPowerLevelsContentSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mroomredaction */
 export const EventRoomRedactionContentSchema = z.object({
@@ -194,6 +194,33 @@ export const eventContentSchemaByType = {
     'm.typing': EventTypingContentSchema,
     // 'm.video': EventVideoContentSchema,
 } as const
+
+export interface EventContentByType {
+    // 'm.audio': EventAudioContent,
+    // 'm.emote': EventEmoteContent,
+    // 'm.file': EventFileContent,
+    // 'm.image': EventImageContent,
+    // 'm.location': EventLocationContent,
+    // 'm.notice': EventNoticeContent,
+    'm.presence': EventPresenceContent,
+    'm.receipt': EventReceiptContent,
+    'm.room.avatar': EventRoomAvatarContent,
+    'm.room.canonical_alias': EventRoomCanonicalAliasContent,
+    'm.room.create': EventRoomCreateContent,
+    'm.room.join_rules': EventRoomJoinRulesContent,
+    'm.room.member': EventRoomMemberContent,
+    'm.room.message': EventRoomMessageContent,
+    'm.room.name': EventRoomNameContent,
+    'm.room.pinned_events': EventRoomPinnedEventsContent,
+    'm.room.power_levels': EventRoomPowerLevelsContent,
+    'm.room.redaction': EventRoomRedactionContent,
+    'm.room.topic': EventRoomTopicContent,
+    'm.space.child': EventSpaceChildContent,
+    'm.space.parent': EventSpaceParentContent,
+    // 'm.text': EventTextContent,
+    'm.typing': EventTypingContent,
+    // 'm.video': EventVideoContent,
+}
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_account-data */
 export const ApiV3SyncAccountDataSchema = camelizeSchemaWithoutTransform(z.object({

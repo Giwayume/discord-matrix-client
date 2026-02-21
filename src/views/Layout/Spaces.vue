@@ -30,7 +30,7 @@
                                 <template v-slot="{ src }">
                                     <img :src="src" :alt="t('layout.spaceAvatarAlt')">
                                 </template>
-                                <template v-slot:error>
+                                <template #error>
                                     {{ createAcronym(space.name) }}
                                 </template>
                             </AuthenticatedImage>

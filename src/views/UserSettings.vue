@@ -22,7 +22,7 @@
                                 <template v-slot="{ src }">
                                     <Avatar :image="src" shape="circle" size="xlarge" :aria-label="t('layout.userAvatarImage')" class="shrink-0" />
                                 </template>
-                                <template v-slot:error>
+                                <template #error>
                                     <Avatar icon="pi pi-user" shape="circle" size="xlarge" :aria-label="t('layout.userAvatarImage')" class="shrink-0" />
                                 </template>
                             </AuthenticatedImage>
@@ -44,7 +44,7 @@
                     <ScrollPanel class="grow-1 overflow-hidden">
                         <div class="pt-3 pr-3 pb-4 pl-1">
                             <Menu :model="menuItems">
-                                <template v-slot:item="{ item, props }">
+                                <template #item="{ item, props }">
                                     <a
                                         class="p-menu-item-link"
                                         :class="{ 'p-menu-item-link-active': item.key === selectedMenuItem.key }"
