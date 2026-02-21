@@ -1,0 +1,11 @@
+:root {
+    --p-iconfield-icon-color: var(--text-strong);
+}
+
+.p-iconfield {
+    --p-form-field-padding-x: 0.875rem;
+
+    .p-inputtext:not(:first-child) {
+        --p-icon-size: 0.75rem;
+    }
+}

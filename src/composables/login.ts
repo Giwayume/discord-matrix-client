@@ -1,5 +1,6 @@
 import { ref, onMounted, onUnmounted, type Ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { createLogger } from '@/composables/logger'
 import { fetchJson } from '@/utils/fetch'
 import * as z from 'zod'
 
@@ -11,6 +12,8 @@ import {
     type ApiV3LoginRequestPassword
 } from '@/types'
 import type { ServerDiscovery } from './server-discovery'
+
+const log = createLogger(import.meta.url)
 
 export interface LoginFormData {
     username?: string;
@@ -87,13 +90,13 @@ export function useLogin(options: {
                 )
             }
             if (loginResponse) {
-                const { reset: resetSync } = useSyncStore()
-                await resetSync()
+                const { setNextBatch } = useSyncStore()
+                setNextBatch(undefined)
                 homeserverBaseUrl.value = matrixBaseUrl
                 setSessionFromApiV3LoginResponse(loginResponse)
             }
         } catch (e) {
-            console.error(e)
+            log.error(e)
             error.value = e as Error
         } finally {
             loading.value = false

@@ -86,6 +86,7 @@ function createAcronym(spaceName: string) {
 
 <style lang="scss" scoped>
 .application__spaces {
+    flex-shrink: 0;
     width: 4.5rem;
     margin: -0.25rem 0 0 0;
     padding: 0 0 4rem 0;

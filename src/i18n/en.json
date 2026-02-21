@@ -1,4 +1,7 @@
 {
+    "dialog": {
+        "close": "Close dialog"
+    },
     "errors": {
         "rateLimited": "You are being rate limited. Please try again shortly.",
         "unexpected": "An unexpected error occurred. Please try again later.",
@@ -26,7 +29,19 @@
         }
     },
     "home": {
-        "title": "Friends"
+        "title": "Friends",
+        "findStartConversationButton": "Find or start a conversation",
+        "topMenu": {
+            "friends": "Friends"
+        },
+        "directMessages": "Direct Messages",
+        "createMessage": "Create Message",
+        "leaveRoom": "Leave Room",
+        "friendFilters": {
+            "online": "Online",
+            "all": "All",
+            "addFriend": "Add Friend"
+        }
     },
     "homeserverSelectionDialog": {
         "title": "Change Homeserver",
@@ -49,6 +64,7 @@
         "addSpace": "Add a Space",
         "discover": "Discover",
         "userStatusSettings": "User Status & Settings",
+        "userAvatarImage": "Avatar image",
         "mute": "Mute",
         "unmute": "Unmute",
         "deafen": "Deafen",
@@ -73,6 +89,14 @@
         "registerPrompt": "Need an account?",
         "registerLink": "Register",
         "userDeactivated": "Your account has been deactivated."
+    },
+    "logout": {
+        "confirm": {
+            "title": "Log Out",
+            "content": "Are you sure you want to logout?",
+            "cancelButton": "Cancel",
+            "logOutButton": "Log Out"
+        }
     },
     "presence": {
         "status": {
@@ -113,5 +137,31 @@
         "dateOfBirthLabel": "Date of Birth",
         "createAccountButton": "Create Account",
         "loginLink": "Already have an account? Log in"
+    },
+    "userSettings": {
+        "search": "Search",
+        "editProfile": "Edit Profile",
+        "menu": {
+            "userSettings": "User Settings",
+            "myAccount": "My Account",
+            "contentSocial": "Content & Social",
+            "dataPrivacy": "Data & Privacy",
+            "authorizedApps": "Authorized Apps",
+            "devices": "Devices",
+            "connections": "Connections",
+            "notifications": "Notifications",
+            "appSettings": "App Settings",
+            "appearance": "Appearance",
+            "accessibility": "Accessibility",
+            "voiceVideo": "Voice & Video",
+            "chat": "Chat",
+            "keybinds": "Keybinds",
+            "languageTime": "Language & Time",
+            "streamerMode": "Streamer Mode",
+            "advanced": "Advanced",
+            "activitySettings": "Activity Settings",
+            "activityPrivacy": "Activity Privacy",
+            "logOut": "Log Out"
+        }
     }
 }

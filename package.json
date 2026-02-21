@@ -1,5 +1,5 @@
 {
-    "name": "discord-matrix-client",
+    "name": "discortix",
     "version": "0.0.0",
     "private": true,
     "type": "module",
@@ -28,6 +28,7 @@
         "primevue": "^4.5.4",
         "sass-embedded": "^1.97.3",
         "tailwindcss": "^4.1.18",
+        "uuid": "^13.0.0",
         "vue": "^3.5.27",
         "vue-i18n": "^11.2.8",
         "vue-router": "^5.0.1",

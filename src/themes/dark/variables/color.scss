@@ -9,6 +9,7 @@
     --neutral-2: hsl(0 calc(1*0%) 98.431%/1);
     --neutral-10: hsl(240 calc(1*4.478%) 86.863%/1);
     --neutral-23: hsl(231.429 calc(1*4.348%) 68.431%/1);
+    --neutral-35: hsl(233.333 calc(1*3.704%) 52.353%/1);
     --neutral-37: hsl(233.333 calc(1*3.557%) 49.608%/1);
     --neutral-64: hsl(232.5 calc(1*6.557%) 23.922%/1);
     --neutral-73: hsl(230 calc(1*6.383%) 18.431%/1);
@@ -18,14 +19,12 @@
     --neutral-86: hsl(240 calc(1*7.143%) 10.98%/1);
     --neutral-92: hsl(240 calc(1*5.263%) 7.451%/1);
 
-    --plum-6: hsl(231.429 calc(1*6.667%) 79.412%/1);
-    --plum-15: hsl(232.5 calc(1*6.557%) 23.922%/1);
-
     --opacity-black-8-hsl: 0 calc(1*0%) 0%;
     --opacity-black-16: hsl(0 calc(1*0%) 0%/0.1607843137254902);
     --opacity-black-20: hsl(0 calc(1*0%) 0%/0.2);
     --opacity-black-28: hsl(0 calc(1*0%) 0%/0.2784313725490196);
     --opacity-black-72-hsl: 0 calc(1*0%) 0%;
+    --opacity-red-8-hsl: 355.636 calc(1*64.706%) 50%;
     --opacity-white-8-hsl: 0 calc(1*0%) 100%;
     --opacity-4-hsl: 240 calc(1*4%) 60.784%;
     --opacity-8-hsl: 240 calc(1*4%) 60.784%;
@@ -34,9 +33,16 @@
     --opacity-20-hsl: 240 calc(1*4%) 60.784%;
     --opacity-64-hsl: 240 calc(1*4%) 60.784%;
     --opacity-80-hsl: 240 calc(1*4%) 60.784%;
+
+    --plum-6: hsl(231.429 calc(1*6.667%) 79.412%/1);
+    --plum-15: hsl(232.5 calc(1*6.557%) 23.922%/1);
+
     --primary-700-hsl: 225 calc(1*6.25%) 12.549%;
 
     --red-new-22: hsl(2.655 calc(1*100%) 77.843%/1);
+    --red-new-50: hsl(355.636 calc(1*64.706%) 50%/1);
+    --red-new-60: hsl(355.075 calc(1*65.686%) 40%/1);
+    --red-new-65: hsl(354.59 calc(1*67.778%) 35.294%/1);
 }
 
 :root {
@@ -46,6 +52,8 @@
     --background-base-low: var(--neutral-82);
     --background-base-lower: var(--neutral-86);
     --background-base-lowest: var(--neutral-92);
+    --background-feedback-critical: hsl(var(--opacity-red-8-hsl)/0.0784313725490196);
+    --background-mod-muted: hsl(var(--opacity-4-hsl)/0.0392156862745098);
     --background-mod-normal: hsl(var(--opacity-16-hsl)/0.1607843137254902);
     --background-mod-subtle: hsl(var(--opacity-8-hsl)/0.0784313725490196);
     --background-scrim: hsl(var(--opacity-black-72-hsl)/0.7215686274509804);
@@ -56,6 +64,20 @@
     --border-muted: hsl(var(--opacity-4-hsl)/0.0392156862745098);
     --border-normal: hsl(var(--opacity-20-hsl)/0.2);
     --border-subtle: hsl(var(--opacity-12-hsl)/0.12156862745098039);
+
+    --channel-icon: var(--neutral-35);
+
+    --channels-default: var(--neutral-35);
+
+    --control-critical-primary-background-default: var(--red-new-50);
+    --control-critical-primary-border-default: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);
+    --control-critical-primary-text-default: var(--neutral-1);
+    --control-critical-primary-background-hover: var(--red-new-60);
+    --control-critical-primary-border-hover: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);
+    --control-critical-primary-text-hover: var(--neutral-1);
+    --control-critical-primary-background-active: var(--red-new-65);
+    --control-critical-primary-border-active: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);
+    --control-critical-primary-text-active: var(--neutral-1);
 
     --control-icon-only-background-hover: hsl(var(--opacity-16-hsl)/0.1607843137254902);
     --control-icon-only-border-hover: hsl(var(--opacity-4-hsl)/0.0392156862745098);
@@ -69,7 +91,15 @@
     --control-primary-border-hover: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);
     --control-primary-text-hover: var(--neutral-1);
 
+    --control-secondary-background-default: hsl(var(--opacity-8-hsl)/0.0784313725490196);
     --control-secondary-background-hover: hsl(var(--opacity-16-hsl)/0.1607843137254902);
+    --control-secondary-background-active: hsl(var(--opacity-20-hsl)/0.2);
+    --control-secondary-border-default: hsl(var(--opacity-4-hsl)/0.0392156862745098);
+    --control-secondary-border-hover: hsl(var(--opacity-4-hsl)/0.0392156862745098);
+    --control-secondary-border-active: hsl(var(--opacity-4-hsl)/0.0392156862745098);
+    --control-secondary-text-default: var(--neutral-2);
+    --control-secondary-text-hover: var(--neutral-2);
+    --control-secondary-text-active: var(--neutral-2);
 
     --icon-strong: var(--neutral-2);
 

@@ -1,0 +1,53 @@
+:root {
+    --p-menu-transition-duration: var(--p-menu-transition-duration);
+
+    --p-menu-submenu-label-background: transparent;
+    --p-menu-submenu-label-padding: 1.5rem 0.5rem 0.25rem 0.5rem;
+    --p-menu-submenu-label-color: var(--text-muted);
+    --p-menu-submenu-label-font-weight: normal;
+
+    --p-menu-list-gap: 0.25rem;
+
+    --p-menu-item-border-radius: var(--radius-sm);
+    --p-menu-item-color: var(--text-muted);
+    --p-menu-item-padding: 0.5rem;
+    --p-menu-item-gap: 0.5rem;
+    --p-menu-item-icon-color: var(--text-muted;)
+
+    --p-menu-item-focus-color: var(--text-strong);
+    --p-menu-item-focus-background: var(--background-mod-muted);
+
+    --p-menu-item-active-background: var(--background-mod-normal);
+}
+
+.p-menu-submenu-label {
+    font-size: 0.875rem;
+
+    &:before {
+        content: '';
+        display: block;
+        position: relative;
+        top: -1rem;
+        border-top: 1px solid var(--border-subtle);
+        width: calc(100% + 0.5rem);
+        left: -0.25rem;
+    }
+
+    &:first-child {
+        --p-menu-submenu-label-padding: 0.5rem 0.5rem 0.25rem 0.5rem;
+
+        &:before {
+            display: none;
+        }
+    }
+}
+
+.p-menu-item-link {
+    min-height: 2.25rem;
+}
+
+.p-menu-item-link-active {
+    --p-menu-item-icon-color: var(--text-strong);
+    background: var(--p-menu-item-active-background);
+    color: var(--text-strong) !important;
+}

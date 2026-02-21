@@ -1,16 +1,26 @@
+import { getCurrentInstance } from 'vue'
+import { useRouter, type Router } from 'vue-router'
 import mitt from 'mitt'
 
 const emitter = mitt()
 
 export function useLogout() {
 
+    let router: Router | undefined
+    if (getCurrentInstance()) {
+        router = useRouter()
+    }
+
     async function logout() {
         emitter.emit('logout')
         emitter.all.clear()
 
         // TODO - probably should show a message when the session expired.
-        const router = (await import('@/router')).default
-        router.replace({ name: 'login' })
+        if (router) {
+            router.push({ name: 'login' })
+        } else {
+            window.location.href = '/login'
+        }
     }
 
     return {

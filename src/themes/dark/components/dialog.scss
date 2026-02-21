@@ -17,6 +17,9 @@
 .p-dialog {
     padding: 0.5rem 0 1rem 0;
 }
+.p-dialog-title {
+    color: var(--text-strong);
+}
 .p-dialog-close-button {
     --p-button-icon-only-width: 2.5rem;
     --p-button-text-secondary-color: var(--control-icon-only-icon-default);
@@ -39,5 +42,22 @@
 
     &.p-button-icon-only.p-button-rounded {
         border-radius: var(--radius-sm);
+    }
+}
+
+.p-dialog-sidebar {
+    background: var(--background-base-lower);
+    width: 100%;
+    max-width: 16rem;
+    padding: 1rem 0 0 0.75rem;
+}
+
+.p-dialog-lg-fullwidth {
+    @media screen and (max-width: 1024px) {
+        border-radius: 0 !important;
+        max-width: none !important;
+        max-height: none !important;
+        width: 100vw !important;
+        height: 100vh !important;
     }
 }

@@ -1,0 +1,56 @@
+:root {
+    --p-overlaystatus-border-color: var(--background-base-lowest);
+    --p-overlaystatus-online-color: #45a366;
+    --p-overlaystatus-offline-color: #84858d;
+    --p-overlaystatus-unavailable-color: #ffc04e;
+}
+
+.p-overlaystatus {
+    position: relative;
+}
+
+.p-overlaystatus-indicator {
+    position: absolute;
+    right: -0.1875rem;
+    bottom: -0.1875rem;
+    width: 1rem;
+    height: 1rem;
+    border: 0.1875rem solid var(--p-overlaystatus-border-color);
+    background: var(--p-overlaystatus-offline-color);
+    border-radius: var(--radius-round);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0.125rem;
+        left: 0.125rem;
+        right: 0.125rem;
+        bottom: 0.125rem;
+        border-radius: var(--radius-round);
+        background: var(--p-overlaystatus-border-color);
+    }
+}
+.p-overlaystatus--online .p-overlaystatus-indicator {
+    background: var(--p-overlaystatus-online-color);
+    &::before {
+        display: none;
+    }
+}
+.p-overlaystatus--unavailable .p-overlaystatus-indicator {
+    background: var(--p-overlaystatus-unavailable-color);
+    &::before {
+        top: -0.06125rem;
+        left: -0.06125rem;
+        right: auto;
+        bottom: auto;
+        width: 0.4375rem;
+        height: 0.4375rem;
+    }
+}
+
+.p-overlaystatus--low {
+    --p-overlaystatus-border-color: var(--background-base-low);
+}
+.p-overlaystatus--lower {
+    --p-overlaystatus-border-color: var(--background-base-lower);
+}

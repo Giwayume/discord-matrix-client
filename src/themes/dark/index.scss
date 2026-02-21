@@ -5,14 +5,19 @@
 @use "./variables/font.scss";
 @use "./variables/mask.scss" as _;
 
+@use "./components/avatar.scss";
 @use "./components/button.scss";
 @use "./components/dialog.scss";
 @use "./components/icon.scss";
+@use "./components/inputicon.scss";
 @use "./components/inputtext.scss";
 @use "./components/mask.scss";
+@use "./components/menu.scss";
 @use "./components/message.scss";
+@use "./components/overlaystatus.scss";
 @use "./components/progressbar.scss";
 @use "./components/radiobutton.scss";
+@use "./components/scrollpanel.scss";
 @use "./components/select.scss";
 @use "./components/selectbutton.scss";
 @use "./components/splitbutton.scss";

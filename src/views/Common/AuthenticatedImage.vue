@@ -68,7 +68,6 @@ watch(() => props.mxcUri, (mxcUri) => {
     getMxcObjectUrl(mxcUri, options, imageFetchAbortController).then((url) => {
         src.value = url
     }).catch((error) => {
-        console.log(error)
         src.value = '/assets/images/image-load-error.svg'
         loadError.value = error
     }).finally(() => {

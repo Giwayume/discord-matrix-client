@@ -12,25 +12,28 @@
         <TitleBar :title="props.title" :titleIcon="props.titleIcon" />
         <Splitter>
             <SplitterPanel class="flex items-center justify-center" :size="leftPanelSize" :minSize="10">
-                <div class="application__sidebar-list">
+                <aside class="application__sidebar-list">
                     <Spaces />
                     <div class="application__sidebar-list__content-container">
                         <slot name="sidebar-list" />
                     </div>
-                    <UserStatusSettings />
-                </div>
+                    <UserStatusSettings
+                        @showUserSettings="userSettingsVisible = true"
+                    />
+                </aside>
             </SplitterPanel>
             <SplitterPanel class="flex items-center justify-center" :size="mainPanelSize" :minSize="10">
-                <div class="application__main__content-container">
+                <main class="application__main__content-container">
                     <slot />
-                </div>
+                </main>
             </SplitterPanel>
         </Splitter>
     </div>
+    <UserSettings v-model:visible="userSettingsVisible" />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
@@ -44,6 +47,7 @@ import CrashError from './CrashError.vue'
 import Spaces from './Spaces.vue'
 import TitleBar from './TitleBar.vue'
 import UserStatusSettings from './UserStatusSettings.vue'
+const UserSettings = defineAsyncComponent(() => import('@/views/UserSettings.vue'))
 
 import ProgressBar from 'primevue/progressbar'
 import Splitter from 'primevue/splitter'
@@ -74,6 +78,7 @@ const props = defineProps({
 
 const leftPanelSize = ref<number>(380 / window.innerWidth * 100)
 const mainPanelSize = ref<number>(100 - leftPanelSize.value)
+const userSettingsVisible = ref<boolean>(false)
 
 const sessionStore = useSessionStore()
 const {
@@ -131,11 +136,17 @@ onMounted(async () => {
 
 .application__sidebar-list {
     display: flex;
-    position: relative;
-    height: 100%;
-    flex-grow: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 .application__sidebar-list__content-container {
+    position: relative;
+    flex-shrink: 1;
+    display: flex;
+    flex-direction: column;
     border-inline-start: 1px solid var(--app-frame-border);
     border-top: 1px solid var(--app-frame-border);
     border-start-start-radius: var(--radius-md);
@@ -145,6 +156,7 @@ onMounted(async () => {
 
 .application__main__content-container {
     flex-grow: 1;
+    flex-shrink: 1;
     height: 100%;
     background: var(--background-base-lower);
     border-top: 1px solid var(--app-frame-border);

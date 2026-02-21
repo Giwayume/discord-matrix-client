@@ -1,14 +1,16 @@
 <template>
     <section class="application__user-status-settings" :aria-label="t('layout.userStatusSettings')">
         <Button variant="text" severity="secondary" class="application__user-status-settings__name-tag">
-            <AuthenticatedImage :mxcUri="authenticatedUserAvatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
-                <template v-slot="{ src }">
-                    <img :src="src" class="rounded-full w-8 h-8 overflow-hidden shrink-0" alt="profile image">
-                </template>
-                <template v-slot:error>
-                    <span class="pi pi-user rounded-full !flex items-center justify-center w-8 h-8 bg-(--background-base-lower)" aria-hidden="true" />
-                </template>
-            </AuthenticatedImage>
+            <OverlayStatus level="low" :status="onlineStatus" class="w-8 h-8">
+                <AuthenticatedImage :mxcUri="authenticatedUserAvatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
+                    <template v-slot="{ src }">
+                        <Avatar :image="src" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
+                    </template>
+                    <template v-slot:error>
+                        <Avatar icon="pi pi-user" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
+                    </template>
+                </AuthenticatedImage>
+            </OverlayStatus>
             <div class="flex flex-col text-nowrap">
                 <div class="text-(--text-strong) leading-4 relative -top-px">{{ username }}</div>
                 <div class="text-(--text-subtle) text-xs  relative top-px">{{ t(`presence.status.${onlineStatus}`) }}</div>
@@ -35,6 +37,7 @@
                 variant="text"
                 severity="secondary"
                 :aria-label="t('layout.userSettings')"
+                @click="emit('showUserSettings')"
             />
         </div>
     </section>
@@ -49,7 +52,9 @@ import { useSessionStore } from '@/stores/session'
 import { useSyncStore } from '@/stores/sync'
 
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
+import OverlayStatus from '@/views/Common/OverlayStatus.vue'
 
+import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import SplitButton from 'primevue/splitbutton'
 import vTooltip from 'primevue/tooltip'
@@ -57,15 +62,17 @@ import vTooltip from 'primevue/tooltip'
 const { t } = useI18n()
 const { authenticatedUserAvatarUrl, authenticatedUserDisplayName } = storeToRefs(useProfileStore())
 const { userId } = storeToRefs(useSessionStore())
-const { sync } = storeToRefs(useSyncStore())
+
+const emit = defineEmits<{
+    (e: 'showUserSettings'): void
+}>()
 
 const username = computed(() => {
     return authenticatedUserDisplayName.value || userId.value
 })
-const onlineStatus = computed(() => {
-    return sync.value.presence?.events?.find((event) => {
-        return event.type === 'm.presence' && event.sender === userId.value
-    })?.content?.presence ?? 'online'
+const onlineStatus = computed<'online'>(() => {
+    // TODO - can user configure this?
+    return 'online'
 })
 
 </script>
@@ -78,7 +85,7 @@ const onlineStatus = computed(() => {
     justify-content: space-between;
     bottom: 0.5rem;
     left: 0.5rem;
-    right: 0.5rem;
+    right: 0.25rem;
     padding: 0.4375rem 0.5rem 0.4375rem 0.4375rem;
     background: var(--background-base-low);
     border: 1px solid var(--border-muted);

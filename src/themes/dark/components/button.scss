@@ -2,6 +2,7 @@
     --p-button-padding-x: 0.9375rem;
     --p-button-padding-y: 0.4375rem;
     --p-button-border-radius: var(--radius-sm);
+    --p-button-gap: 0.5rem;
 
     --p-button-focus-ring-width: var(--p-form-field-focus-ring-width);
     --p-button-focus-ring-style: var(--p-form-field-focus-ring-style);
@@ -10,6 +11,10 @@
     --p-button-focus-ring-shadow: var(--p-form-field-focus-ring-shadow);
 
     --p-button-icon-only-width: 2rem;
+
+    --p-button-sm-font-size: 0.875rem;
+    --p-button-sm-padding-y: 0.1875rem;
+    --p-button-sm-padding-x: 0.6875rem;
 
     --p-button-primary-background: var(--control-primary-background-default);
     --p-button-primary-border-color: var(--control-primary-border-default);
@@ -28,9 +33,33 @@
     --p-button-primary-focus-ring-color: var(--p-form-field-focus-ring-color);
     --p-button-primary-focus-ring-shadow: var(--p-form-field-focus-ring-shadow);
 
+    --p-button-secondary-background: var(--control-secondary-background-default);
+    --p-button-secondary-border-color: var(--control-secondary-border-default);
+    --p-button-secondary-color: var(--control-secondary-text-default);
+    --p-button-secondary-hover-background: var(--control-secondary-background-hover);
+    --p-button-secondary-hover-border-color: var(--control-secondary-border-hover);
+    --p-button-secondary-hover-color: var(--control-secondary-text-hover);
+    --p-button-secondary-active-background: var(--control-secondary-background-active);
+    --p-button-secondary-active-border-color: var(--control-secondary-border-active);
+    --p-button-secondary-active-color: var(--control-secondary-text-active);
+
     --p-button-text-secondary-color: var(--interactive-text-default);
     --p-button-text-secondary-hover-background: var(--control-secondary-background-hover);
     --p-button-text-secondary-hover-color: var(--interactive-text-hover);
+
+    --p-button-danger-background: var(--control-critical-primary-background-default);
+    --p-button-danger-border-color: var(--control-critical-primary-border-default);
+    --p-button-danger-color: var(--control-critical-primary-text-default);
+    --p-button-danger-hover-background: var(--control-critical-primary-background-hover);
+    --p-button-danger-hover-border-color: var(--control-critical-primary-border-hover);
+    --p-button-danger-hover-color: var(--control-critical-primary-text-hover);
+    --p-button-danger-active-background: var(--control-critical-primary-background-active);
+    --p-button-danger-active-border-color: var(--control-critical-primary-border-active);
+    --p-button-danger-active-color: var(--control-critical-primary-text-active);
+
+    --p-button-text-danger-color: var(--text-feedback-critical);
+    --p-button-text-danger-hover-background: var(--background-feedback-critical);
+    --p-button-text-danger-hover: var(--text-feedback-critical);
 }
 
 @keyframes p-button-loading-dot-flashing {
@@ -45,9 +74,17 @@
     }
 }
 
+.p-button {
+    text-rendering: optimizeLegibility;
+}
+
 .p-button:hover {
     --p-button-text-primary-color: var(--p-button-text-primary-hover-color);
     --p-button-text-secondary-color: var(--p-button-text-secondary-hover-color);
+}
+
+.p-button-sm {
+    min-height: 2rem;
 }
 
 .p-button-loading-dots {

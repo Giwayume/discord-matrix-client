@@ -1,6 +1,9 @@
 import * as z from 'zod'
 
-import { eventContentSchemaByType } from '@/types'
+import {
+    eventContentSchemaByType,
+    type ApiV3SyncClientEventWithoutRoomId,
+} from '@/types'
 
 export interface GenericEvent<C = any> {
     content: C;
@@ -9,14 +12,26 @@ export interface GenericEvent<C = any> {
 }
 export type GenericEventList = Array<GenericEvent>
 
-export function findEvent<T extends keyof typeof eventContentSchemaByType>(
-    eventList: GenericEventList | null | undefined, eventType: T
+export function findFirstEvent<T extends keyof typeof eventContentSchemaByType>(
+    eventList: GenericEventList | null | undefined,
+    eventType: T
 ): GenericEvent<z.infer<(typeof eventContentSchemaByType)[T]>> | null {
     const event = eventList?.find((value) => value.type === eventType)
     if (!event) return null
     const eventContentParse = eventContentSchemaByType[eventType].safeParse(event.content)
     if (!eventContentParse.success) return null
     return event
+}
+
+export function findAllEventsOfType<T extends keyof typeof eventContentSchemaByType>(
+    eventList: GenericEventList | null | undefined,
+    eventType: T
+): GenericEvent<z.infer<(typeof eventContentSchemaByType)[T]>>[] {
+    return eventList?.filter((event) => {
+        if (event.type !== eventType) return false
+        const eventContentParse = eventContentSchemaByType[eventType].safeParse(event.content)
+        return eventContentParse.success
+    }) ?? []
 }
 
 type EventsFromKeys<
@@ -27,7 +42,7 @@ type EventsFromKeys<
     > | null;
 }
 
-export function findEvents<
+export function findLastEvents<
     K extends readonly (keyof typeof eventContentSchemaByType)[]
 >(
     eventList: GenericEventList | null | undefined,
@@ -44,4 +59,8 @@ export function findEvents<
         }
     }
     return events as never
+}
+
+export function redactEvent(event: ApiV3SyncClientEventWithoutRoomId) {
+    // TODO - modifies object in place
 }

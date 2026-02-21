@@ -1,6 +1,30 @@
 import * as z from 'zod'
 import { camelizeSchema, camelizeSchemaWithoutTransform } from '@/utils/zod'
 
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mpresence */
+export const EventPresenceContentSchema = z.object({
+    avatarUrl: z.string().optional(),
+    currentlyActive: z.boolean().optional(),
+    displayname: z.string().optional(),
+    lastActiveAgo: z.number().optional(),
+    presence: z.enum(['online', 'offline', 'unavailable']),
+    statusMsg: z.string().optional(),
+})
+export type EventPresenceContent = z.infer<typeof EventPresenceContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mreceipt */
+export const EventReceiptContentSchema = z.record(z.string(), z.object({
+    'm.read': z.record(z.string(), z.object({
+        threadId: z.string().optional(),
+        ts: z.number().optional(),
+    })),
+    'm.read.private': z.record(z.string(), z.object({
+        threadId: z.string().optional(),
+        ts: z.number().optional(),
+    })),
+}))
+export type EventReceiptContent = z.infer<typeof EventReceiptContentSchema>
+
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mroomavatar */
 export const EventRoomAvatarContentSchema = z.object({
     info: z.object({
@@ -104,6 +128,13 @@ export const EventRoomPowerLevelsContentSchema = z.object({
 })
 export type EventRoomPowerLevels = z.infer<typeof EventRoomPowerLevelsContentSchema>
 
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mroomredaction */
+export const EventRoomRedactionContentSchema = z.object({
+    reason: z.string().optional(),
+    redacts: z.string().optional(),
+})
+export type EventRoomRedactionContent = z.infer<typeof EventRoomRedactionContentSchema>
+
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mroomtopic */
 export const EventRoomTopicContentSchema = z.object({
     'm.topic': z.object({
@@ -111,10 +142,31 @@ export const EventRoomTopicContentSchema = z.object({
             body: z.string(),
             mimetype: z.string().optional(),
         }).optional(),
-    }).optional,
+    }).optional(),
     topic: z.string(),
 })
 export type EventRoomTopicContent = z.infer<typeof EventRoomTopicContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mspacechild */
+export const EventSpaceChildContentSchema = z.object({
+    order: z.string().optional(),
+    suggested: z.boolean().optional(),
+    via: z.array(z.string()),
+})
+export type EventSpaceChildContent = z.infer<typeof EventSpaceChildContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mspaceparent */
+export const EventSpaceParentContentSchema = z.object({
+    canonical: z.boolean().optional(),
+    via: z.array(z.string()),
+})
+export type EventSpaceParentContent = z.infer<typeof EventSpaceParentContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mtyping */
+export const EventTypingContentSchema = z.object({
+    userIds: z.array(z.string()),
+})
+export type EventTypingContent = z.infer<typeof EventTypingContentSchema>
 
 export const eventContentSchemaByType = {
     // 'm.audio': EventAudioContentSchema,
@@ -123,6 +175,8 @@ export const eventContentSchemaByType = {
     // 'm.image': EventImageContentSchema,
     // 'm.location': EventLocationContentSchema,
     // 'm.notice': EventNoticeContentSchema,
+    'm.presence': EventPresenceContentSchema,
+    'm.receipt': EventReceiptContentSchema,
     'm.room.avatar': EventRoomAvatarContentSchema,
     'm.room.canonical_alias': EventRoomCanonicalAliasContentSchema,
     'm.room.create': EventRoomCreateContentSchema,
@@ -132,8 +186,12 @@ export const eventContentSchemaByType = {
     'm.room.name': EventRoomNameContentSchema,
     'm.room.pinned_events': EventRoomPinnedEventsContentSchema,
     'm.room.power_levels': EventRoomPowerLevelsContentSchema,
+    'm.room.redaction': EventRoomRedactionContentSchema,
     'm.room.topic': EventRoomTopicContentSchema,
+    'm.space.child': EventSpaceChildContentSchema,
+    'm.space.parent': EventSpaceParentContentSchema,
     // 'm.text': EventTextContentSchema,
+    'm.typing': EventTypingContentSchema,
     // 'm.video': EventVideoContentSchema,
 } as const
 
@@ -144,6 +202,10 @@ export const ApiV3SyncAccountDataSchema = camelizeSchemaWithoutTransform(z.objec
         type: z.string(),
     })).optional(),
 }))
+export interface ApiV3SyncAccountDataEvent<C = any> {
+    content: C;
+    type: string;
+}
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_clienteventwithoutroomid */
 export const ApiV3SyncClientEventWithoutRoomIdSchemaWithoutUnsigned = camelizeSchemaWithoutTransform(z.object({
@@ -166,10 +228,23 @@ export const ApiV3SyncClientEventWithoutRoomIdSchema = camelizeSchemaWithoutTran
         membership: z.string().optional(),
         prev_content: z.any().optional(), // The previous content for this event.
         redacted_because: ApiV3SyncClientEventWithoutRoomIdSchemaWithoutUnsigned.optional(),
+        replaces_state: z.string().optional(), // UNOFFICIAL. https://github.com/matrix-org/matrix-spec/issues/274
         transaction_id: z.string().optional(),
     }).optional(),
 }))
-export type ApiV3SyncClientEventWithoutRoomId = z.infer<typeof ApiV3SyncClientEventWithoutRoomIdSchema>
+export interface ApiV3SyncClientEventWithoutRoomId<C = any> extends z.infer<typeof ApiV3SyncClientEventWithoutRoomIdSchema> {
+    content: C;
+}
+
+export const ApiV3SyncStrippedStateEventSchema = camelizeSchemaWithoutTransform(z.object({
+    content: z.any(),
+    sender: z.string(),
+    state_key: z.string(),
+    type: z.string(),
+}))
+export interface ApiV3SyncStrippedStateEvent<C = any> extends z.infer<typeof ApiV3SyncStrippedStateEventSchema> {
+    content: C;
+}
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_state */
 export const ApiV3SyncStateSchema = camelizeSchemaWithoutTransform(z.object({
@@ -177,14 +252,15 @@ export const ApiV3SyncStateSchema = camelizeSchemaWithoutTransform(z.object({
 }))
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_roomsummary */
-export const ApiV3SyncRoomSummary = camelizeSchemaWithoutTransform(z.object({
+export const ApiV3SyncRoomSummarySchema = camelizeSchemaWithoutTransform(z.object({
     'm.heroes': z.array(z.string()).optional(),
     'm.invited_member_count': z.number().optional(),
     'm.joined_member_count': z.number().optional(),
 }))
+export type ApiV3SyncRoomSummary = z.infer<typeof ApiV3SyncRoomSummarySchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_timeline */
-export const ApiV3SyncTimeline = camelizeSchemaWithoutTransform(z.object({
+export const ApiV3SyncTimelineSchema = camelizeSchemaWithoutTransform(z.object({
     events: z.array(ApiV3SyncClientEventWithoutRoomIdSchema).optional(),
     limited: z.boolean().optional(),
     prev_batch: z.string().optional(),
@@ -193,14 +269,10 @@ export const ApiV3SyncTimeline = camelizeSchemaWithoutTransform(z.object({
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_invited-room */
 export const ApiV3SyncInvitedRoomSchema = camelizeSchemaWithoutTransform(z.object({
     invite_state: z.object({
-        events: z.array(z.object({
-            content: z.any(),
-            sender: z.string(),
-            state_key: z.string(),
-            type: z.string(),
-        })).optional()
+        events: z.array(ApiV3SyncStrippedStateEventSchema).optional()
     }).optional(),
 }))
+export type ApiV3SyncInvitedRoom = z.infer<typeof ApiV3SyncInvitedRoomSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_joined-room */
 export const ApiV3SyncJoinedRoomSchema = camelizeSchemaWithoutTransform(z.object({
@@ -213,8 +285,8 @@ export const ApiV3SyncJoinedRoomSchema = camelizeSchemaWithoutTransform(z.object
     }).optional(),
     state: ApiV3SyncStateSchema.optional(),
     state_after: ApiV3SyncStateSchema.optional(),
-    summary: ApiV3SyncRoomSummary.optional(),
-    timeline: ApiV3SyncTimeline.optional(),
+    summary: ApiV3SyncRoomSummarySchema.optional(),
+    timeline: ApiV3SyncTimelineSchema.optional(),
     unread_notifications: z.object({
         highlight_count: z.number().optional(),
         notification_count: z.number().optional(),
@@ -224,26 +296,24 @@ export const ApiV3SyncJoinedRoomSchema = camelizeSchemaWithoutTransform(z.object
         notification_count: z.number().optional(),
     })).optional(),
 }))
+export type ApiV3SyncJoinedRoom = z.infer<typeof ApiV3SyncJoinedRoomSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_knocked-room */
 export const ApiV3SyncKnockedRoomSchema = camelizeSchemaWithoutTransform(z.object({
     knock_state: z.object({
-        events: z.array(z.object({
-            account_data: ApiV3SyncAccountDataSchema.optional(),
-            state: ApiV3SyncStateSchema.optional(),
-            state_after: ApiV3SyncStateSchema.optional(),
-            timeline: ApiV3SyncTimeline.optional(),
-        })).optional(),
+        events: z.array(ApiV3SyncStrippedStateEventSchema).optional(),
     }).optional(),
 }))
+export type ApiV3SyncKnockedRoom = z.infer<typeof ApiV3SyncKnockedRoomSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_left-room */
 export const ApiV3SyncLeftRoomSchema = camelizeSchemaWithoutTransform(z.object({
     account_data: ApiV3SyncAccountDataSchema.optional(),
     state: ApiV3SyncStateSchema.optional(),
     state_after: ApiV3SyncStateSchema.optional(),
-    timeline: ApiV3SyncTimeline.optional(),
+    timeline: ApiV3SyncTimelineSchema.optional(),
 }))
+export type ApiV3SyncLeftRoom = z.infer<typeof ApiV3SyncLeftRoomSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#extensions-to-sync */
 export const ApiV3SyncToDevice = camelizeSchemaWithoutTransform(z.object({

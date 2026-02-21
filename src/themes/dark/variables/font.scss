@@ -2,3 +2,13 @@
     font-family: "Bebas Neue";
     src: url("/assets/fonts/bebas-neue/regular.woff2") format("woff2");
 }
+
+@font-face {
+    font-family: "gg sans";
+    src: url("/assets/fonts/google-sans/regular.ttf") format("truetype");
+}
+@font-face {
+    font-family: "gg sans";
+    font-style: italic;
+    src: url("/assets/fonts/google-sans/italic.ttf") format("truetype");
+}

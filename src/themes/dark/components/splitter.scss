@@ -13,12 +13,17 @@
 
 .p-splitter {
     --p-border-radius-md: 0;
-
     border: none !important;
+}
+
+.p-splitterpanel {
+    overflow: visible !important;
+    position: relative !important;
 }
 
 .p-splitter-gutter {
     border-top: 1px solid var(--app-frame-border);
+    z-index: 5 !important;
 
     &:hover {
         background: var(--app-frame-border);

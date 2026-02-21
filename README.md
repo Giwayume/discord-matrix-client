@@ -1,4 +1,4 @@
-# discord-matrix-client
+# Discortix - Discord Inspired Matrix Chat Client
 
 This project is a **WORK IN PROGRESS** Matrix chat client, designed for web. Should be mobile app friendly.
 
