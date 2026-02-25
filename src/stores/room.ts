@@ -17,12 +17,13 @@ import {
     type JoinedRoom,
     type LeftRoom,
     eventContentSchemaByType,
+    type ApiV3RoomMessagesResponse,
     type ApiV3SyncAccountDataEvent,
     type ApiV3SyncClientEventWithoutRoomId,
     type ApiV3SyncStrippedStateEvent,
     type ApiV3SyncResponse,
     type ApiV3SyncLeftRoom,
-    type ApiV3SyncRoomSummary,
+    type ApiV3SyncTimeline,
     type EventRoomRedactionContent,
 } from '@/types'
 
@@ -144,6 +145,103 @@ function addJoinedOrLeftRoomStateEvent(room: JoinedRoom | LeftRoom, event: ApiV3
     room.stateEventsById[event.eventId] = event
 }
 
+function addJoinedOrLeftRoomTimelineEvent(room: JoinedRoom | LeftRoom, event: ApiV3SyncClientEventWithoutRoomId) {
+    if (room.timeline.length === 0) {
+        room.timeline.push(event)
+        return
+    }
+    let low = 0
+    let high = room.timeline.length
+    while (low < high) {
+        const mid = (low + high) >>> 1
+        const midEvent = room.timeline[mid]
+        if (midEvent == null) {
+            low = high
+            break
+        }
+        if (midEvent.originServerTs < event.originServerTs) {
+            low = mid + 1
+        } else if (midEvent.originServerTs > event.originServerTs) {
+            high = mid
+        } else {
+            if (midEvent.eventId < event.eventId) {
+                low = mid + 1
+            } else {
+                high = mid
+            }
+        }
+    }
+    if (room.timeline[low]?.eventId === event.eventId) return
+    room.timeline.splice(low, 0, event)
+}
+
+function getTimelineEventIndexById(room: JoinedRoom | LeftRoom, eventId?: string): number | undefined {
+    if (eventId == null) return
+    for (let eventIndex = room.timeline.length - 1; eventIndex >= 0; eventIndex--)  {
+        if (room.timeline[eventIndex]?.eventId === eventId) {
+            return eventIndex
+        }
+    }
+}
+
+function manageTimelineGap(room: JoinedRoom | LeftRoom, timeline: ApiV3SyncTimeline, nextBatch: string) {
+    if (timeline.limited && room.timelineGapStartToken && room.timelineGapEndToken) {
+        /* 
+         * We already have a gap that has not been filled, don't want to maintain multiple gaps. Discard old events.
+         *
+         *      |---timeline1---|               |----timeline2----|
+         *   endToken      gapEndtoken    gapStartToken       startToken
+         *
+         *                                      |----timeline2----|              |-------timeline3-------|
+         *                                   endToken         gapEndtoken    gapStartToken           startToken
+         */
+        const gapEndEventIndex = getTimelineEventIndexById(room, room.timelineGapNewestEventId)
+        if (gapEndEventIndex != null) {
+            room.timeline = room.timeline.slice(gapEndEventIndex + 1)
+            room.timelineEndToken = room.timelineGapStartToken
+            room.timelineGapEndToken = room.timelineStartToken
+            room.timelineGapStartToken = timeline.prevBatch
+            room.timelineStartToken = nextBatch
+        } else {
+            // If we can't find where to slice the timeline, do a total reset.
+            room.timeline = []
+            room.timelineGapStartToken = undefined
+            room.timelineGapEndToken = undefined
+            room.timelineEndToken = timeline.prevBatch
+            room.timelineStartToken = nextBatch
+        }
+        room.timelineGapNewestEventId = room.timeline[room.timeline.length - 1]?.eventId
+    } else if (timeline.limited && room.timelineEndToken) {
+        /* 
+         * We have a normal timeline, but a gap is being created. Future API calls will fill in the gap.
+         * 
+         *      |---timeline1---|
+         *   endToken       startToken
+         * 
+         *      |---timeline1---|             |---timeline2---|
+         *   endToken      gapEndToken   gapStartToken    startToken
+         */
+        room.timelineGapEndToken = room.timelineStartToken
+        room.timelineGapStartToken = timeline.prevBatch
+        room.timelineStartToken = nextBatch
+        room.timelineGapNewestEventId = room.timeline[room.timeline.length - 1]?.eventId
+    } else {
+        /*
+         * No gap and not creating a gap. Only take prevBatch token if we don't already have an older one.
+         *
+         *       |---timeline1---| 
+         *    endToken       startToken
+         * 
+         *       |---timeline1---|---timeline2---|
+         *    endToken                       startToken
+         */
+        if (!room.timelineEndToken) {
+            room.timelineEndToken = timeline.prevBatch
+        }
+        room.timelineStartToken = nextBatch
+    }
+}
+
 function addAccountDataEvent(room: JoinedRoom | LeftRoom, event: ApiV3SyncAccountDataEvent) {
     const eventContentParse = eventContentSchemaByType[event.type as keyof typeof eventContentSchemaByType]?.safeParse(event.content)
     if (!eventContentParse?.success) return
@@ -206,7 +304,11 @@ export const useRoomStore = defineStore('room', () => {
                 }),
             ])
         } catch (error) {
-            roomsLoadError.value = error as Error
+            if (error instanceof Error) {
+                roomsLoadError.value = error
+            } else {
+                roomsLoadError.value = new Error('The thrown object was not an error.')
+            }
         }
         roomsLoading.value = false
     }
@@ -338,10 +440,14 @@ export const useRoomStore = defineStore('room', () => {
                 if (joinedRoomSync.summary) {
                     joined.value[roomId].summary = joinedRoomSync.summary
                 }
-                if (joinedRoomSync.timeline?.events) {
-                    for (const timelineEvent of joinedRoomSync.timeline.events) {
-                        if (isRoomStateEventType(timelineEvent.type)) {
-                            addJoinedOrLeftRoomStateEvent(joined.value[roomId], timelineEvent)
+                if (joinedRoomSync.timeline) {
+                    manageTimelineGap(joined.value[roomId], joinedRoomSync.timeline, sync.nextBatch)
+                    if (joinedRoomSync.timeline.events) {
+                        for (const timelineEvent of joinedRoomSync.timeline.events) {
+                            if (isRoomStateEventType(timelineEvent.type)) {
+                                addJoinedOrLeftRoomStateEvent(joined.value[roomId], timelineEvent)
+                            }
+                            addJoinedOrLeftRoomTimelineEvent(joined.value[roomId], timelineEvent)
                         }
                     }
                 }
@@ -405,10 +511,14 @@ export const useRoomStore = defineStore('room', () => {
                         addJoinedOrLeftRoomStateEvent(left.value[roomId], stateEvent)
                     }
                 }
-                if (leftRoomSync.timeline?.events) {
-                    for (const timelineEvent of leftRoomSync.timeline.events) {
-                        if (isRoomStateEventType(timelineEvent.type)) {
-                            addJoinedOrLeftRoomStateEvent(left.value[roomId], timelineEvent)
+                if (leftRoomSync.timeline) {
+                    manageTimelineGap(left.value[roomId], leftRoomSync.timeline, sync.nextBatch)
+                    if (leftRoomSync.timeline.events) {
+                        for (const timelineEvent of leftRoomSync.timeline.events) {
+                            if (isRoomStateEventType(timelineEvent.type)) {
+                                addJoinedOrLeftRoomStateEvent(left.value[roomId], timelineEvent)
+                            }
+                            addJoinedOrLeftRoomTimelineEvent(left.value[roomId], timelineEvent)
                         }
                     }
                 }
@@ -446,6 +556,48 @@ export const useRoomStore = defineStore('room', () => {
             }
         }
 
+    }
+
+    async function populateFromApiV3RoomMessagesResponse(roomId: string, messages: ApiV3RoomMessagesResponse) {
+        const joinedRoom = joined.value[roomId]
+        const leftRoom = left.value[roomId]
+        const room = joinedRoom ?? leftRoom
+        if (!room) return
+
+        for (const timelineEvent of messages.chunk) {
+            addJoinedOrLeftRoomTimelineEvent(room, timelineEvent)
+        }
+
+        if (room.timelineGapStartToken && room.timelineGapEndToken) {
+            if (messages.end) {
+                room.timelineGapStartToken = messages.end
+            } else {
+                delete room.timelineGapStartToken
+                delete room.timelineGapEndToken
+            }
+        } else {
+            room.timelineEndToken = messages.end
+        }
+
+        // Different browser tabs can fetch different room histories, and only the leader's history is kept.
+        // This means if the leader swaps to a different tab, chat messages from the previous leader can
+        // be lost in storage because the new leader doesn't have them. But we're treating message fetching
+        // as semi-ephemeral state anyways. They can always be fetched again.
+        if (isLeader.value) {
+            if (joinedRoom) {
+                try {
+                    await saveDiscortixTableKey('rooms', 'joined', toRaw(joined.value))
+                } catch (error) {
+                    // Ignore - It is not critical that message history is updated. Can fetch again.
+                }
+            } else if (leftRoom) {
+                try {
+                    await saveDiscortixTableKey('rooms', 'left', toRaw(left.value))
+                } catch (error) {
+                    // Ignore - It is not critical that message history is updated. Can fetch again.
+                }
+            }
+        }
     }
 
     // This includes one-on-one and group chats.
@@ -506,6 +658,8 @@ export const useRoomStore = defineStore('room', () => {
         joined: computed(() => joined.value),
         left: computed(() => left.value),
         directMessageRooms,
+        getTimelineEventIndexById,
         populateFromApiV3SyncResponse,
+        populateFromApiV3RoomMessagesResponse,
     }
 })

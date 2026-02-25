@@ -1,5 +1,21 @@
 export { ZodError } from 'zod'
 
+export class EncryptionNotSupportedError extends Error {
+    constructor(message?: string) {
+        const defaultMessage = 'Encryption is not supported.'
+        super(message ?? defaultMessage)
+        this.name = 'EncryptionNotSupportedError'
+    }
+}
+
+export class EncryptionVerificationError extends Error {
+    constructor(message?: string) {
+        const defaultMessage = 'Encryption key verification failed.'
+        super(message ?? defaultMessage)
+        this.name = 'EncryptionVerificationError'
+    }
+}
+
 export class HttpError extends Error {
     readonly response: Response
     readonly responseBody: any
@@ -30,7 +46,7 @@ export class HttpError extends Error {
 
     isMatrixNotFound() {
         return (
-            this.status === 404
+            (this.status === 404 || this.status === 400)
             && this.responseBody?.errcode === 'M_NOT_FOUND'
         )
     }

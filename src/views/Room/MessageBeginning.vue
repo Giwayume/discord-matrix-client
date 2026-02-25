@@ -1,13 +1,37 @@
 <template>
     <div class="p-4">
-        <template v-if="otherMembers.length === 1">
+        <template v-if="isInsideSpace">
+            <div class="w-20 h-20">
+                <AuthenticatedImage :mxcUri="props.roomAvatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
+                    <template v-slot="{ src }">
+                        <Avatar :image="src" shape="circle" class="p-avatar-full" :aria-label="t('layout.userAvatarImage')" />
+                    </template>
+                    <template #error>
+                        <Avatar icon="pi pi-hashtag" shape="circle" class="p-avatar-full" :style="{ '--p-avatar-icon-size': '3rem', '--p-avatar-background': 'var(--background-base-low)' }" :aria-label="t('layout.userAvatarImage')" />
+                    </template>
+                </AuthenticatedImage>
+            </div>
+            <h3 class="font-bold text-[2rem] text-(--text-strong) leading-10 my-2">
+                {{ t('room.spaceMessageHistoryBeginningTitle', { roomName: props.roomName ?? t('room.untitledRoom') }) }}
+            </h3>
+            <p>
+                {{ t('room.spaceMessageHistoryBeginningSubtitle', { roomName: props.roomName ?? t('room.untitledRoom') }) }}
+            </p>
+            <div class="flex gap-2 mt-4">
+                <Button size="small" severity="secondary">
+                    <span class="pi pi-pencil" aria-hidden="true" :style="{ '--p-icon-size': '0.875rem' }"/>
+                    {{ t('room.editRoom') }}
+                </Button>
+            </div>
+        </template>
+        <template v-else-if="otherMembers.length === 1">
             <div class="w-20 h-20">
                 <AuthenticatedImage :mxcUri="otherMembers[0]!.avatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
                     <template v-slot="{ src }">
                         <Avatar :image="src" shape="circle" class="p-avatar-full" :aria-label="t('layout.userAvatarImage')" />
                     </template>
                     <template #error>
-                        <Avatar icon="pi pi-user" shape="circle" class="p-avatar-full" :style="{ '--p-avatar-icon-size': '3rem', '--p-avatar-background': 'var(--background-base-lowest)' }" :aria-label="t('layout.userAvatarImage')" />
+                        <Avatar icon="pi pi-user" shape="circle" class="p-avatar-full" :style="{ '--p-avatar-icon-size': '3rem', '--p-avatar-background': 'var(--background-base-low)' }" :aria-label="t('layout.userAvatarImage')" />
                     </template>
                 </AuthenticatedImage>
             </div>
@@ -39,7 +63,7 @@
                         <Avatar :image="src" shape="circle" class="p-avatar-full" :aria-label="t('layout.userAvatarImage')" />
                     </template>
                     <template #error>
-                        <Avatar icon="pi pi-users" shape="circle" class="p-avatar-full" :style="{ '--p-avatar-icon-size': '3rem', '--p-avatar-background': 'var(--background-base-lowest)' }" :aria-label="t('layout.userAvatarImage')" />
+                        <Avatar icon="pi pi-users" shape="circle" class="p-avatar-full" :style="{ '--p-avatar-icon-size': '3rem', '--p-avatar-background': 'var(--background-base-low)' }" :aria-label="t('layout.userAvatarImage')" />
                     </template>
                 </AuthenticatedImage>
                 <div class="message-beginning__edit-group-icon-button-overlay">
@@ -66,7 +90,7 @@
                     </strong>
                 </template>
             </I18nT>
-            <div class="flex gap-2 mt-4">
+            <div class="flex flex-wrap gap-2 mt-4">
                 <Button severity="primary"><span class="pi pi-user-plus" aria-hidden="true" /> {{ t('room.inviteFriendsButton') }}</Button>
                 <Button severity="secondary" @click="editGroupDialogVisible = true"><span class="pi pi-pencil" aria-hidden="true" /> {{ t('room.editGroupButton') }}</Button>
             </div>
@@ -107,6 +131,10 @@ const props = defineProps({
         type: String,
         default: undefined,
     },
+    isInsideSpace: {
+        type: Boolean,
+        default: false,
+    }
 })
 
 const editGroupDialogVisible = ref<boolean>(false)

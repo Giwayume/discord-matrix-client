@@ -97,7 +97,11 @@ export function useLogin(options: {
             }
         } catch (e) {
             log.error(e)
-            error.value = e as Error
+            if (e instanceof Error) {
+                error.value = e
+            } else {
+                error.value = new Error('The thrown object was not an error.')
+            }
         } finally {
             loading.value = false
         }

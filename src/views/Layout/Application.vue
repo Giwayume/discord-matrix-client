@@ -30,6 +30,7 @@
         </Splitter>
     </div>
     <UserSettings v-model:visible="userSettingsVisible" />
+    <IdentityVerificationDialog v-if="identityVerificationFlowStarted" v-model:visible="identityVerificationVisible" />
 </template>
 
 <script setup lang="ts">
@@ -39,8 +40,10 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 
 import { until } from '@/utils/vue'
+import { useCryptoKeys } from '@/composables/crypto-keys'
 import { useProfiles } from '@/composables/profiles'
 import { useSync } from '@/composables/sync'
+import { useCryptoKeysStore } from '@/stores/crypto-keys'
 import { useSessionStore } from '@/stores/session'
 
 import CrashError from './CrashError.vue'
@@ -48,6 +51,7 @@ import Spaces from './Spaces.vue'
 import TitleBar from './TitleBar.vue'
 import UserStatusSettings from './UserStatusSettings.vue'
 const UserSettings = defineAsyncComponent(() => import('@/views/UserSettings.vue'))
+const IdentityVerificationDialog = defineAsyncComponent(() => import('@/views/EncryptionSetup/IdentityVerificationDialog.vue'))
 
 import ProgressBar from 'primevue/progressbar'
 import Splitter from 'primevue/splitter'
@@ -55,6 +59,10 @@ import SplitterPanel from 'primevue/splitterpanel'
 
 const router = useRouter()
 const { t } = useI18n()
+const {
+    getFriendlyErrorMessage: getFriendlyCryptoKeysErrorMessage,
+    initialize: initializeCryptoKeys,
+} = useCryptoKeys()
 const {
     getFriendlyErrorMessage: getFriendlySyncErrorMessage,
     initialize: initializeSync,
@@ -64,6 +72,15 @@ const {
     getFriendlyErrorMessage: getFriendlyProfilesErrorMessage,
     initialize: initializeProfiles,
 } = useProfiles()
+const sessionStore = useSessionStore()
+const {
+    secureSessionInitialized,
+    loading: sessionStoreLoading,
+    hasAuthenticatedSession,
+} = storeToRefs(sessionStore)
+const {
+    identityVerificationRequired,
+} = storeToRefs(useCryptoKeysStore())
 
 const props = defineProps({
     title: {
@@ -80,11 +97,8 @@ const leftPanelSize = ref<number>(380 / window.innerWidth * 100)
 const mainPanelSize = ref<number>(100 - leftPanelSize.value)
 const userSettingsVisible = ref<boolean>(false)
 
-const sessionStore = useSessionStore()
-const {
-    loading: sessionStoreLoading,
-    hasAuthenticatedSession,
-} = storeToRefs(sessionStore)
+const identityVerificationFlowStarted = ref<boolean>(false)
+const identityVerificationVisible = ref<boolean>(false)
 
 const initializeErrorMessage = ref<string | null>(null)
 
@@ -94,9 +108,25 @@ const loading = computed(() => {
 
 async function initialize() {
     initializeErrorMessage.value = null
+
+    if (!secureSessionInitialized.value) {
+        try {
+            await initializeCryptoKeys()
+        } catch (error) {
+            initializeErrorMessage.value = getFriendlyCryptoKeysErrorMessage(error)
+            return
+        }
+
+        if (identityVerificationRequired.value) {
+            identityVerificationFlowStarted.value = true
+            identityVerificationVisible.value = true
+            await until(() => !identityVerificationVisible.value)
+        }
+    }
+
     const [syncSettled, profilesSettled] = await Promise.allSettled([
         ...(!syncInitialized.value ? [initializeSync()] : []),
-        initializeProfiles(),
+        ...(!secureSessionInitialized.value ? [initializeProfiles()] : []),
     ])
     if (syncSettled?.status === 'rejected') {
         initializeErrorMessage.value = getFriendlySyncErrorMessage(syncSettled.reason)
@@ -106,6 +136,8 @@ async function initialize() {
         initializeErrorMessage.value = getFriendlyProfilesErrorMessage(profilesSettled.reason)
         return
     }
+
+    secureSessionInitialized.value = true
 }
 
 onMounted(async () => {

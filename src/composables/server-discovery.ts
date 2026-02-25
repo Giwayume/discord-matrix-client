@@ -191,7 +191,11 @@ export function useServerDiscovery(scenario: 'login' | 'register') {
                 serverDiscovery.value.registerFlows = registerFlows
             }
         } catch (e) {
-            error.value = e as Error
+            if (e instanceof Error) {
+                error.value = e
+            } else {
+                error.value = new Error('The thrown object was not an error.')
+            }
         } finally {
             loadAbortController = undefined
             loading.value = false

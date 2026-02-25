@@ -1,15 +1,20 @@
-import { computed, ref, watch } from 'vue'
-import { defineStore } from 'pinia'
+import { computed, ref, toRaw, watch } from 'vue'
+import { defineStore, storeToRefs } from 'pinia'
 
 import { onLogout } from '@/composables/logout'
-import { usePickleKey } from '@/composables/pickle-key'
-import { decryptAesHmacSha2EncryptedData } from '@/utils/secret-storage'
-import { loadTableKey as loadMatrixReactSdkTableKey, saveTableKey as saveMatrixReactSdkTableKey } from './database/matrix-react-sdk'
+import { useCryptoKeysStore } from '@/stores/crypto-keys'
+import { getPickleKey } from '@/utils/pickle-key'
+import { decryptSecret, pickleKeyToAesKey } from '@/utils/secret-storage'
+import {
+    loadTableKey as loadMatrixReactSdkTableKey,
+    saveTableKey as saveMatrixReactSdkTableKey,
+    deleteTableKey as deleteMatrixReactSdkTableKey,
+} from './database/matrix-react-sdk'
 
 import type { AesHmacSha2EncryptedData, ApiV3LoginResponse } from '@/types'
 
 export const useSessionStore = defineStore('session', () => {
-    const { get: getPickleKey } = usePickleKey()
+    const secureSessionInitialized = ref<boolean>(false)
 
     /* User ID */
     const userId = ref<string | undefined>(localStorage.getItem('mx_user_id') ?? undefined)
@@ -31,132 +36,119 @@ export const useSessionStore = defineStore('session', () => {
         }
     })
 
-    /* Retrieve storage encryption key */
-    const userDevicePickleKey = ref<string | undefined>()
-    watch(() => [userId.value, deviceId.value], () => {
-        if (!userId.value) return
-        getPickleKey(userId.value, deviceId.value ?? '').then((pickleKey) => {
-            userDevicePickleKey.value = pickleKey ?? undefined
-        })
-    }, { immediate: true })
+    /* Decrypted Access Token - @/composables/crypto-keys.ts::initialize() decrypts. */
+    const decryptedAccessToken = ref<string | undefined>()
 
     /* Access Token */
     const accessToken = ref<string | AesHmacSha2EncryptedData | undefined>(localStorage.getItem('mx_access_token') ?? undefined)
-    const accessTokenLoading = ref<boolean>(false)
+    const accessTokenLoading = ref<boolean>(true)
     const accessTokenError = ref<Error | null>(null)
     try {
         if (accessToken.value) {
-            if (accessToken.value.startsWith('{')) {
-                accessToken.value = JSON.parse(accessToken.value as string)
-            }
+            decryptedAccessToken.value = accessToken.value as string
+            accessTokenLoading.value = false
         } else {
-            accessTokenLoading.value = true
             loadMatrixReactSdkTableKey('account', 'mx_access_token').then((value) => {
                 if (accessTokenLoading.value) {
                     accessToken.value = value
                 }
             }).catch((error) => {
-                accessTokenError.value = error as Error
+                if (error instanceof Error) {
+                    accessTokenError.value = error
+                } else {
+                    accessTokenError.value = new Error('The thrown object was not an error.')
+                }
             }).finally(() => {
                 accessTokenLoading.value = false
             })
         }
     } catch (error) {
-        accessTokenError.value = error as Error
+        if (error instanceof Error) {
+            accessTokenError.value = error
+        } else {
+            accessTokenError.value = new Error('The thrown object was not an error.')
+        }
+        accessTokenLoading.value = false
     }
     watch(() => accessToken.value, async (accessToken) => {
         accessTokenLoading.value = false
         try {
-            await saveMatrixReactSdkTableKey('account', 'mx_access_token', accessToken)
-        } catch (error) {
-            if (accessToken != null) {
-                localStorage.setItem('mx_access_token',
-                    Object.prototype.toString.call(accessToken) === '[object String]'
-                        ? accessToken as string
-                        : JSON.stringify(accessToken as string)
-                )
+            if (accessToken) {
+                if (Object.prototype.toString.call(accessToken) === '[object Object]') {
+                    localStorage.removeItem('mx_access_token')
+                    await saveMatrixReactSdkTableKey('account', 'mx_access_token', toRaw(accessToken))
+                } else {
+                    localStorage.setItem('mx_access_token',
+                        Object.prototype.toString.call(accessToken) === '[object String]'
+                            ? accessToken as string
+                            : JSON.stringify(accessToken as string)
+                    )
+                }
             } else {
                 localStorage.removeItem('mx_access_token')
+                await deleteMatrixReactSdkTableKey('account', 'mx_access_token')
             }
+        } catch (error) {
+            console.error(error)
+            localStorage.removeItem('mx_access_token')
         }
     })
 
-    /* Decrypted Access Token */
-    const decryptedAccessToken = ref<string | undefined>()
-    watch(() => [accessToken.value, userDevicePickleKey.value], async () => {
-        if (Object.prototype.toString.call(accessToken.value) === '[object Object]') {
-            if (userDevicePickleKey.value) {
-                decryptAesHmacSha2EncryptedData(
-                    userDevicePickleKey.value,
-                    accessToken.value as AesHmacSha2EncryptedData,
-                    'access_token'
-                ).then((decryptedValue) => {
-                    decryptedAccessToken.value = decryptedValue
-                })
-            }
-        } else {
-            decryptedAccessToken.value = accessToken.value as string
-        }
-    }, { immediate: true })
+    /* Decrypted Refresh Token - @/composables/crypto-keys.ts::initialize() decrypts. */
+    const decryptedRefreshToken = ref<string | undefined>()
 
     /* Refresh Token */
     const refreshToken = ref<string | AesHmacSha2EncryptedData | undefined>(localStorage.getItem('mx_refresh_token') ?? undefined)
-    const refreshTokenLoading = ref<boolean>(false)
+    const refreshTokenLoading = ref<boolean>(true)
     const refreshTokenError = ref<Error | null>(null)
     try {
         if (refreshToken.value) {
-            if (refreshToken.value.startsWith('{')) {
-                refreshToken.value = JSON.parse(refreshToken.value as string)
-            }
+            decryptedRefreshToken.value = refreshToken.value as string
+            refreshTokenLoading.value = false
         } else {
-            refreshTokenLoading.value = true
             loadMatrixReactSdkTableKey('account', 'mx_refresh_token').then((value) => {
                 if (refreshTokenLoading.value) {
                     refreshToken.value = value
                 }
             }).catch((error) => {
-                refreshTokenError.value = error as Error
+                if (error instanceof Error) {
+                    refreshTokenError.value = error
+                } else {
+                    refreshTokenError.value = new Error('The thrown object was not an error.')
+                }
             }).finally(() => {
                 refreshTokenLoading.value = false
             })
         }
     } catch (error) {
-        refreshTokenError.value = error as Error
+        if (error instanceof Error) {
+            refreshTokenError.value = error
+        } else {
+            refreshTokenError.value = new Error('The thrown object was not an error.')
+        }
+        refreshTokenLoading.value = false
     }
     watch(() => refreshToken.value, async (refreshToken) => {
         refreshTokenLoading.value = false
         try {
-            await saveMatrixReactSdkTableKey('account', 'mx_refresh_token', refreshToken)
-        } catch (error) {
-            if (refreshToken != null) {
-                localStorage.setItem('mx_refresh_token',
-                    Object.prototype.toString.call(refreshToken) === '[object String]'
-                        ? refreshToken as string
-                        : JSON.stringify(refreshToken as string)
-                )
+            if (refreshToken) {
+                if (Object.prototype.toString.call(refreshToken) === '[object Object]') {
+                    localStorage.removeItem('mx_refresh_token')
+                    await saveMatrixReactSdkTableKey('account', 'mx_refresh_token', toRaw(refreshToken))
+                } else {
+                    localStorage.setItem('mx_refresh_token',
+                        Object.prototype.toString.call(refreshToken) === '[object String]'
+                            ? refreshToken as string
+                            : JSON.stringify(refreshToken as string)
+                    )
+                }
             } else {
-                localStorage.removeItem('mx_refresh_token')
+                await deleteMatrixReactSdkTableKey('account', 'mx_refresh_token')
             }
+        } catch (error) {
+            localStorage.removeItem('mx_refresh_token')
         }
     })
-
-    /* Decrypted Refresh Token */
-    const decryptedRefreshToken = ref<string | undefined>()
-    watch(() => [refreshToken.value, userDevicePickleKey.value], async () => {
-        if (Object.prototype.toString.call(refreshToken.value) === '[object Object]') {
-            if (userDevicePickleKey.value) {
-                decryptAesHmacSha2EncryptedData(
-                    userDevicePickleKey.value,
-                    refreshToken.value as AesHmacSha2EncryptedData,
-                    'refresh_token'
-                ).then((decryptedValue) => {
-                    decryptedRefreshToken.value = decryptedValue
-                })
-            }
-        } else {
-            decryptedRefreshToken.value = refreshToken.value as string
-        }
-    }, { immediate: true })
 
     /* Homeserver URL */
     const homeserverBaseUrl = ref<string | undefined>(localStorage.getItem('mx_hs_url') ?? undefined)
@@ -193,6 +185,7 @@ export const useSessionStore = defineStore('session', () => {
 
     /** Clear all state and navigate to the login page. */
     onLogout(() => {
+        secureSessionInitialized.value = false
         accessToken.value = undefined
         refreshToken.value = undefined
         userId.value = undefined
@@ -213,6 +206,7 @@ export const useSessionStore = defineStore('session', () => {
         refreshToken,
         refreshTokenLoading,
         refreshTokenError,
+        secureSessionInitialized,
         setFromApiV3LoginResponse,
         userId,
     }

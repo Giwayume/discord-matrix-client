@@ -16,6 +16,7 @@
     --neutral-73: hsl(230 calc(1*6.383%) 18.431%/1);
     --neutral-76: hsl(240 calc(1*5.882%) 16.667%/1);
     --neutral-79: hsl(240 calc(1*6.494%) 15.098%/1);
+    --neutral-80: hsl(228 calc(1*6.849%) 14.314%/1);
     --neutral-82: hsl(240 calc(1*5.882%) 13.333%/1);
     --neutral-86: hsl(240 calc(1*7.143%) 10.98%/1);
     --neutral-92: hsl(240 calc(1*5.263%) 7.451%/1);
@@ -41,6 +42,7 @@
     --primary-700-hsl: 225 calc(1*6.25%) 12.549%;
 
     --red-new-22: hsl(2.655 calc(1*100%) 77.843%/1);
+    --red-new-46: hsl(357.692 calc(1*67.826%) 54.902%/1);
     --red-new-50: hsl(355.636 calc(1*64.706%) 50%/1);
     --red-new-60: hsl(355.075 calc(1*65.686%) 40%/1);
     --red-new-65: hsl(354.59 calc(1*67.778%) 35.294%/1);
@@ -55,6 +57,7 @@
     --background-base-lowest: var(--neutral-92);
     --background-brand: var(--blurple-50);
     --background-feedback-critical: hsl(var(--opacity-red-8-hsl)/0.0784313725490196);
+    --background-feedback-notification: var(--red-new-46);
     --background-mod-muted: hsl(var(--opacity-4-hsl)/0.0392156862745098);
     --background-mod-normal: hsl(var(--opacity-16-hsl)/0.1607843137254902);
     --background-mod-subtle: hsl(var(--opacity-8-hsl)/0.0784313725490196);
@@ -70,6 +73,8 @@
     --channel-icon: var(--neutral-35);
 
     --channels-default: var(--neutral-35);
+
+    --chat-background-default: var(--neutral-80);
 
     --control-critical-primary-background-default: var(--red-new-50);
     --control-critical-primary-border-default: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);

@@ -24,6 +24,20 @@
         "title": "Change Icon",
         "uploadImage": "Upload Image"
     },
+    "enterRecoveryKey": {
+        "title": "Enter Recovery Key",
+        "subtitle": "Please provide your recovery key to continue.",
+        "recoveryKey": "Recovery Key",
+        "recoveryKeyRequired": "Recovery Key is required.",
+        "recoveryKeyInvalid": "Recovery Key should contain exactly 48 letters/numbers.",
+        "recoveryKeyWrongFileType": "Wrong file type was uploaded.",
+        "recoveryKeyNoMatch": "This is the wrong recovery key, we are unable to decrypt with it.",
+        "recoveryKeyPartialUnlock": "Some keys were unlocked, but not all. You can try uploading other recovery keys.",
+        "or": "or",
+        "uploadButton": "Upload",
+        "backButton": "Back",
+        "continueButton": "Continue"
+    },
     "errors": {
         "rateLimited": "You are being rate limited. Please try again shortly.",
         "unexpected": "An unexpected error occurred. Please try again later.",
@@ -40,6 +54,12 @@
             "schemaValidation": "We could not discover the server capabilities because the APIs responded in an unexpected format.",
             "httpError": "The server rejected the request to discover its capabilities. This could be a temporary error.",
             "serverDown": "The server is either currently down, or it is not a matrix chat server. This could be a temporary error."
+        },
+        "cryptoKeys": {
+            "encryptionNotSupported": "We failed to set up encryption keys for this device. Please use an updated browser that complies to the latest web standards.",
+            "encryptionVerificationFailed": "We failed to verify some of the encryption keys actually work to decrypt messages.",
+            "schemaValidation": "We failed to initialize encryption keys because one of the APIs responded in an unexpected format.",
+            "httpError": "A network error occurred; we cannot determine the state of the encryption keys. This could be a temporary error."
         },
         "profiles": {
             "missingSessionData": "This session is missing required data in order to load the user profile. We recommend logging in again in order to fix this issue."
@@ -70,6 +90,14 @@
         "hostnameLabel": "Hostname",
         "hostnameHelp": "Use your preferred Matrix homeserver if you have one, or host your own.",
         "aboutHomeserversLink": "About homeservers"
+    },
+    "identityVerification": {
+        "title": "Verify Your Identity",
+        "subtitle": "In order to access encrypted messages and prove your identity to others, you need to provide your recovery key or import it from another device.",
+        "verifyWithAnotherDeviceButton": "Verify with another device",
+        "verifyWithRecoveryKeyButton": "Verify with Recovery Key",
+        "lostRecoveryMethods": "Forgotten or lost all recovery methods?",
+        "resetIdentityLink": "Reset your identity"
     },
     "landing": {
         "loading": "Reading session storage...",
@@ -163,11 +191,18 @@
     "room": {
         "directMessageHistoryBeginning": "This is the beginning of your direct message history with {displayname}.",
         "groupMessageHistoryBeginning": "Welcome to the beginning of the {users} group.",
+        "untitledRoom": "Untitled Room",
+        "spaceMessageHistoryBeginningTitle": "Welcome to #{roomName}",
+        "spaceMessageHistoryBeginningSubtitle": "This is the start of the #{roomName} room.",
         "removeFriendButton": "Remove Friend",
         "blockButton": "Block",
         "editGroupIconButton": "Edit Group Icon",
         "inviteFriendsButton": "Invite Friends",
-        "editGroupButton": "Edit Group"
+        "editGroupButton": "Edit Group",
+        "editRoom": "Edit Room",
+        "messagePlaceholder": "Message {roomName}",
+        "unableToDecryptMessage": "Unable to decrypt this message.",
+        "learnFixDecrypt": "How to fix?"
     },
     "roomSettings": {
         "title": {

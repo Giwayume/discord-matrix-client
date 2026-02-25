@@ -15,10 +15,6 @@ export interface RoomSummary {
     roomVersion: string;
 }
 
-export interface RoomTimelineEvent {
-    // ???
-}
-
 export type EventDataRecordFrom = {
     [K in keyof EventContentByType]?: EventContentByType[K];
 } & {
@@ -64,7 +60,12 @@ export interface JoinedRoom {
     stateEventsById: Record<string, ApiV3SyncClientEventWithoutRoomId>;
     stateEventsByType: ApiV3SyncClientEventWithoutRoomIdRecordFrom;
     summary: ApiV3SyncRoomSummary;
-    timeline: Array<RoomTimelineEvent>;
+    timeline: Array<ApiV3SyncClientEventWithoutRoomId>;
+    timelineStartToken?: string; // The next_batch token used to fetch the newest events
+    timelineEndToken?: string; // The prev_batch token used to fetch the oldest events
+    timelineGapStartToken?: string; // The prev_batch token that represents the start of the gap (newer events)
+    timelineGapEndToken?: string; // The next_batch token that represents the end of the gap (older events)
+    timelineGapNewestEventId?: string; // The event_id of the last event we saw before the gap was created
     typingUserIds: string[];
     unreadNotifications: {
         highlightCount: number;
@@ -81,5 +82,10 @@ export interface LeftRoom {
     accountData: EventDataRecordFrom;
     stateEventsById: Record<string, ApiV3SyncClientEventWithoutRoomId>;
     stateEventsByType: ApiV3SyncClientEventWithoutRoomIdRecordFrom;
-    timeline: Array<RoomTimelineEvent>;
+    timeline: Array<ApiV3SyncClientEventWithoutRoomId>;
+    timelineStartToken?: string; // The next_batch token used to fetch the newest events
+    timelineEndToken?: string; // The prev_batch token used to fetch the oldest events
+    timelineGapStartToken?: string; // The prev_batch token that represents the start of the gap (newer events)
+    timelineGapEndToken?: string; // The next_batch token that represents the end of the gap (older events)
+    timelineGapNewestEventId?: string; // The event_id of the last event we saw before the gap was created
 }

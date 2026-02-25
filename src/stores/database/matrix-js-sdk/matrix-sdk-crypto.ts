@@ -1,5 +1,5 @@
 /**
- * General storage for data that we have reformatted from element-web.
+ * Following the format of the matrix-js-sdk storage, but not using their code.
  */
 
 let database: IDBDatabase | null = null;
@@ -11,18 +11,26 @@ async function init(): Promise<void> {
         throw new Error('IndexedDB not available')
     }
     database = await new Promise((resolve, reject) => {
-        const request = indexedDB.open('discortix', 1)
+        const request = indexedDB.open('matrix-js-sdk::matrix-sdk-crypto', 1)
         request.onerror = reject
         request.onsuccess = (): void => {
             resolve(request.result)
         }
         request.onupgradeneeded = (): void => {
             const db = request.result
-            db.createObjectStore('4s')
-            db.createObjectStore('accountData')
-            db.createObjectStore('clientSettings')
-            db.createObjectStore('profiles')
-            db.createObjectStore('rooms')
+            db.createObjectStore('backup_keys')
+            db.createObjectStore('core')
+            db.createObjectStore('devices')
+            db.createObjectStore('direct_withheld_info')
+            db.createObjectStore('gossip_requests')
+            db.createObjectStore('identities')
+            db.createObjectStore('inbound_group_sessions3')
+            db.createObjectStore('olm_hashes')
+            db.createObjectStore('outbound_group_sessions')
+            db.createObjectStore('room_settings')
+            db.createObjectStore('secrets_inbox')
+            db.createObjectStore('session')
+            db.createObjectStore('tracked_users')
         }
     })
 }
@@ -46,13 +54,6 @@ async function runTransaction(
             resolve(request.result)
         }
     })
-}
-
-export async function getAllTableKeys(table: string): Promise<any> {
-    if (!database) {
-        await init()
-    }
-    return runTransaction(table, 'readonly', (objectStore) => objectStore.getAllKeys())
 }
 
 export async function loadTableKey(table: string, key: string | string[]): Promise<any> {

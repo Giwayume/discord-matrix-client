@@ -1,4 +1,5 @@
 export * from './api-events'
+export * from './api-key-management'
 export * from './api-legacy-authentication'
 export * from './api-rooms'
 export * from './api-user-data'

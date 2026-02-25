@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import { useI18n, type ComposerTranslation } from 'vue-i18n'
 import { useBroadcast } from '@/composables/broadcast'
 import { createLogger } from '@/composables/logger'
+import { useAccountDataStore } from '@/stores/account-data'
 import { useProfileStore } from '@/stores/profile'
 import { useSessionStore } from '@/stores/session'
 import { useSyncStore } from '@/stores/sync'
@@ -34,6 +35,9 @@ function getFriendlyErrorMessage(t: ComposerTranslation, error: Error | unknown)
 export function useSync() {
     const { t } = useI18n()
     const { isLeader, onFollowerMessage, broadcastMessage } = useBroadcast()
+    const accountDataStore = useAccountDataStore()
+    const { accountDataLoading, accountDataLoadError } = storeToRefs(accountDataStore)
+    const { populateFromApiV3SyncResponse: populateAccountDataFromApiV3SyncResponse } = accountDataStore
     const profileStore = useProfileStore()
     const { profilesLoading, profilesLoadError } = storeToRefs(profileStore)
     const { populateFromApiV3SyncResponse: populateProfilesFromApiV3SyncResponse } = profileStore
@@ -55,6 +59,11 @@ export function useSync() {
     })
 
     function populateAllFromApiSyncResponse(syncResponse: ApiV3SyncResponse) {
+        try {
+            populateAccountDataFromApiV3SyncResponse(syncResponse)
+        } catch (error) {
+            log.error('Error when populating account data from sync.', error)
+        }
         try {
             populateRoomsFromApiV3SyncResponse(syncResponse)
         } catch (error) {
@@ -131,10 +140,11 @@ export function useSync() {
 
     async function initialize() {
         if (syncInitialized.value) return
-        await until(() => !roomsLoading.value && !profilesLoading.value)
+        await until(() => !roomsLoading.value && !profilesLoading.value && !accountDataLoading.value)
 
         fullSyncRequired.value = (
-            !!roomsLoadError.value
+            !!accountDataLoadError.value
+            || !!roomsLoadError.value
             || !!profilesLoadError.value
             || !getNextBatch()
             || true // TODO - for debugging; remove.

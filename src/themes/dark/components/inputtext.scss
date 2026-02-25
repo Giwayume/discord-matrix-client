@@ -29,3 +29,12 @@
         outline: 1px solid var(--p-inputtext-invalid-border-color);
     }
 }
+
+.p-inputtext-transparent {
+    --p-inputtext-border-radius: 0;
+    --p-inputtext-background: transparent;
+    --p-inputtext-border-color: transparent;
+    --p-inputtext-hover-border-color: transparent;
+    --p-inputtext-focus-border-color: transparent;
+    --p-inputtext-focus-ring-color: transparent;
+}

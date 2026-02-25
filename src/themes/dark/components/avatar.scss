@@ -22,3 +22,17 @@
     --p-avatar-width: 100%;
     --p-avatar-height: 100%;
 }
+
+.p-avatar-chat {
+    --p-avatar-background: var(--background-base-lowest);
+    --p-avatar-width: 2.5rem;
+    --p-avatar-height: 2.5rem;
+    --p-avatar-icon-size: 1.25rem;
+}
+
+.p-avatar-chat-blob {
+    --p-avatar-background: var(--text-default);
+    --p-avatar-width: 2.5rem;
+    --p-avatar-height: 2.5rem;
+    opacity: 0.06;
+}

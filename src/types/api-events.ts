@@ -1,6 +1,24 @@
 import * as z from 'zod'
 import { camelizeSchema, camelizeSchemaWithoutTransform } from '@/utils/zod'
 
+import { PushNotificationPushRuleSchema } from './api-push-notifications'
+
+/** https://spec.matrix.org/v1.17/client-server-api/#mforwarded_room_key */
+export const EventForwardedRoomKeyContentSchema = z.object({
+    algorithm: z.string(),
+    forwardingCurve25519KeyChain: z.array(z.string()),
+    roomId: z.string(),
+    senderClaimedEd25519Key: z.string(),
+    senderKey: z.string(),
+    sessionId: z.string(),
+    sessionKey: z.string(),
+    withheld: z.object({
+        code: z.string().optional(),
+        reason: z.string().optional(),
+    }).optional(),
+})
+export type EventForwardedRoomKeyContent = z.infer<typeof EventForwardedRoomKeyContentSchema>
+
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mpresence */
 export const EventPresenceContentSchema = z.object({
     avatarUrl: z.string().optional(),
@@ -11,6 +29,18 @@ export const EventPresenceContentSchema = z.object({
     statusMsg: z.string().optional(),
 })
 export type EventPresenceContent = z.infer<typeof EventPresenceContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mpush_rules */
+export const EventPushRulesContentSchema = z.object({
+    global: z.object({
+        content: z.array(PushNotificationPushRuleSchema).optional(),
+        override: z.array(PushNotificationPushRuleSchema).optional(),
+        room: z.array(PushNotificationPushRuleSchema).optional(),
+        sender: z.array(PushNotificationPushRuleSchema).optional(),
+        underride: z.array(PushNotificationPushRuleSchema).optional(),
+    }).optional(),
+})
+export type EventPushRulesContent = z.infer<typeof EventPushRulesContentSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mreceipt */
 export const EventReceiptContentSchema = z.record(z.string(), z.object({
@@ -65,6 +95,22 @@ export const EventRoomCreateContentSchema = z.object({
 })
 export type EventRoomCreateContent = z.infer<typeof EventRoomCreateContentSchema>
 
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mroomencrypted */
+export const EventRoomEncryptedContentSchema = z.object({
+    algorithm: z.enum(['m.olm.v1.curve25519-aes-sha2', 'm.megolm.v1.aes-sha2']),
+    ciphertext: z.union([
+        z.string(),
+        z.record(z.string(), z.object({
+            body: z.string().optional(),
+            type: z.number().optional(),
+        }))
+    ]),
+    deviceId: z.string().optional(),
+    senderKey: z.string().optional(),
+    sessionId: z.string().optional(),
+})
+export type EventRoomEncryptedContent = z.infer<typeof EventRoomEncryptedContentSchema>
+
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mroomjoin_rules */
 export const EventRoomJoinRulesContentSchema = z.object({
     allow: z.array(z.object({
@@ -74,6 +120,40 @@ export const EventRoomJoinRulesContentSchema = z.object({
     joinRule: z.enum(['public', 'knock', 'invite', 'private', 'restricted', 'knock_restricted'])
 })
 export type EventRoomJoinRulesContent = z.infer<typeof EventRoomJoinRulesContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mroom_key */
+export const EventRoomKeyContentSchema = z.object({
+    algorithm: z.enum(['m.megolm.v1.aes-sha2']),
+    roomId: z.string(),
+    sessionId: z.string(),
+    sessionKey: z.string(),
+})
+export type EventRoomKeyContent = z.infer<typeof EventRoomKeyContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mroom_key_request */
+export const EventRoomKeyRequestContentSchema = z.object({
+    action: z.enum(['request', 'request_cancellation']),
+    body: z.object({
+        algorithm: z.string(),
+        roomId: z.string(),
+        senderKey: z.string().optional(),
+        sessionId: z.string(),
+    }).optional(),
+    requestId: z.string(),
+    requestingDeviceId: z.string(),
+})
+export type EventRoomKeyRequestContent = z.infer<typeof EventRoomKeyRequestContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mroom_keywithheld */
+export const EventRoomKeyWithheldContentSchema = z.object({
+    algorithm: z.enum(['m.megolm.v1.aes-sha2']),
+    code: z.enum(['m.blacklisted', 'm.unverified', 'm.unauthorised', 'm.unavailable', 'm.no_olm']),
+    reason: z.string().optional(),
+    roomId: z.string().optional(),
+    senderKey: z.string(),
+    sessionId: z.string().optional(),
+})
+export type EventRoomKeyWithheldContent = z.infer<typeof EventRoomKeyWithheldContentSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mroommember */
 export const EventRoomMemberContentSchema = z.object({
@@ -170,16 +250,20 @@ export type EventTypingContent = z.infer<typeof EventTypingContentSchema>
 
 export const eventContentSchemaByType = {
     // 'm.audio': EventAudioContentSchema,
+    'm.dummy': z.any(),
     // 'm.emote': EventEmoteContentSchema,
     // 'm.file': EventFileContentSchema,
+    'm.forwarded_room_key': EventForwardedRoomKeyContentSchema,
     // 'm.image': EventImageContentSchema,
     // 'm.location': EventLocationContentSchema,
     // 'm.notice': EventNoticeContentSchema,
     'm.presence': EventPresenceContentSchema,
+    'm.push_rules': EventPushRulesContentSchema,
     'm.receipt': EventReceiptContentSchema,
     'm.room.avatar': EventRoomAvatarContentSchema,
     'm.room.canonical_alias': EventRoomCanonicalAliasContentSchema,
     'm.room.create': EventRoomCreateContentSchema,
+    'm.room.encrypted': EventRoomEncryptedContentSchema,
     'm.room.join_rules': EventRoomJoinRulesContentSchema,
     'm.room.member': EventRoomMemberContentSchema,
     'm.room.message': EventRoomMessageContentSchema,
@@ -188,6 +272,8 @@ export const eventContentSchemaByType = {
     'm.room.power_levels': EventRoomPowerLevelsContentSchema,
     'm.room.redaction': EventRoomRedactionContentSchema,
     'm.room.topic': EventRoomTopicContentSchema,
+    'm.room_key': EventRoomKeyContentSchema,
+    'm.room_key_request': EventRoomKeyRequestContentSchema,
     'm.space.child': EventSpaceChildContentSchema,
     'm.space.parent': EventSpaceParentContentSchema,
     // 'm.text': EventTextContentSchema,
@@ -197,16 +283,20 @@ export const eventContentSchemaByType = {
 
 export interface EventContentByType {
     // 'm.audio': EventAudioContent,
+    'm.dummy': any,
     // 'm.emote': EventEmoteContent,
     // 'm.file': EventFileContent,
+    'm.forwarded_room_key': EventForwardedRoomKeyContent,
     // 'm.image': EventImageContent,
     // 'm.location': EventLocationContent,
     // 'm.notice': EventNoticeContent,
     'm.presence': EventPresenceContent,
+    'm.push_rules': EventPushRulesContent,
     'm.receipt': EventReceiptContent,
     'm.room.avatar': EventRoomAvatarContent,
     'm.room.canonical_alias': EventRoomCanonicalAliasContent,
     'm.room.create': EventRoomCreateContent,
+    'm.room.encrypted': EventRoomEncryptedContent,
     'm.room.join_rules': EventRoomJoinRulesContent,
     'm.room.member': EventRoomMemberContent,
     'm.room.message': EventRoomMessageContent,
@@ -215,6 +305,8 @@ export interface EventContentByType {
     'm.room.power_levels': EventRoomPowerLevelsContent,
     'm.room.redaction': EventRoomRedactionContent,
     'm.room.topic': EventRoomTopicContent,
+    'm.room_key': EventRoomKeyContent,
+    'm.room_key_request': EventRoomKeyRequestContent,
     'm.space.child': EventSpaceChildContent,
     'm.space.parent': EventSpaceParentContent,
     // 'm.text': EventTextContent,
@@ -292,6 +384,7 @@ export const ApiV3SyncTimelineSchema = camelizeSchemaWithoutTransform(z.object({
     limited: z.boolean().optional(),
     prev_batch: z.string().optional(),
 }))
+export type ApiV3SyncTimeline = z.infer<typeof ApiV3SyncTimelineSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync_response-200_invited-room */
 export const ApiV3SyncInvitedRoomSchema = camelizeSchemaWithoutTransform(z.object({

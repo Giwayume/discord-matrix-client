@@ -12,7 +12,7 @@
                 </AuthenticatedImage>
             </OverlayStatus>
             <div class="flex flex-col text-nowrap">
-                <div class="text-(--text-strong) leading-4 relative -top-px">{{ username }}</div>
+                <div class="text-(--text-strong) leading-4 relative">{{ username }}</div>
                 <div class="text-(--text-subtle) text-xs  relative top-px">{{ t(`presence.status.${onlineStatus}`) }}</div>
             </div>
         </Button>
@@ -49,7 +49,6 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useProfileStore } from '@/stores/profile'
 import { useSessionStore } from '@/stores/session'
-import { useSyncStore } from '@/stores/sync'
 
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
 import OverlayStatus from '@/views/Common/OverlayStatus.vue'
@@ -83,6 +82,7 @@ const onlineStatus = computed<'online'>(() => {
     position: absolute;
     align-items: center;
     justify-content: space-between;
+    height: 3.5rem;
     bottom: 0.5rem;
     left: 0.5rem;
     right: 0.25rem;

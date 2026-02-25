@@ -45,7 +45,11 @@ export const useProfileStore = defineStore('profile', () => {
                 }
             }
         } catch (error) {
-            profilesLoadError.value = error as Error
+            if (error instanceof Error) {
+                profilesLoadError.value = error
+            } else {
+                profilesLoadError.value = new Error('The thrown object was not an error.')
+            }
         }
         profilesLoading.value = false
     }

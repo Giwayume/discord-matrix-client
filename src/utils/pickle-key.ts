@@ -34,6 +34,7 @@ async function buildAndEncodePickleKey(
             data.cryptoKey,
             data.encrypted,
         )
+
         if (pickleKeyBuf) {
             return encodeUnpaddedBase64(new Uint8Array(pickleKeyBuf))
         }
@@ -62,7 +63,7 @@ async function encryptPickleKey(
     return { encrypted, iv, cryptoKey }
 }
 
-async function getPickleKey(userId: string, deviceId: string): Promise<string | null> {
+export async function getPickleKey(userId: string, deviceId: string): Promise<string | null> {
     let data: { encrypted?: BufferSource; iv?: BufferSource; cryptoKey?: CryptoKey } | undefined
     try {
         data = await loadTableKey('pickleKey', [userId, deviceId])
@@ -70,7 +71,7 @@ async function getPickleKey(userId: string, deviceId: string): Promise<string | 
     return (await buildAndEncodePickleKey(data, userId, deviceId)) ?? null
 }
 
-async function createPickleKey(userId: string, deviceId: string): Promise<string | null> {
+export async function createPickleKey(userId: string, deviceId: string): Promise<string | null> {
     const randomArray = new Uint8Array(32)
     crypto.getRandomValues(randomArray)
     const data = await encryptPickleKey(randomArray, userId, deviceId)
@@ -86,16 +87,8 @@ async function createPickleKey(userId: string, deviceId: string): Promise<string
     return encodeUnpaddedBase64(randomArray);
 }
 
-async function destroyPickleKey(userId: string, deviceId: string): Promise<void> {
+export async function destroyPickleKey(userId: string, deviceId: string): Promise<void> {
     try {
         await deleteTableKey('pickleKey', [userId, deviceId])
     } catch {}
-}
-
-export function usePickleKey() {
-    return {
-        get: getPickleKey,
-        create: createPickleKey,
-        destroy: destroyPickleKey,
-    }
 }

@@ -32,21 +32,20 @@
             </template>
             <h1 class="font-medium text-(--text-strong) mr-2">
                 <template v-if="roomName">{{ roomName }}</template>
-                <template v-else>
-                    <template v-for="(member, memberIndex) of otherMembers" :key="member.userId">
-                        {{ member.displayname ?? member.userId }}<template v-if="memberIndex < otherMembers.length - 1">, </template>
-                    </template>
-                </template>
+                <template v-else>{{ roomMemberListDisplay }}</template>
             </h1>
         </div>
     </MainHeader>
-    <MainBody>
-        <MessageBeginning
-            :roomId="props.room.roomId"
-            :otherMembers="otherMembersDisplayed"
-            :roomAvatarUrl="roomAvatarUrl"
-            :roomName="roomName"
-        />
+    <MainBody :disableScrollbar="true">
+        <TimelineEvents :room="props.room" />
+        <template #footer>
+            <div class="joined-room__chat-bar">
+                <InputText
+                    class="p-inputtext-transparent"
+                    :placeholder="t('room.messagePlaceholder', { roomName: roomName ?? roomMemberListDisplay })"
+                />
+            </div>
+        </template>
     </MainBody>
 </template>
 
@@ -66,8 +65,11 @@ import MainHeader from '@/views/Layout/MainHeader.vue'
 import MessageBeginning from '@/views/Room/MessageBeginning.vue'
 import OverlayStatus from '@/views/Common/OverlayStatus.vue'
 
+import TimelineEvents from './TimelineEvents.vue'
+
 import Avatar from 'primevue/avatar'
 import AvatarGroup from 'primevue/avatargroup'
+import InputText from 'primevue/inputtext'
 
 import {
     type JoinedRoom,
@@ -94,6 +96,10 @@ const roomName = computed<string | undefined>(() => {
     return roomNameEvent?.content.name
 })
 
+const roomMemberListDisplay = computed<string>(() => {
+    return otherMembersDisplayed.value.map((member) => member.displayname ?? member.userId).join(', ')
+})
+
 const isInsideSpace = computed<boolean>(() => {
     return isRoomPartOfSpace(props.room)
 })
@@ -116,3 +122,19 @@ const otherMembersDisplayed = computed(() => {
 })
 
 </script>
+
+<style lang="scss" scoped>
+.joined-room__chat-bar {
+    display: flex;
+    height: 3.5rem;
+    padding: 0 0 0 0.9375rem;
+    margin: 0 0.5rem 0.5rem 0.5rem;
+    background: var(--chat-background-default);
+    border: 1px solid var(--border-muted);
+    border-radius: var(--radius-sm);
+
+    .p-inputtext {
+        flex-grow: 1;
+    }
+}
+</style>
