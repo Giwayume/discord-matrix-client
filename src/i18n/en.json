@@ -99,6 +99,20 @@
         "lostRecoveryMethods": "Forgotten or lost all recovery methods?",
         "resetIdentityLink": "Reset your identity"
     },
+    "importRoomKeys": {
+        "title": "Import Room Keys",
+        "subtitle": "You can import room encryption keys that you have previously exported from another Matrix client. You will then be able to decrypt any messages that the other client could decrypt.",
+        "passphrasePrompt": "The export file will be protected with a passphrase that you created when you previously exported the keys.",
+        "backupFile": "Select Backup File",
+        "backupFileRequired": "Please select a file.",
+        "backupFileInvalid": "The backup file is in an invalid format.",
+        "passphrase": "Enter Passphrase",
+        "passphraseRequired": "Please enter your passphrase.",
+        "passphraseInvalid": "The passphrase did not work to unlock the backup file.",
+        "cancelButton": "Cancel",
+        "importButton": "Import",
+        "importSuccessToast": "Room keys imported successfully."
+    },
     "landing": {
         "loading": "Reading session storage...",
         "title": "Group Chat That Respects Your Privacy",
@@ -148,6 +162,13 @@
             "logOutButton": "Log Out"
         }
     },
+    "photoViewer": {
+        "closeButton": "Close",
+        "zoomInButton": "Zoom In",
+        "zoomOutButton": "Zoom Out",
+        "downloadButton": "Download",
+        "downloadError": "An error occurred while trying to download the image. Try again later."
+    },
     "presence": {
         "status": {
             "online": "Online",
@@ -196,13 +217,21 @@
         "spaceMessageHistoryBeginningSubtitle": "This is the start of the #{roomName} room.",
         "removeFriendButton": "Remove Friend",
         "blockButton": "Block",
+        "roomEncryptionEnabled": "Chat room encryption is enabled.",
         "editGroupIconButton": "Edit Group Icon",
+        "changedGroupIcon": "changed the group icon.",
+        "changedGroupNamePrefix": "changed the group name: ",
+        "changedGroupNameSuffix": ".",
         "inviteFriendsButton": "Invite Friends",
         "editGroupButton": "Edit Group",
         "editRoom": "Edit Room",
         "messagePlaceholder": "Message {roomName}",
         "unableToDecryptMessage": "Unable to decrypt this message.",
-        "learnFixDecrypt": "How to fix?"
+        "learnFixDecrypt": "How to fix?",
+        "joinedTheRoomPrefix": "Everyone welcome ",
+        "joinedTheRoomSuffix": "!",
+        "leftTheRoom": "left the room. They will be missed 😭.",
+        "bannedFromTheRoom": "was banned from the room."
     },
     "roomSettings": {
         "title": {
@@ -214,11 +243,15 @@
     "userSettings": {
         "search": "Search",
         "editProfile": "Edit Profile",
+        "youHaveUnsavedChanges": "Careful - you have unsaved changes!",
+        "resetLink": "Reset",
+        "saveChangesButton": "Save Changes",
         "menu": {
             "userSettings": "User Settings",
             "myAccount": "My Account",
             "contentSocial": "Content & Social",
             "dataPrivacy": "Data & Privacy",
+            "encryption": "Encryption",
             "authorizedApps": "Authorized Apps",
             "devices": "Devices",
             "connections": "Connections",
@@ -235,6 +268,15 @@
             "activitySettings": "Activity Settings",
             "activityPrivacy": "Activity Privacy",
             "logOut": "Log Out"
+        },
+        "encryption": {
+            "identityHeading": "Identity Keys",
+            "identityDescription": "Identity signing keys are used to verify your identity with others. If you lose these keys, you will need to re-generate them, which can result in losing access to all of your encrypted messages.",
+            "changeIdentityRecoveryKeyButton": "Change Identity Recovery Key",
+            "roomKeysHeading": "Room Keys",
+            "roomKeysDescription": "Room keys are used to encrypt your messages in chats. If you lose these keys, you will not be able to read old encrypted chat messages.",
+            "exportRoomKeysButton": "Export Keys",
+            "importRoomKeysButton": "Import Keys"
         }
     }
 }

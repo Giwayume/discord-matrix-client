@@ -1,0 +1,28 @@
+:root {
+    --p-toast-border-width: 1px;
+    --p-toast-border-radius: var(--radius-md);
+
+    --p-toast-content-padding: 1rem;
+    --p-toast-content-gap: 0.5rem;
+
+    --p-toast-icon-size: 1rem;
+
+    --p-toast-text-gap: 0.5rem;
+
+    --p-toast-summary-font-weight: 400;
+    --p-toast-summary-font-size: 1rem;
+
+    --p-toast-success-background: var(--control-connected-background-default);
+    --p-toast-success-border-color: var(--control-connected-background-default);
+    --p-toast-success-color: var(--control-connected-color-default);
+    --p-toast-success-shadow: var(--legacy-elevation-high);
+
+    --p-toast-error-background: var(--control-critical-primary-background-default);
+    --p-toast-error-border-color: var(--control-critical-primary-background-default);
+    --p-toast-error-color: var(--control-critical-primary-color-default);
+    --p-toast-error-shadow: var(--legacy-elevation-high);
+}
+
+.p-toast-message-content .p-icon:first-child {
+    align-self: center;
+}

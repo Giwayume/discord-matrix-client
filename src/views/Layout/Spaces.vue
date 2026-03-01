@@ -25,7 +25,7 @@
                                 type="thumbnail"
                                 :width="48"
                                 :height="48"
-                                method="crop"
+                                method="scale"
                             >
                                 <template v-slot="{ src }">
                                     <img :src="src" :alt="t('layout.spaceAvatarAlt')">

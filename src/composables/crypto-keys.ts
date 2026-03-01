@@ -1,6 +1,6 @@
-import { ref } from 'vue'
 import { useI18n, type ComposerTranslation } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
+import initVodozemacAsync from 'vodozemac-wasm-bindings'
 
 import { createLogger } from '@/composables/logger'
 
@@ -20,7 +20,7 @@ import * as z from 'zod'
 
 import { useAccountData } from './account-data'
 
-import { loadTableKey as loadDiscortixTableKey, saveTableKey as saveDiscortixTableKey } from '@/stores/database/discortix'
+import { getAllTableKeys as getAllDiscortixTableKeys, loadTableKey as loadDiscortixTableKey, saveTableKey as saveDiscortixTableKey } from '@/stores/database/discortix'
 import { useAccountDataStore } from '@/stores/account-data'
 import { useSessionStore } from '@/stores/session'
 import { useCryptoKeysStore } from '@/stores/crypto-keys'
@@ -32,6 +32,7 @@ import {
     type ApiV3KeysQueryRequest, type ApiV3KeysQueryResponse, ApiV3KeysQueryResponseSchema,
     type ApiV3KeysUploadRequest, type ApiV3KeysUploadResponse, ApiV3KeysUploadResponseSchema,
     type ApiV3KeysDeviceSigningUploadRequest,
+    type EventForwardedRoomKeyContent,
 } from '@/types'
 
 const log = createLogger(import.meta.url)
@@ -63,15 +64,20 @@ export function useCryptoKeys() {
         decryptedRefreshToken,
     } = storeToRefs(useSessionStore())
     const { accountData } = storeToRefs(useAccountDataStore())
+    const cryptoKeysStore = useCryptoKeysStore()
     const {
+        encryptionNotSupported,
+        roomKeyLoadFailed,
         signingKeysValidationFailed,
         signingKeysUploadFailed,
         secretKeyIdsMissing,
+        vodozemacInitFailed,
         userDevicePickleKey,
         crossSigningMasterKey,
         crossSigningUserSigningKey,
         crossSigningSelfSigningKey,
-    } = storeToRefs(useCryptoKeysStore())
+    } = storeToRefs(cryptoKeysStore)
+    const { addRoomKeyInMemory } = cryptoKeysStore
 
     async function queryAuthenticatedUserKeys() {
         if (!userId.value) throw new DOMException('User ID not found. Cannot proceed.', 'NotFoundError')
@@ -164,20 +170,26 @@ export function useCryptoKeys() {
             try {
                 pickleKeyString = await createPickleKey(userId.value, deviceId.value)
             } catch (error) {
-                throw new EncryptionNotSupportedError()
+                log.error('Error when generating pickle key.', error)
+                encryptionNotSupported.value = true
+                return
             }
         }
         if (pickleKeyString) {
             try {
                 userDevicePickleKey.value = await pickleKeyToAesKey(pickleKeyString)
             } catch (error) {
-                throw new EncryptionNotSupportedError()
+                log.error('Error when converting pickle key to AES key.', error)
+                encryptionNotSupported.value = true
+                return
             }
         }
         if (!userDevicePickleKey.value) {
-            throw new EncryptionNotSupportedError()
+            encryptionNotSupported.value = true
+            return
         }
 
+        // Convert string auth tokens to encrypted versions.
         if (typeof accessToken.value === 'string') {
             accessToken.value = await encryptSecret(userDevicePickleKey.value, accessToken.value, 'access_token')
         }
@@ -189,6 +201,46 @@ export function useCryptoKeys() {
         }
         if (typeof refreshToken.value === 'object') {
             decryptedRefreshToken.value = await decryptSecret(userDevicePickleKey.value, refreshToken.value, 'refresh_token')
+        }
+
+        try {
+            await initVodozemacAsync({ module_or_path: '/assets/wasm/vodozemac_bg.wasm' })
+        } catch (error) {
+            vodozemacInitFailed.value = true
+            log.error('Vodozemac initialization failed.', error)
+        }
+
+        // Fetch room keys from storage.
+        try {
+            const roomKeyTableKeys: string[][] = await getAllDiscortixTableKeys('roomKeys')
+            const fetchPromises: Array<Promise<[string, string, string, EventForwardedRoomKeyContent]>> = []
+            for (const [roomId, sessionId, senderKey] of roomKeyTableKeys) {
+                if (!roomId || !sessionId || !senderKey) continue
+                fetchPromises.push(
+                    loadDiscortixTableKey('roomKeys', [roomId, sessionId, senderKey]).then(
+                        async (encryptedData: AesHmacSha2EncryptedData) => ([
+                            roomId,
+                            sessionId,
+                            senderKey,
+                            JSON.parse(await decryptSecret(
+                                userDevicePickleKey.value!,
+                                encryptedData,
+                                `${roomId},${sessionId},${senderKey}`,
+                            )),
+                        ])
+                    )
+                )
+            }
+            const settleResults = await Promise.allSettled(fetchPromises)
+            for (const settleResult of settleResults) {
+                if (settleResult.status === 'fulfilled') {
+                    const [roomId, sessionId, senderKey, event] = settleResult.value
+                    addRoomKeyInMemory(event)
+                }
+            }
+        } catch (error) {
+            log.error('An error occurred when loading room keys from storage.', error)
+            roomKeyLoadFailed.value = true
         }
         
         // Try to retrieve keys from the account data and uploaded store.
@@ -408,14 +460,6 @@ export function useCryptoKeys() {
             }
         }
         secretKeyIdsMissing.value = Array.from(missingKeyIdSet)
-        
-        // const recoveryKey = 'EsT6 rbFu z7DF Kj1w KEKJ mdz3 bND3 cooD SjBg Jej2 fHJw 3MVv'
-        // const secret = await recoveryKeyStringToRawKey(recoveryKey)
-        // const decrypted = await decryptSecret(
-        //     secret,
-        //     crossSigningMaster.encrypted[secretStorageDefaultKeyName.key],
-        //     'm.cross_signing.master',
-        // )
     }
 
     async function installSecretKey(keyId: string, secretKey: Uint8Array) {

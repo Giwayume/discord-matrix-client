@@ -16,6 +16,8 @@
                     type="text"
                     :invalid="v$.homeserverBaseUrl.$invalid && v$.$dirty"
                     autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
                     :placeholder="defaultHomeserverUrl"
                     @input="hostChanged"
                 />

@@ -2,7 +2,7 @@
     <section class="application__user-status-settings" :aria-label="t('layout.userStatusSettings')">
         <Button variant="text" severity="secondary" class="application__user-status-settings__name-tag">
             <OverlayStatus level="low" :status="onlineStatus" class="w-8 h-8">
-                <AuthenticatedImage :mxcUri="authenticatedUserAvatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
+                <AuthenticatedImage :mxcUri="authenticatedUserAvatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
                     <template v-slot="{ src }">
                         <Avatar :image="src" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
                     </template>

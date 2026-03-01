@@ -5,6 +5,10 @@
     --blurple-50: hsl(234.935 calc(1*85.556%) 64.706%/1);
     --blurple-60: hsl(232.941 calc(1*46.667%) 50%/1);
 
+    --green-new-50: hsl(151.128 calc(1*100%) 26.078%/1);
+    --green-new-60: hsl(150.556 calc(1*100%) 21.176%/1);
+    --green-new-65: hsl(150.316 calc(1*100%) 18.627%/1);
+
     --neutral-1: hsl(0 calc(1*0%) 100%/1);
     --neutral-2: hsl(0 calc(1*0%) 98.431%/1);
     --neutral-10: hsl(240 calc(1*4.478%) 86.863%/1);
@@ -26,6 +30,7 @@
     --opacity-black-20: hsl(0 calc(1*0%) 0%/0.2);
     --opacity-black-28: hsl(0 calc(1*0%) 0%/0.2784313725490196);
     --opacity-black-72-hsl: 0 calc(1*0%) 0%;
+    --opacity-black-92-hsl: 0 calc(1*0%) 0%;
     --opacity-red-8-hsl: 355.636 calc(1*64.706%) 50%;
     --opacity-white-8-hsl: 0 calc(1*0%) 100%;
     --opacity-4-hsl: 240 calc(1*4%) 60.784%;
@@ -62,6 +67,7 @@
     --background-mod-normal: hsl(var(--opacity-16-hsl)/0.1607843137254902);
     --background-mod-subtle: hsl(var(--opacity-8-hsl)/0.0784313725490196);
     --background-scrim: hsl(var(--opacity-black-72-hsl)/0.7215686274509804);
+    --background-scrim-lightbox: hsl(var(--opacity-black-92-hsl)/0.9215686274509803);
     --background-surface-high: var(--neutral-79);
     --background-surface-higher: var(--neutral-76);
     --background-surface-highest: var(--neutral-73);
@@ -75,6 +81,16 @@
     --channels-default: var(--neutral-35);
 
     --chat-background-default: var(--neutral-80);
+
+    --control-connected-background-default: var(--green-new-50);
+    --control-connected-border-default: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);
+    --control-connected-text-default: var(--white);
+    --control-connected-background-hover: var(--green-new-60);
+    --control-connected-border-hover: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);
+    --control-connected-text-hover: var(--white);
+    --control-connected-background-active: var(--green-new-65);
+    --control-connected-border-active: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);
+    --control-connected-text-active: var(--white);
 
     --control-critical-primary-background-default: var(--red-new-50);
     --control-critical-primary-border-default: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);
@@ -137,6 +153,7 @@
 
     --text-default: var(--neutral-10);
     --text-strong: var(--neutral-1);
+    --text-subtle: var(--neutral-23);
     --text-muted: var(--neutral-23);
     --text-brand: var(--blurple-26);
     --text-feedback-critical: var(--red-new-22);

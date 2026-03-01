@@ -34,7 +34,7 @@ function getFriendlyErrorMessage(t: ComposerTranslation, error: Error | unknown)
 
 export function useSync() {
     const { t } = useI18n()
-    const { isLeader, onFollowerMessage, broadcastMessage } = useBroadcast()
+    const { isLeader, onFollowerMessage, broadcastMessageFromLeader } = useBroadcast()
     const accountDataStore = useAccountDataStore()
     const { accountDataLoading, accountDataLoadError } = storeToRefs(accountDataStore)
     const { populateFromApiV3SyncResponse: populateAccountDataFromApiV3SyncResponse } = accountDataStore
@@ -52,9 +52,9 @@ export function useSync() {
     const syncStatus = ref<'online' | 'offline'>('online')
     watch(() => syncStatus.value, (newSyncStatus, oldSyncStatus) => {
         if (newSyncStatus === 'online' && oldSyncStatus !== 'online') {
-            broadcastMessage({ type: 'syncStatus', data: { status: 'online' } })
+            broadcastMessageFromLeader({ type: 'syncStatus', data: { status: 'online' } })
         } else if (newSyncStatus === 'offline' && oldSyncStatus !== 'offline') {
-            broadcastMessage({ type: 'syncStatus', data: { status: 'offline' } })
+            broadcastMessageFromLeader({ type: 'syncStatus', data: { status: 'offline' } })
         }
     })
 
@@ -114,7 +114,7 @@ export function useSync() {
                     }
                 )
                 populateAllFromApiSyncResponse(syncResponse)
-                broadcastMessage({ type: 'apiV3Sync', data: syncResponse })
+                broadcastMessageFromLeader({ type: 'apiV3Sync', data: syncResponse })
                 setNextBatch(syncResponse.nextBatch)
                 syncStatus.value = 'online'
                 if (syncRequestParams.timeout === 0) {

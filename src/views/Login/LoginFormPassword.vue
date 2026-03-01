@@ -1,7 +1,7 @@
 <template>
     <div class="p-staticlabel flex flex-col gap-2 mt-5">
         <label for="login-username" class="text-(--text-strong)">{{ t('login.usernameLabel') }}</label>
-        <InputText id="login-username" v-model.trim="formData.username" type="text" :invalid="v$.username.$invalid && v$.$dirty" required autocomplete="off" />
+        <InputText id="login-username" v-model.trim="formData.username" type="text" :invalid="v$.username.$invalid && v$.$dirty" required autocomplete="off" autocorrect="off" autocapitalize="off" />
         <Message v-if="(v$.username.$invalid && v$.$dirty) || usernameOrPasswordInvalid" severity="error" size="small" variant="simple">
             <template #icon>
                 <span class="pi pi-exclamation-circle !text-xs !leading-3 -mt-[1px]" aria-hidden="true" />
@@ -16,7 +16,7 @@
     </div>
     <div class="p-staticlabel flex flex-col gap-2 mt-5">
         <label for="login-password" class="text-(--text-strong)">{{ t('login.passwordLabel') }}</label>
-        <InputText id="login-password" v-model.trim="formData.password" type="password" :invalid="v$.password.$invalid && v$.$dirty" required />
+        <InputText id="login-password" v-model.trim="formData.password" type="password" :invalid="v$.password.$invalid && v$.$dirty" required autocomplete="off" autocorrect="off" autocapitalize="off" />
         <Message v-if="(v$.password.$invalid && v$.$dirty) || usernameOrPasswordInvalid" severity="error" size="small" variant="simple">
             <template #icon>
                 <span class="pi pi-exclamation-circle !text-xs !leading-3 -mt-[1px]" aria-hidden="true" />

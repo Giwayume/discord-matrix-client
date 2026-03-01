@@ -1,4 +1,4 @@
-import { encodeUnpaddedBase64, decodeBase64, decodeMatrixBase64 } from '@/utils/base64'
+import { encodeUnpaddedBase64, decodeBase64 } from '@/utils/base64'
 import basex from '@/utils/base-x'
 
 import type { AesHmacSha2EncryptedData, AesHmacSha2KeyDescription, AesHmacSha2KeyDescriptionPassphrase } from '@/types'
@@ -113,7 +113,6 @@ export async function createSecretKeyDescription(
         )
     )
 
-    // ---- 4️⃣ Compute HMAC-SHA256 over ciphertext ----
     const hmacKey = await crypto.subtle.importKey(
         'raw',
         macKeyBytes,
@@ -126,7 +125,6 @@ export async function createSecretKeyDescription(
         await crypto.subtle.sign('HMAC', hmacKey, ciphertext)
     )
 
-    // ---- 5️⃣ Encode to base64 ----
     const ivBase64 = btoa(String.fromCharCode(...iv))
     const macBase64 = btoa(String.fromCharCode(...mac))
 
@@ -153,8 +151,8 @@ export async function validateSecretKeyDescription(
 
     if (secret.length !== 32) return false
 
-    const iv = decodeMatrixBase64(description.iv)
-    const expectedMac = decodeMatrixBase64(description.mac)
+    const iv = decodeBase64(description.iv)
+    const expectedMac = decodeBase64(description.mac)
 
     if (iv.length !== 16 || expectedMac.length !== 32) {
         return false

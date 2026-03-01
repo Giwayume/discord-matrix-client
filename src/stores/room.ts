@@ -282,6 +282,7 @@ export const useRoomStore = defineStore('room', () => {
     const knocked = ref<Record<string, KnockedRoom>>({})
     const joined = ref<Record<string, JoinedRoom>>({})
     const left = ref<Record<string, LeftRoom>>({})
+    const decryptedRoomEvents = ref<Record<string, ApiV3SyncClientEventWithoutRoomId>>({})
 
     async function initialize() {
         try {
@@ -657,6 +658,7 @@ export const useRoomStore = defineStore('room', () => {
         knocked: computed(() => knocked.value),
         joined: computed(() => joined.value),
         left: computed(() => left.value),
+        decryptedRoomEvents,
         directMessageRooms,
         getTimelineEventIndexById,
         populateFromApiV3SyncResponse,

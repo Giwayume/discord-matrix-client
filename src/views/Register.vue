@@ -151,7 +151,7 @@ function registerSubmit() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: 100dvh;
     padding: 6rem 1rem 1rem 1rem;
 
     @media screen and (min-width: 860px) {

@@ -5,9 +5,10 @@ html {
     color: var(--text-default);
 }
 
-a[href] {
+a[href], .link {
     color: var(--text-brand);
     text-decoration: none;
+    cursor: pointer;
 
     &:hover {
         text-decoration: underline;

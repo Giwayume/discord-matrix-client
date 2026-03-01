@@ -6,8 +6,8 @@
         :header="selectedMenuTitle"
         :style="{
             width: '100%',
-            maxWidth: 'calc(100vw - 5rem)',
-            height: 'calc(100vh - 4rem)',
+            maxWidth: 'calc(100dvw - 5rem)',
+            height: 'calc(100dvh - 4rem)',
             maxHeight: 'none',
         }"
         class="p-dialog-lg-fullwidth !p-0 !overflow-hidden"
@@ -18,7 +18,7 @@
                 <aside class="p-dialog-sidebar flex flex-col">
                     <div class="pl-1 pr-4">
                         <Button variant="text" severity="secondary" class="!p-2 mb-2 w-full !justify-start">
-                            <AuthenticatedImage :mxcUri="authenticatedUserAvatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
+                            <AuthenticatedImage :mxcUri="authenticatedUserAvatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
                                 <template v-slot="{ src }">
                                     <Avatar :image="src" shape="circle" size="xlarge" :aria-label="t('layout.userAvatarImage')" class="shrink-0" />
                                 </template>
@@ -83,8 +83,21 @@
                             />
                         </div>
                     </div>
-                    <div class="p-dialog-content">
-
+                    <div class="p-dialog-content relative">
+                        <EncryptionSettings v-if="selectedMenuItem.key === 'encryption'" />
+                        <div v-if="hasPendingChanges" class="absolute left-0 bottom-0 right-0 p-4">
+                            <div class="flex items-center justify-between mx-auto max-w-174 p-[0.625rem] pl-4 bg-(--background-surface-highest) border-1 border-(--border-subtle) rounded-(--radius-sm) shadow-(--legacy-elevation-high)">
+                                <span class="font-medium">{{ t('userSettings.youHaveUnsavedChanges') }}</span>
+                                <div class="flex items-center gap-4">
+                                    <span class="link text-sm" tabindex="0" role="button">{{ t('userSettings.resetLink') }}</span>
+                                    <Button
+                                        severity="success"
+                                        size="small"
+                                        :label="t('userSettings.saveChangesButton')"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -108,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 
@@ -116,6 +129,7 @@ import { useLogout } from '@/composables/logout'
 import { useProfileStore } from '@/stores/profile'
 
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
+const EncryptionSettings = defineAsyncComponent(() => import('./UserSettings/Encryption.vue'))
 
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
@@ -162,6 +176,12 @@ const menuItems = ref([
                 key: 'dataPrivacy',
                 label: t('userSettings.menu.dataPrivacy'),
                 icon: 'pi pi-lock',
+                command: selectMenuItem,
+            },
+            {
+                key: 'encryption',
+                label: t('userSettings.menu.encryption'),
+                icon: 'pi pi-key',
                 command: selectMenuItem,
             },
             {
@@ -264,6 +284,8 @@ const selectedMenuItem = ref<MenuItem>(menuItems.value[0]!.items[0]!)
 const selectedMenuTitle = computed<string>(() => {
     return selectedMenuItem.value?.label + ''
 })
+
+const hasPendingChanges = ref<boolean>(false)
 
 const logoutConfirmVisible = ref<boolean>(false)
 

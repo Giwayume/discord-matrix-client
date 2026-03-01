@@ -6,7 +6,7 @@
             </template>
             <template v-else-if="otherMembersDisplayed.length === 1">
                 <OverlayStatus level="low" :status="otherMembersDisplayed[0]!.presence" size="small" class="w-5 h-5 mr-2">
-                    <AuthenticatedImage :mxcUri="otherMembersDisplayed[0]!.avatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
+                    <AuthenticatedImage :mxcUri="otherMembersDisplayed[0]!.avatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
                         <template v-slot="{ src }">
                             <Avatar :image="src" shape="circle" class="p-avatar-full" :aria-label="t('layout.userAvatarImage')" />
                         </template>
@@ -19,7 +19,7 @@
             <template v-else-if="otherMembersDisplayed.length > 1">
                 <AvatarGroup class="mr-2">
                     <template v-for="member of otherMembersDisplayed" :key="member.userId">
-                        <AuthenticatedImage :mxcUri="member.avatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
+                        <AuthenticatedImage :mxcUri="member.avatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
                             <template v-slot="{ src }">
                                 <Avatar :image="src" shape="circle" class="p-avatar-full" :aria-label="t('layout.userAvatarImage')" />
                             </template>
@@ -62,7 +62,6 @@ import { isRoomPartOfSpace } from '@/utils/room'
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
 import MainBody from '@/views/Layout/MainBody.vue'
 import MainHeader from '@/views/Layout/MainHeader.vue'
-import MessageBeginning from '@/views/Room/MessageBeginning.vue'
 import OverlayStatus from '@/views/Common/OverlayStatus.vue'
 
 import TimelineEvents from './TimelineEvents.vue'
@@ -84,11 +83,6 @@ const props = defineProps({
         type: Object as PropType<JoinedRoom>,
         required: true,
     }
-})
-
-const roomAvatarUrl = computed<string | undefined>(() => {
-    const roomAvatarEvent = props.room.stateEventsByType['m.room.avatar']?.[0]
-    return roomAvatarEvent?.content.url
 })
 
 const roomName = computed<string | undefined>(() => {

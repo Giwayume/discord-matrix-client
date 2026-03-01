@@ -23,6 +23,7 @@ async function init(): Promise<void> {
             db.createObjectStore('clientSettings')
             db.createObjectStore('profiles')
             db.createObjectStore('rooms')
+            db.createObjectStore('roomKeys')
         }
     })
 }

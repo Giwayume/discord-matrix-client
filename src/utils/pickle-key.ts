@@ -8,7 +8,7 @@ function getPickleAdditionalData(userId: string, deviceId: string): Uint8Array {
     for (let i = 0; i < userId.length; i++) {
         additionalData[i] = userId.charCodeAt(i)
     }
-    additionalData[userId.length] = 124; // "|"
+    additionalData[userId.length] = 124; // '|'
     for (let i = 0; i < deviceId.length; i++) {
         additionalData[userId.length + 1 + i] = deviceId.charCodeAt(i)
     }
@@ -30,7 +30,7 @@ async function buildAndEncodePickleKey(
     try {
         const additionalData = getPickleAdditionalData(userId, deviceId)
         const pickleKeyBuf = await window.crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: data.iv, additionalData: additionalData as BufferSource },
+            { name: 'AES-GCM', iv: data.iv, additionalData: additionalData as BufferSource },
             data.cryptoKey,
             data.encrypted,
         )
@@ -51,13 +51,13 @@ async function encryptPickleKey(
     if (!crypto?.subtle) {
         return undefined;
     }
-    const cryptoKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"])
+    const cryptoKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt'])
     const iv = new Uint8Array(32)
     crypto.getRandomValues(iv)
 
     const additionalData = getPickleAdditionalData(userId, deviceId)
     const encrypted = await crypto.subtle.encrypt({
-        name: "AES-GCM", iv, additionalData: additionalData as BufferSource
+        name: 'AES-GCM', iv, additionalData: additionalData as BufferSource
     }, cryptoKey, pickleKey as BufferSource)
 
     return { encrypted, iv, cryptoKey }
@@ -81,7 +81,7 @@ export async function createPickleKey(userId: string, deviceId: string): Promise
 
     try {
         await saveTableKey('pickleKey', [userId, deviceId], data)
-    } catch {
+    } catch (error) {
         return null;
     }
     return encodeUnpaddedBase64(randomArray);

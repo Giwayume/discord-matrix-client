@@ -38,8 +38,16 @@ function becomeLeader() {
     }, 2000)
 }
 
-function broadcastMessage(message: BroadcastMessage) {
+function broadcastMessageFromLeader(message: BroadcastMessage) {
     if (!isLeader.value) return
+    message.fromLeader = true
+    message.fromTabId = tabId
+    broadcastChannel.postMessage(message)
+}
+
+function broadcastMessageFromTab(message: BroadcastMessage) {
+    message.fromLeader = false
+    message.fromTabId = tabId
     broadcastChannel.postMessage(message)
 }
 
@@ -77,14 +85,25 @@ setInterval(claimLeadership, 3000)
 export function useBroadcast() {
 
     const onFollowerMessageListeners: Array<(message: BroadcastMessage) => void> = []
+    const onTabMessageListeners: Array<(message: BroadcastMessage) => void> = []
 
     if (getCurrentInstance()) {
         const onMessageCallback = function(message: BroadcastMessage) {
-            for (const callback of onFollowerMessageListeners) {
-                try {
-                    callback(message)
-                } catch (error) {
-                    log.error(error)
+            if (message.fromLeader) {
+                for (const callback of onFollowerMessageListeners) {
+                    try {
+                        callback(message)
+                    } catch (error) {
+                        log.error(error)
+                    }
+                }
+            } else if (message.fromTabId !== tabId) {
+                for (const callback of onTabMessageListeners) {
+                    try {
+                        callback(message)
+                    } catch (error) {
+                        log.error(error)
+                    }
                 }
             }
         }
@@ -105,9 +124,15 @@ export function useBroadcast() {
         onFollowerMessageListeners.push(callback)
     }
 
+    function onTabMessage(callback: (message: BroadcastMessage) => void) {
+        onTabMessageListeners.push(callback)
+    }
+
     return {
         isLeader,
         onFollowerMessage,
-        broadcastMessage,
+        onTabMessage,
+        broadcastMessageFromLeader,
+        broadcastMessageFromTab,
     }
 }

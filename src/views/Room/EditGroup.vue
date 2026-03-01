@@ -12,7 +12,7 @@
         </Message>
         <template v-else>
             <div class="edit-group__edit-avatar-button mx-auto mt-2" tabindex="0" role="button" :aria-label="t('editGroup.editRoomAvatar')" @click="editGroupIcon">
-                <AuthenticatedImage :mxcUri="roomAvatarUrl" type="thumbnail" :width="96" :height="96" method="crop">
+                <AuthenticatedImage :mxcUri="roomAvatarUrl" type="thumbnail" :width="96" :height="96" method="scale">
                     <template v-slot="{ src }">
                         <Avatar :image="src" shape="circle" class="p-avatar-full" :aria-label="t('editGroup.roomAvatar')" />
                     </template>

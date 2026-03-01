@@ -17,11 +17,11 @@
         "format": "prettier --write --experimental-cli src/"
     },
     "dependencies": {
-        "@matrix-org/olm": "^3.2.15",
         "@tailwindcss/vite": "^4.1.18",
         "@vuelidate/core": "^2.0.3",
         "@vuelidate/validators": "^2.0.4",
         "camelcase-keys": "^10.0.2",
+        "eruda": "^3.4.3",
         "google-libphonenumber": "^3.2.44",
         "mitt": "^3.0.1",
         "pinia": "^3.0.4",
@@ -30,7 +30,9 @@
         "sass-embedded": "^1.97.3",
         "tailwindcss": "^4.1.18",
         "uuid": "^13.0.0",
+        "vodozemac-wasm-bindings": "^0.8.1",
         "vue": "^3.5.27",
+        "vue-dompurify-html": "^5.3.0",
         "vue-i18n": "^11.2.8",
         "vue-router": "^5.0.1",
         "zod": "^4.3.6"
@@ -57,7 +59,10 @@
         "type-fest": "^5.4.4",
         "typescript": "~5.9.3",
         "vite": "^7.3.1",
+        "vite-plugin-static-copy": "^3.2.0",
+        "vite-plugin-top-level-await": "^1.6.0",
         "vite-plugin-vue-devtools": "^8.0.5",
+        "vite-plugin-wasm": "^3.5.0",
         "vitest": "^4.0.18",
         "vue-tsc": "^3.2.4"
     },

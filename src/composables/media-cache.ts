@@ -1,7 +1,10 @@
-import { onUnmounted } from 'vue'
+import { getCurrentInstance, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSessionStore } from '@/stores/session'
+import { decryptFile } from '@/utils/crypto'
 import { fetch, HttpError } from '@/utils/fetch'
+
+import type { EncryptedFile } from '@/types'
 
 const mxcObjectUrls = new Map<string, string>()
 const mxcObjectUrlUserCount = new Map<string, number>()
@@ -27,6 +30,7 @@ export interface GetMxcObjectUrlOptions {
     height?: number;
     method?: 'crop' | 'scale';
     animated?: boolean;
+    mimetype?: string;
 }
 
 export function useMediaCache() {
@@ -35,18 +39,22 @@ export function useMediaCache() {
 
     /** Fetch media from the server and store the blob as an object URL */
     async function getMxcObjectUrl(
-        mxcUri: string,
+        mxcUriOrFile: EncryptedFile | string,
         options: GetMxcObjectUrlOptions,
         abortController?: AbortController,
     ): Promise<string> {
         if (!options.type) options.type = 'download'
         const optionsId = JSON.stringify(options)
+        const mxcUri = typeof mxcUriOrFile === 'string' ? mxcUriOrFile : mxcUriOrFile.url
+        const encryptionInfo: EncryptedFile | undefined = typeof mxcUriOrFile === 'string' ? undefined : mxcUriOrFile
         const mxcStoreId = mxcUri + '::' + optionsId
         let objectUrl = mxcObjectUrls.get(mxcStoreId)
         fetchMedia:
         if (!objectUrl) {
             const { serverName, mediaId } = parseMxcUri(mxcUri)
             if (!serverName || !mediaId) break fetchMedia
+            const mimetype = options.mimetype
+            delete options.mimetype
             const queryParams: Record<string, any> = { ...options }
             delete queryParams.type
             let response: Response
@@ -79,9 +87,19 @@ export function useMediaCache() {
             }
             if (abortController?.signal?.aborted) break fetchMedia
             if (!response.ok) throw new HttpError(response)
-            const blob = await response.blob()
             if (abortController?.signal?.aborted) break fetchMedia
-            objectUrl = URL.createObjectURL(blob)
+
+            if (encryptionInfo) {
+                const encryptedData = new Uint8Array(await response.arrayBuffer())
+                if (abortController?.signal?.aborted) break fetchMedia
+                const blob = await decryptFile(encryptedData, encryptionInfo, mimetype)
+                if (abortController?.signal?.aborted) break fetchMedia
+                objectUrl = URL.createObjectURL(blob)
+            } else {
+                const blob = await response.blob()
+                objectUrl = URL.createObjectURL(blob)
+            }
+
             mxcObjectUrls.set(mxcStoreId, objectUrl)
         }
         if (objectUrl && !usedMxcUris.has(mxcStoreId)) {
@@ -92,7 +110,7 @@ export function useMediaCache() {
         return objectUrl
     }
 
-    onUnmounted(() => {
+    function clearUsers() {
         for (const mxcStoreId of usedMxcUris) {
             const userCount = Math.max(0, (mxcObjectUrlUserCount.get(mxcStoreId) ?? 0) - 1)
             mxcObjectUrlUserCount.set(mxcStoreId, userCount)
@@ -104,9 +122,16 @@ export function useMediaCache() {
                 mxcObjectUrlUserCount.delete(mxcStoreId)
             }
         }
-    })
+    }
+
+    if (getCurrentInstance()) {
+        onUnmounted(() => {
+            clearUsers()
+        })
+    }
 
     return {
         getMxcObjectUrl,
+        clearUsers,
     }
 }

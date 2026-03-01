@@ -57,7 +57,21 @@
         border-radius: 0 !important;
         max-width: none !important;
         max-height: none !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        width: 100dvw !important;
+        height: 100dvh !important;
     }
+}
+
+.p-dialog-fullscreen-transparent {
+    --p-dialog-border-radius: 0;
+    --p-dialog-background: var(--background-scrim-lightbox);
+    --p-dialog-border-color: transparent;
+
+    border: none !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    max-width: none !important;
+    max-height: none !important;
+    width: 100dvw !important;
+    height: 100dvh !important;
 }

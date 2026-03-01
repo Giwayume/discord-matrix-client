@@ -10,6 +10,8 @@
     --p-button-focus-ring-offset: 1px;
     --p-button-focus-ring-shadow: var(--p-form-field-focus-ring-shadow);
 
+    --p-button-label-font-weight: 500;
+
     --p-button-icon-only-width: 2rem;
 
     --p-button-sm-font-size: 0.875rem;
@@ -60,6 +62,20 @@
     --p-button-text-danger-color: var(--text-feedback-critical);
     --p-button-text-danger-hover-background: var(--background-feedback-critical);
     --p-button-text-danger-hover: var(--text-feedback-critical);
+
+    --p-button-success-background: var(--control-connected-background-default);
+    --p-button-success-border-color: var(--control-connected-border-default);
+    --p-button-success-color: var(--control-connected-text-default);
+    --p-button-success-hover-background: var(--control-connected-background-hover);
+    --p-button-success-hover-border-color: var(--control-connected-border-hover);
+    --p-button-success-hover-color: var(--control-connected-text-hover);
+    --p-button-success-active-background: var(--control-connected-background-active);
+    --p-button-success-active-border-color: var(--control-connected-border-active);
+    --p-button-success-active-color: var(--control-connected-text-active);
+
+    // --p-button-text-success-color: var(--control-connected-background-default);
+    // --p-button-text-success-hover-background: var(--background-connected-critical);
+    // --p-button-text-success-hover: var(--text-connected-critical);
 }
 
 @keyframes p-button-loading-dot-flashing {

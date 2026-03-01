@@ -56,7 +56,7 @@
                     >
                         <span class="p-menu-item-label flex gap-3 max-w-full">
                             <OverlayStatus level="lowest" :status="item.presence" :invisible="item.isGroup" class="w-8 h-8">
-                                <AuthenticatedImage :mxcUri="item.avatarUrl" type="thumbnail" :width="48" :height="48" method="crop">
+                                <AuthenticatedImage :mxcUri="item.avatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
                                     <template v-slot="{ src }">
                                         <Avatar :image="src" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
                                     </template>

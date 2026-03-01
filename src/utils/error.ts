@@ -66,6 +66,14 @@ export class HttpError extends Error {
     }
 }
 
+export class InvalidFileError extends Error {
+    constructor(message?: string) {
+        const defaultMessage = 'The contents of the file are in an invalid format.'
+        super(message ?? defaultMessage)
+        this.name = 'InvalidFileError'
+    }
+}
+
 export class MissingSessionDataError extends Error {
     constructor(message?: string) {
         const defaultMessage = 'Session data is missing.'

@@ -2,6 +2,7 @@ import * as z from 'zod'
 import { camelizeSchema, camelizeSchemaWithoutTransform } from '@/utils/zod'
 
 import { PushNotificationPushRuleSchema } from './api-push-notifications'
+import { EncryptedFileSchema } from './encryption'
 
 /** https://spec.matrix.org/v1.17/client-server-api/#mforwarded_room_key */
 export const EventForwardedRoomKeyContentSchema = z.object({
@@ -18,6 +19,32 @@ export const EventForwardedRoomKeyContentSchema = z.object({
     }).optional(),
 })
 export type EventForwardedRoomKeyContent = z.infer<typeof EventForwardedRoomKeyContentSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mimage */
+export const EventImageContentSchema = z.object({
+    body: z.string(),
+    file: EncryptedFileSchema,
+    filename: z.string().optional(),
+    format: z.enum(['org.matrix.custom.html']).optional(),
+    formattedBody: z.string().optional(),
+    info: z.object({
+        h: z.number().optional(),
+        mimetype: z.string().optional(),
+        size: z.number().optional(),
+        thumbnailFile: EncryptedFileSchema,
+        thumbnailInfo: z.object({
+            h: z.number().optional(),
+            mimetype: z.string().optional(),
+            size: z.number().optional(),
+            w: z.number().optional(),
+        }).optional(),
+        thumbnailUrl: z.string().optional(),
+        w: z.number().optional(),
+    }).optional(),
+    msgtype: z.enum(['m.image']),
+    url: z.string().optional(),
+})
+export type EventImageContent = z.infer<typeof EventImageContentSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mpresence */
 export const EventPresenceContentSchema = z.object({
@@ -254,7 +281,7 @@ export const eventContentSchemaByType = {
     // 'm.emote': EventEmoteContentSchema,
     // 'm.file': EventFileContentSchema,
     'm.forwarded_room_key': EventForwardedRoomKeyContentSchema,
-    // 'm.image': EventImageContentSchema,
+    'm.image': EventImageContentSchema,
     // 'm.location': EventLocationContentSchema,
     // 'm.notice': EventNoticeContentSchema,
     'm.presence': EventPresenceContentSchema,
@@ -287,7 +314,7 @@ export interface EventContentByType {
     // 'm.emote': EventEmoteContent,
     // 'm.file': EventFileContent,
     'm.forwarded_room_key': EventForwardedRoomKeyContent,
-    // 'm.image': EventImageContent,
+    'm.image': EventImageContent,
     // 'm.location': EventLocationContent,
     // 'm.notice': EventNoticeContent,
     'm.presence': EventPresenceContent,
