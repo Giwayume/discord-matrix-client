@@ -58,9 +58,10 @@
                     'photo-viewer__viewer--zoomed': zoomScale > 1,
                     'photo-viewer__viewer--zooming': isZooming,
                 }"
+                @touchstart="onTouchStart"
+                @touchmove="onTouchMove"
                 @pointerdown="onPointerDown"
                 @pointermove="onPointerMove"
-                @pointerup="onPointerUpViewer"
             >
                 <AuthenticatedImage
                     :mxcUri="props.imageEvent?.content.url"
@@ -80,9 +81,6 @@
                                 'transform': `translate(${zoomTranslateX}px, ${zoomTranslateY}px) scale(${zoomScale})`
                             }"
                             @dragstart="onDragStart"
-                            @pointerdown="onPointerDown"
-                            @pointermove="onPointerMove"
-                            @pointerup="onPointerUpImage"
                         >
                     </template>
                 </AuthenticatedImage>
@@ -92,10 +90,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch, type PropType } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
+import { translateTouchEventToPointerEvents } from '@/utils/dom-event'
 
+import { useApplication } from '@/composables/application'
 import { useMediaCache } from '@/composables/media-cache'
 import { useProfileStore } from '@/stores/profile'
 
@@ -115,6 +115,7 @@ import {
 
 const { t } = useI18n()
 const toast = useToast()
+const { isTouchEventsDetected } = useApplication()
 const { profiles } = storeToRefs(useProfileStore())
 const { getMxcObjectUrl } = useMediaCache()
 
@@ -195,12 +196,12 @@ const zoomTranslateY = ref<number>(0)
 
 function toggleZoom() {
     isZooming.value = true
-    if (zoomScale.value > 1) {
-        zoomScale.value = 1
+    if (zoomScale.value > zoomScaleMin) {
+        zoomScale.value = zoomScaleMin
         zoomTranslateX.value = 0
         zoomTranslateY.value = 0
     } else {
-        zoomScale.value = 2
+        zoomScale.value = zoomScaleMax
     }
     setTimeout(() => {
         isZooming.value = false
@@ -225,6 +226,8 @@ let imageBaseHeight = window.innerHeight - imageZoomedOutYPadding
 let averageXDown: number = 0
 let averageYDown: number = 0
 let zoomScaleDown: number = 1
+let zoomScaleMin: number = 1
+let zoomScaleMax: number = 2
 let zoomFingerDistanceDown: number = 1
 let zoomTranslateXDown: number = 0
 let zoomTranslateYDown: number = 0
@@ -237,10 +240,47 @@ function pointDistance(p1x: number, p1y: number, p2x: number, p2y: number) {
 }
 
 function onDragStart(event: DragEvent) {
+    if (!props.visible) return
+
     event.preventDefault()
 }
 
+function onTouchStart(event: TouchEvent) {
+    for (const pointerEvent of translateTouchEventToPointerEvents('pointerdown', event)) {
+        onPointerDownHandle(pointerEvent)
+    }
+}
+
+function onTouchMove(event: TouchEvent) {
+    for (const pointerEvent of translateTouchEventToPointerEvents('pointermove', event)) {
+        onPointerMoveHandle(pointerEvent)
+    }
+}
+
+function onTouchEndViewer(event: TouchEvent) {
+    for (const pointerEvent of translateTouchEventToPointerEvents('pointerup', event)) {
+        onPointerUpHandle(pointerEvent)
+    }
+}
+
 function onPointerDown(event: PointerEvent) {
+    if (isTouchEventsDetected.value) return
+    onPointerDownHandle(event)
+}
+
+function onPointerMove(event: PointerEvent) {
+    if (isTouchEventsDetected.value) return
+    onPointerMoveHandle(event)
+}
+
+function onPointerUpViewer(event: PointerEvent) {
+    if (isTouchEventsDetected.value) return
+    onPointerUpHandle(event)
+}
+
+function onPointerDownHandle(event: PointerEvent) {
+    if (!props.visible) return
+
     event.preventDefault()
     event.stopPropagation()
 
@@ -282,17 +322,19 @@ function onPointerDown(event: PointerEvent) {
     viewContainerHeight = window.innerHeight
     const imageRect = previewImage.value?.getBoundingClientRect()
     if (imageRect) {
-        imageBaseHeight = viewContainerHeight - imageZoomedOutYPadding
+        imageBaseHeight = Math.min(viewContainerHeight - imageZoomedOutYPadding, props.imageEvent?.content.info?.h ?? Infinity)
         imageBaseWidth = (imageRect.width / imageRect.height) * imageBaseHeight
 
         if (imageBaseWidth > viewContainerWidth - imageZoomedOutXPadding) {
-            imageBaseWidth = viewContainerWidth - imageZoomedOutXPadding
+            imageBaseWidth = Math.min(viewContainerWidth - imageZoomedOutXPadding, props.imageEvent?.content.info?.w ?? Infinity)
             imageBaseHeight = (imageRect.height / imageRect.width) * imageBaseWidth
         }
     }
 }
 
-function onPointerMove(event: PointerEvent) {
+function onPointerMoveHandle(event: PointerEvent) {
+    if (!props.visible) return
+
     event.preventDefault()
     event.stopPropagation()
 
@@ -311,14 +353,18 @@ function onPointerMove(event: PointerEvent) {
     averageX /= pointersDown.length
     averageY /= pointersDown.length
 
-    const translateXLimit = Math.floor(Math.max(0, ((imageBaseWidth * zoomScale.value) - viewContainerWidth) / 2))
-    const translateYLimit = Math.floor(Math.max(0, ((imageBaseHeight * zoomScale.value) - viewContainerHeight) / 2))
+    let translateXLimit = Math.floor(Math.max(0, ((imageBaseWidth * zoomScale.value) - viewContainerWidth) / 2))
+    let translateYLimit = Math.floor(Math.max(0, ((imageBaseHeight * zoomScale.value) - viewContainerHeight) / 2))
+    if (pointersDown.length > 1) {
+        translateXLimit = Math.floor(Math.max(0, ((imageBaseWidth * zoomScaleMax) - viewContainerWidth) / 2))
+        translateYLimit = Math.floor(Math.max(0, ((imageBaseHeight * zoomScaleMax) - viewContainerHeight) / 2))
+    }
 
     zoomTranslateX.value = Math.max(-translateXLimit, Math.min(translateXLimit, zoomTranslateXDown + (averageX - averageXDown)))
     zoomTranslateY.value = Math.max(-translateYLimit, Math.min(translateYLimit, zoomTranslateYDown + (averageY - averageYDown)))
     
     if (pointersDown.length > 1) {
-        zoomScale.value = Math.max(1, Math.min(2, zoomScaleDown * (pointDistance(
+        zoomScale.value = Math.max(zoomScaleMin, Math.min(zoomScaleMax, zoomScaleDown * (pointDistance(
             pointersDown[0]!.pageX,
             pointersDown[0]!.pageY,
             pointersDown[1]!.pageX,
@@ -327,56 +373,75 @@ function onPointerMove(event: PointerEvent) {
     }
 }
 
-function onPointerUpViewer(event: PointerEvent) {
-    onPointerUp(event, false)
-}
+function onPointerUpHandle(event: PointerEvent) {
+    const isImagePointer = (event.target as HTMLElement)?.tagName === 'IMG'
+    if (!props.visible) return
+    if (isImagePointer) {
+        event.stopPropagation()
+    }
 
-function onPointerUpImage(event: PointerEvent) {
-    onPointerUp(event, true)
-}
+    const index = pointersDown.findIndex((pointer) => pointer.pointerId === event.pointerId)
+    const pointer = pointersDown[index]
+    if (!pointer) return
 
-function onPointerUp(event: PointerEvent, isImagePointer: boolean) {
-    event.stopPropagation()
-    
-    if (event.button === 0) {
-        const index = pointersDown.findIndex((pointer) => pointer.pointerId === event.pointerId)
-        const pointer = pointersDown[index]
-        if (!pointer) return
-
-        try {
-            if (pointersDown.length === 1) {
-                // "Click"
-                if (
-                    pointer.isPrimary
-                    && Math.abs(pointer.pageXDown - event.pageX) < 16
-                    && Math.abs(pointer.pageYDown - event.pageY) < 16
-                    && window.performance.now() - pointer.timestamp < 500
-                ) {
-                    if (isImagePointer) {
-                        toggleZoom()
-                    } else {
-                        emit('update:visible', false)
-                    }
+    try {
+        if (pointersDown.length === 2) {
+            pointersDown = []
+        } else if (pointersDown.length === 1) {
+            // "Click"
+            if (
+                pointer.isPrimary
+                && Math.abs(pointer.pageXDown - event.pageX) < 16
+                && Math.abs(pointer.pageYDown - event.pageY) < 16
+                && window.performance.now() - pointer.timestamp < 500
+            ) {
+                if (isImagePointer) {
+                    toggleZoom()
+                } else {
+                    emit('update:visible', false)
                 }
             }
-        } catch (error) { /* Ignore */ }
-
-        if (index > -1) {
-            pointersDown.splice(index, 1)
         }
+        if (pointersDown.length < 2) {
+            const translateXLimit = Math.floor(Math.max(0, ((imageBaseWidth * zoomScale.value) - viewContainerWidth) / 2))
+            const translateYLimit = Math.floor(Math.max(0, ((imageBaseHeight * zoomScale.value) - viewContainerHeight) / 2))
+            if (Math.abs(zoomTranslateX.value) > translateXLimit || Math.abs(zoomTranslateY.value) > translateYLimit) {
+                nextTick(() => {
+                    setTimeout(() => {
+                        zoomTranslateX.value = Math.max(-translateXLimit, Math.min(translateXLimit, zoomTranslateX.value))
+                        zoomTranslateY.value = Math.max(-translateYLimit, Math.min(translateYLimit, zoomTranslateY.value))
+                    }, 1)
+                })
+                
+            }
+        }
+        isZooming.value = true
+        setTimeout(() => {
+            isZooming.value = false
+        }, 300)
+    } catch (error) { /* Ignore */ }
+
+    if (index > -1) {
+        pointersDown.splice(index, 1)
     }
 }
 
 function onWindowPointerLeave() {
-    pointersDown = []
+    // pointersDown = []
 }
 
 onMounted(() => {
     window.addEventListener('pointerout', onWindowPointerLeave, true)
+    window.addEventListener('pointerup', onPointerUpViewer, true)
+    window.addEventListener('touchend', onTouchEndViewer, true)
 })
 
 onUnmounted(() => {
     window.removeEventListener('pointerout', onWindowPointerLeave, true)
+    window.removeEventListener('pointerup', onPointerUpViewer, true)
+    window.removeEventListener('touchend', onTouchEndViewer, true)
+
+
 })
 </script>
 

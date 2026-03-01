@@ -1,10 +1,40 @@
 <template>
     <header class="application__main__header">
         <div class="application__main__header-container">
+            <Button
+                v-if="isMobileView"
+                icon="pi pi-arrow-left"
+                severity="secondary"
+                variant="text"
+                class="!p-0 !w-10 !h-10 !ml-1"
+                :style="{ '--p-icon-size': '1.25rem' }"
+                :aria-label="t('layout.sidebarMenuButton')"
+                @click="toggleApplicationSidebar()"
+            />
             <slot />
         </div>
     </header>
 </template>
+
+<script setup lang="ts">
+import { inject, type Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+import { useApplication } from '@/composables/application'
+
+import Button from 'primevue/button'
+
+const { isMobileView, toggleApplicationSidebar } = useApplication()
+
+const { t } = useI18n()
+
+const emit = defineEmits<{
+    (e: 'toggleMenu'): void
+}>()
+
+const isTouchScreen = window.matchMedia("(pointer: coarse)").matches
+
+</script>
 
 <style lang="scss" scoped>
 .application__main__header {

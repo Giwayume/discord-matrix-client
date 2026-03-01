@@ -40,61 +40,69 @@
                     :aria-label="t('home.createMessage')"
                 />
             </div>
-            <Menu
+            <div
                 :model="directChatItems"
                 :style="{
                     '--p-menu-item-focus-background': 'var(--background-mod-subtle)',
                     '--p-menu-item-border-radius': '0.5rem 0 0 0.5rem',
                 }"
-                class="-mr-2 !min-w-auto"
+                class="p-menu -mr-2 !min-w-auto"
             >
-                <template #item="{ item, props }">
-                    <a
-                        class="p-menu-item-link sidebar-list__direct-message"
-                        :class="{ 'p-menu-item-link-active': item.key === route.params.roomId }"
-                        tabindex="-1"
-                    >
-                        <span class="p-menu-item-label flex gap-3 max-w-full">
-                            <OverlayStatus level="lowest" :status="item.presence" :invisible="item.isGroup" class="w-8 h-8">
-                                <AuthenticatedImage :mxcUri="item.avatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
-                                    <template v-slot="{ src }">
-                                        <Avatar :image="src" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
-                                    </template>
-                                    <template #error>
-                                        <Avatar :icon="item.isGroup ? 'pi pi-users' : 'pi pi-user'" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
-                                    </template>
-                                </AuthenticatedImage>
-                            </OverlayStatus>
-                            <div class="flex flex-col justify-center overflow-hidden">
-                                <div class="overflow-hidden text-nowrap text-ellipsis leading-5 -mb-[2px]">{{ item.displayname ?? item.label }}</div>
-                                <div
-                                    v-if="item.statusMessage"
-                                    v-tooltip.top="{ value: item.statusMessage }"
-                                    class="overflow-hidden text-nowrap text-ellipsis text-xs leading-4 -mt-[2px]"
-                                >{{ item.statusMessage }}</div>
+                <div class="p-menu-list" role="navigation">
+                    <div v-for="item of directChatItems" class="p-menu-item" role="presentation">
+                        <div class="p-menu-item-content">
+                            <div
+                                role="button"
+                                class="p-menu-item-link sidebar-list__direct-message"
+                                :class="{ 'p-menu-item-link-active': item.key === route.params.roomId }"
+                                @pointerdown="(event) => onPointerDownChat(event, item)"
+                                @pointerup="(event) => onPointerUpChat(event, item)"
+                            >
+                                <span class="p-menu-item-label flex gap-3 max-w-full">
+                                    <OverlayStatus level="lowest" :status="item.presence" :invisible="item.isGroup" class="w-8 h-8">
+                                        <AuthenticatedImage :mxcUri="item.avatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
+                                            <template v-slot="{ src }">
+                                                <Avatar :image="src" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
+                                            </template>
+                                            <template #error>
+                                                <Avatar :icon="item.isGroup ? 'pi pi-users' : 'pi pi-user'" shape="circle" size="large" :aria-label="t('layout.userAvatarImage')" />
+                                            </template>
+                                        </AuthenticatedImage>
+                                    </OverlayStatus>
+                                    <div class="flex flex-col justify-center overflow-hidden">
+                                        <div class="overflow-hidden text-nowrap text-ellipsis leading-5 -mb-[2px]">{{ item.displayname ?? item.label }}</div>
+                                        <div
+                                            v-if="item.statusMessage"
+                                            v-tooltip.top="{ value: item.statusMessage }"
+                                            class="overflow-hidden text-nowrap text-ellipsis text-xs leading-4 -mt-[2px]"
+                                        >{{ item.statusMessage }}</div>
+                                    </div>
+                                    <div
+                                        class="p-button p-component p-button-icon-only p-button-secondary p-button-text p-button-sm !absolute right-1 !text-xs !p-0 !w-7 !h-6"
+                                        variant="text"
+                                        severity="secondary"
+                                        size="small"
+                                        :aria-label="t('home.leaveRoom')"
+                                        @click="leaveRoom(item.key)"
+                                    >
+                                        <span class="pi pi-times" aria-hidden="true" />
+                                    </div>
+                                </span>
                             </div>
-                            <Button
-                                icon="pi pi-times"
-                                variant="text"
-                                severity="secondary"
-                                size="small"
-                                class="!absolute right-1 !text-xs !p-0 !w-7 !h-6"
-                                :aria-label="t('home.leaveRoom')"
-                                @click="leaveRoom(item.key)"
-                            />
-                        </span>
-                    </a>
-                </template>
-            </Menu>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </SidebarListBody>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
+import { useApplication } from '@/composables/application'
 import { useProfileStore } from '@/stores/profile'
 import { useRoomStore } from '@/stores/room'
 
@@ -112,6 +120,7 @@ import type { MenuItem } from 'primevue/menuitem'
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const { toggleApplicationSidebar } = useApplication()
 const { directMessageRooms } = storeToRefs(useRoomStore())
 const { profiles } = storeToRefs(useProfileStore())
 
@@ -122,7 +131,11 @@ const topMenuItems = ref([
         key: 'friends',
         label: t('home.topMenu.friends'),
         icon: 'pi pi-user',
-        route: { name: 'home' },
+        command() {
+            router.push({ name: 'home' }).then(() => {
+                toggleApplicationSidebar(false)
+            })
+        },
     },
 ])
 
@@ -140,12 +153,39 @@ const directChatItems = computed<MenuItem[]>(() => {
             avatarUrl: room.heroes.length > 1 ? undefined : profile?.avatarUrl,
             presence: profile?.presence,
             statusMessage: room.heroes.length > 1 ? undefined : profile?.statusMessage,
-            command(event) {
-                router.push({ name: 'room', params: { roomId: event.item.key } })
-            },
         }
     })
 })
+
+function selectChat(item: MenuItem) {
+    router.push({ name: 'room', params: { roomId: item.key } }).then(() => {
+        toggleApplicationSidebar(false)
+    })
+}
+
+let pointerDownChatItem: MenuItem | undefined = undefined
+let pointerDownChatItemX: number = 0
+let pointerDownChatItemY: number = 0
+let pointerDownChatTimestamp: number = 0
+
+function onPointerDownChat(event: PointerEvent, item: MenuItem) {
+    pointerDownChatItem = item
+    pointerDownChatItemX = event.pageX
+    pointerDownChatItemY = event.pageY
+    pointerDownChatTimestamp = window.performance.now()
+}
+
+function onPointerUpChat(event: PointerEvent, item: MenuItem) {
+    // "Click" / "Tap" simulation. Need to do this because of the Safari "double tap with hover states" issue.
+    if (
+        item === pointerDownChatItem
+        && window.performance.now() - pointerDownChatTimestamp <= 500
+        && Math.abs(event.pageX - pointerDownChatItemX) < 8
+        && Math.abs(event.pageY - pointerDownChatItemY) < 8
+    ) {
+        selectChat(item)
+    }
+}
 
 function highlightMenuItem() {
     if (route.name === 'home') {

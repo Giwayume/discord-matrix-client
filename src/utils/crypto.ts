@@ -97,7 +97,7 @@ export async function decryptMegolmEvent<T = any>(
 
     const decryptedMessageObject = camelizeApiResponse(JSON.parse(decryptedMessage))
     const schema = eventContentSchemaByType[decryptedMessageObject.type as keyof typeof eventContentSchemaByType]
-    schema.parse(decryptedMessageObject.content)
+    schema?.parse(decryptedMessageObject.content)
 
     return decryptedMessageObject
 }

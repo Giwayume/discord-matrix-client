@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4">
+    <div class="p-4 overflow-hidden">
         <template v-if="isInsideSpace">
             <div class="w-20 h-20">
                 <AuthenticatedImage :mxcUri="roomAvatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
@@ -39,7 +39,7 @@
                 {{ otherMembersDisplayed[0]!.displayname }}
             </h3>
             <h3 class="font-medium text-2xl text-(--text-strong) leading-[1.25] mb-5">{{ otherMembersDisplayed[0]!.userId }}</h3>
-            <I18nT tag="p" keypath="room.directMessageHistoryBeginning">
+            <I18nT tag="p" keypath="room.directMessageHistoryBeginning" scope="global">
                 <template #displayname>
                     <strong>{{ otherMembersDisplayed[0]!.displayname ?? otherMembersDisplayed[0]!.userId }}</strong>
                 </template>
@@ -78,7 +78,7 @@
                     </template>
                 </template>
             </h3>
-            <I18nT tag="p" keypath="room.groupMessageHistoryBeginning">
+            <I18nT tag="p" keypath="room.groupMessageHistoryBeginning" scope="global">
                 <template #users>
                     <strong>
                         <template v-if="roomName">{{ roomName }}</template>

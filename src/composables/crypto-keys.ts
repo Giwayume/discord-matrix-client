@@ -38,7 +38,6 @@ import {
 const log = createLogger(import.meta.url)
 
 function getFriendlyErrorMessage(t: ComposerTranslation, error: Error | unknown) {
-    console.error(error)
     if (error instanceof EncryptionNotSupportedError) {
         return t('errors.cryptoKeys.encryptionNotSupported')
     } else if (error instanceof EncryptionVerificationError) {
@@ -172,35 +171,46 @@ export function useCryptoKeys() {
             } catch (error) {
                 log.error('Error when generating pickle key.', error)
                 encryptionNotSupported.value = true
-                return
             }
         }
-        if (pickleKeyString) {
+        if (pickleKeyString && !encryptionNotSupported.value) {
             try {
                 userDevicePickleKey.value = await pickleKeyToAesKey(pickleKeyString)
             } catch (error) {
                 log.error('Error when converting pickle key to AES key.', error)
                 encryptionNotSupported.value = true
-                return
             }
         }
         if (!userDevicePickleKey.value) {
             encryptionNotSupported.value = true
-            return
         }
 
         // Convert string auth tokens to encrypted versions.
-        if (typeof accessToken.value === 'string') {
-            accessToken.value = await encryptSecret(userDevicePickleKey.value, accessToken.value, 'access_token')
+        if (userDevicePickleKey.value) {
+            if (typeof accessToken.value === 'string') {
+                accessToken.value = await encryptSecret(userDevicePickleKey.value, accessToken.value, 'access_token')
+            }
+            if (typeof accessToken.value === 'object') {
+                decryptedAccessToken.value = await decryptSecret(userDevicePickleKey.value, accessToken.value, 'access_token')
+            }
+            if (typeof refreshToken.value === 'string') {
+                refreshToken.value = await encryptSecret(userDevicePickleKey.value, refreshToken.value, 'refresh_token')
+            }
+            if (typeof refreshToken.value === 'object') {
+                decryptedRefreshToken.value = await decryptSecret(userDevicePickleKey.value, refreshToken.value, 'refresh_token')
+            }
+        } else {
+            // Set plain strings if encryption not supported.
+            if (typeof accessToken.value === 'string') {
+                decryptedAccessToken.value = accessToken.value
+            }
+            if (typeof refreshToken.value === 'string') {
+                decryptedRefreshToken.value = refreshToken.value
+            }
         }
-        if (typeof accessToken.value === 'object') {
-            decryptedAccessToken.value = await decryptSecret(userDevicePickleKey.value, accessToken.value, 'access_token')
-        }
-        if (typeof refreshToken.value === 'string') {
-            refreshToken.value = await encryptSecret(userDevicePickleKey.value, refreshToken.value, 'refresh_token')
-        }
-        if (typeof refreshToken.value === 'object') {
-            decryptedRefreshToken.value = await decryptSecret(userDevicePickleKey.value, refreshToken.value, 'refresh_token')
+
+        if (encryptionNotSupported.value || !userDevicePickleKey.value) {
+            return
         }
 
         try {

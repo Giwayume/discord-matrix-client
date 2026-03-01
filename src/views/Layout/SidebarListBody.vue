@@ -28,10 +28,14 @@ import ScrollPanel from 'primevue/scrollpanel'
     flex-grow: 1;
     align-items: flex-start;
     overflow: hidden;
+    position: relative;
 
     > .p-scrollpanel {
-        flex-grow: 1;
-        max-width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
     }
 }
 </style>

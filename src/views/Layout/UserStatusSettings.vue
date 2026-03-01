@@ -18,35 +18,45 @@
         </Button>
         <div class="application__user-status-settings__actions">
             <Button
-                v-tooltip.bottom="{ value: t('layout.unmute') }"
+                v-tooltip.top="{ value: t('layout.unmute') }"
                 icon="pi pi-microphone"
                 variant="text"
                 severity="secondary"
                 :aria-label="t('layout.unmute')"
             />
             <Button
-                v-tooltip.bottom="{ value: t('layout.deafen') }"
+                v-tooltip.top="{ value: t('layout.deafen') }"
                 icon="pi pi-headphones"
                 variant="text"
                 severity="secondary"
                 :aria-label="t('layout.deafen')"
             />
             <Button
-                v-tooltip.bottom="{ value: t('layout.userSettings') }"
+                v-tooltip.top="{ value: t('layout.userSettings') }"
                 icon="pi pi-cog"
                 variant="text"
                 severity="secondary"
                 :aria-label="t('layout.userSettings')"
                 @click="emit('showUserSettings')"
             />
+            <Button
+                v-if="isFullscreenEnabled"
+                v-tooltip.top="{ value: t('layout.enterFullscreen') }"
+                icon="pi pi-expand"
+                variant="text"
+                severity="secondary"
+                :aria-label="t('layout.enterFullscreen')"
+                @click="toggleFullscreen()"
+            />
         </div>
     </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject, type Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { useApplication } from '@/composables/application'
 import { useProfileStore } from '@/stores/profile'
 import { useSessionStore } from '@/stores/session'
 
@@ -59,12 +69,17 @@ import SplitButton from 'primevue/splitbutton'
 import vTooltip from 'primevue/tooltip'
 
 const { t } = useI18n()
+const { isMobileView } = useApplication()
 const { authenticatedUserAvatarUrl, authenticatedUserDisplayName } = storeToRefs(useProfileStore())
 const { userId } = storeToRefs(useSessionStore())
 
 const emit = defineEmits<{
     (e: 'showUserSettings'): void
 }>()
+
+const isFullscreenEnabled = computed(() => {
+    return isMobileView.value && document.fullscreenEnabled
+})
 
 const username = computed(() => {
     return authenticatedUserDisplayName.value || userId.value
@@ -73,6 +88,14 @@ const onlineStatus = computed<'online'>(() => {
     // TODO - can user configure this?
     return 'online'
 })
+
+function toggleFullscreen() {
+    if (document.fullscreenElement) {
+        document.exitFullscreen()
+    } else {
+        document.body.requestFullscreen()
+    }
+}
 
 </script>
 
@@ -91,6 +114,10 @@ const onlineStatus = computed<'online'>(() => {
     border: 1px solid var(--border-muted);
     border-radius: var(--radius-sm);
     z-index: 10;
+
+    @media screen and (max-width: 800px) {
+        right: 0.5rem;
+    }
 }
 
 .application__user-status-settings__actions {

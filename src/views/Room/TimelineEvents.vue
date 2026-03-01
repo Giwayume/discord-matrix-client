@@ -57,6 +57,7 @@
                                                 '--image-target-height': (e.event.content.info?.thumbnailInfo?.h || e.event.content.info?.h || 16) + 'px',
                                                 '--image-aspect-ratio': (e.event.content.info?.thumbnailInfo?.w || e.event.content.info?.w || 16) / (e.event.content.info?.thumbnailInfo?.h || e.event.content.info?.h || 16),
                                             }"
+                                            @dragstart.prevent
                                             @click="viewPhoto(e.event)"
                                         >
                                     </template>
@@ -314,7 +315,6 @@ function isEventVisible(event: ApiV3SyncClientEventWithoutRoomId) {
     if (event.type === 'm.room.member') {
         if (!visibleMembershipStatuses.includes(event.content.membership)) return false
     } else if (event.type === 'm.room.message') {
-        console.log(event.content)
         if (!messageEventMessageTypes.includes(event.content.msgtype)) return false
     }
     return true

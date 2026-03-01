@@ -89,7 +89,6 @@ export const useSessionStore = defineStore('session', () => {
                 await deleteMatrixReactSdkTableKey('account', 'mx_access_token')
             }
         } catch (error) {
-            console.error(error)
             localStorage.removeItem('mx_access_token')
         }
     })

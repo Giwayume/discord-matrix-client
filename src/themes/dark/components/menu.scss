@@ -20,6 +20,10 @@
     --p-menu-item-active-background: var(--background-mod-normal);
 }
 
+.p-menu {
+    user-select: none;
+}
+
 .p-menu-submenu-label {
     font-size: 0.875rem;
 

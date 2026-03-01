@@ -3,6 +3,14 @@ html {
     font-family: var(--font-primary);
     background: var(--background-base-lowest);
     color: var(--text-default);
+    margin: 0 !important;
+    padding: 0 !important;
+    overscroll-behavior: none !important;
+}
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    overscroll-behavior: none !important;
 }
 
 a[href], .link {

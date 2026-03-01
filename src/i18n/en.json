@@ -121,6 +121,7 @@
         "registerButton": "Register"
     },
     "layout": {
+        "sidebarMenuButton": "Menu",
         "titleBarInbox": "Inbox",
         "titleBarHelp": "Help",
         "spaceAvatarAlt": "Space Avatar",
@@ -133,7 +134,8 @@
         "unmute": "Unmute",
         "deafen": "Deafen",
         "undeafen": "Undeafen",
-        "userSettings": "User Settings"
+        "userSettings": "User Settings",
+        "enterFullscreen": "Enter Fullscreen"
     },
     "login": {
         "title": "Welcome back!",
