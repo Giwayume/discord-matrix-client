@@ -51,7 +51,7 @@
         </template>
         <template v-else-if="otherMembersDisplayed.length > 1">
             <div
-                v-tooltip.bottom="{ value: t('room.editGroupIconButton') }"
+                v-tooltip.bottom="{ value: isTouchEventsDetected ? undefined : t('room.editGroupIconButton') }"
                 class="message-beginning__edit-group-icon-button w-20 h-20"
                 role="button"
                 tabindex="0"
@@ -106,6 +106,7 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 
 import { isRoomPartOfSpace } from '@/utils/room'
+import { useApplication } from '@/composables/application'
 
 import { useProfileStore } from '@/stores/profile'
 import { useSessionStore } from '@/stores/session'
@@ -121,6 +122,7 @@ import vTooltip from 'primevue/tooltip'
 import type { JoinedRoom } from '@/types'
 
 const { t } = useI18n()
+const { isTouchEventsDetected } = useApplication()
 const { profiles } = storeToRefs(useProfileStore())
 const { userId } = storeToRefs(useSessionStore())
 

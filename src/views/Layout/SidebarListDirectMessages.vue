@@ -30,18 +30,17 @@
             <div class="flex justify-between pl-2 pb-1">
                 <h2 class="text-sm text-(--channels-default)">{{ t('home.directMessages') }}</h2>
                 <Button
-                    v-tooltip.top="{ value: t('home.createMessage') }"
+                    v-tooltip.top="{ value: isTouchEventsDetected ? undefined : t('home.createMessage') }"
                     icon="pi pi-plus"
                     severity="secondary"
                     variant="text"
                     size="small"
-                    class="!p-0 !w-9 -my-2 -mr-2 shrink-0"
+                    class="!p-0 !w-8 !h-8 -my-2 -mr-2 shrink-0"
                     :style="{ '--p-button-sm-font-size': 'var(--text-xs)' }"
                     :aria-label="t('home.createMessage')"
                 />
             </div>
             <div
-                :model="directChatItems"
                 :style="{
                     '--p-menu-item-focus-background': 'var(--background-mod-subtle)',
                     '--p-menu-item-border-radius': '0.5rem 0 0 0.5rem',
@@ -73,19 +72,19 @@
                                         <div class="overflow-hidden text-nowrap text-ellipsis leading-5 -mb-[2px]">{{ item.displayname ?? item.label }}</div>
                                         <div
                                             v-if="item.statusMessage"
-                                            v-tooltip.top="{ value: item.statusMessage }"
+                                            v-tooltip.top="{ value: isTouchEventsDetected ? undefined : item.statusMessage }"
                                             class="overflow-hidden text-nowrap text-ellipsis text-xs leading-4 -mt-[2px]"
                                         >{{ item.statusMessage }}</div>
                                     </div>
                                     <div
-                                        class="p-button p-component p-button-icon-only p-button-secondary p-button-text p-button-sm !absolute right-1 !text-xs !p-0 !w-7 !h-6"
+                                        class="p-button p-component p-button-icon-only p-button-secondary p-button-text p-button-sm !absolute right-1 !p-0 !w-7 !h-6"
                                         variant="text"
                                         severity="secondary"
                                         size="small"
                                         :aria-label="t('home.leaveRoom')"
                                         @click="leaveRoom(item.key)"
                                     >
-                                        <span class="pi pi-times" aria-hidden="true" />
+                                        <span class="pi pi-times !text-sm" aria-hidden="true" />
                                     </div>
                                 </span>
                             </div>
@@ -102,6 +101,7 @@ import { computed, inject, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
+
 import { useApplication } from '@/composables/application'
 import { useProfileStore } from '@/stores/profile'
 import { useRoomStore } from '@/stores/room'
@@ -120,7 +120,7 @@ import type { MenuItem } from 'primevue/menuitem'
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
-const { toggleApplicationSidebar } = useApplication()
+const { isTouchEventsDetected, toggleApplicationSidebar } = useApplication()
 const { directMessageRooms } = storeToRefs(useRoomStore())
 const { profiles } = storeToRefs(useProfileStore())
 

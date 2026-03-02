@@ -1,6 +1,13 @@
 import type { useRoomStore } from '@/stores/room'
 import type { InvitedRoom, KnockedRoom, JoinedRoom, LeftRoom } from '@/types'
 
+/** Get the room avatar URL, if defined. */
+export function getRoomAvatarUrl(
+    room: InvitedRoom | KnockedRoom | JoinedRoom | LeftRoom
+): string | undefined {
+    return room.stateEventsByType['m.room.avatar']?.[0]?.content.url
+}
+
 /** Get the room name, if defined. */
 export function getRoomName(
     room: InvitedRoom | KnockedRoom | JoinedRoom | LeftRoom

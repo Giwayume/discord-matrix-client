@@ -81,3 +81,11 @@ export class MissingSessionDataError extends Error {
         this.name = 'MissingSessionDataError'
     }
 }
+
+export class NetworkConnectionError extends Error {
+    constructor(message?: string) {
+        const defaultMessage = 'An error occurred when connecting to the network host.'
+        super(message ?? defaultMessage)
+        this.name = 'NetworkConnectionError'
+    }
+}

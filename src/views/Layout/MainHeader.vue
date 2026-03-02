@@ -49,7 +49,7 @@ const isTouchScreen = window.matchMedia("(pointer: coarse)").matches
     border-start-start-radius: var(--radius-md);
     padding: 0;
     margin: 0;
-    height: 3.0625rem;
+    height: 3rem;
     z-index: 2;
 }
 .application__main__header-container {

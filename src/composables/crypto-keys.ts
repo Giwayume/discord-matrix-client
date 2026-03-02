@@ -6,7 +6,7 @@ import { createLogger } from '@/composables/logger'
 
 import { decodeBase64, encodeUnpaddedBase64 } from '@/utils/base64'
 import { generateEd25519Key, createSigningJson, type Ed25519KeyPair } from '@/utils/crypto'
-import { HttpError, EncryptionNotSupportedError, EncryptionVerificationError } from '@/utils/error'
+import { HttpError, EncryptionNotSupportedError, EncryptionVerificationError, NetworkConnectionError } from '@/utils/error'
 import { fetchJson } from '@/utils/fetch'
 import { createPickleKey, getPickleKey } from '@/utils/pickle-key'
 import { allSettledValues } from '@/utils/promise'
@@ -46,6 +46,8 @@ function getFriendlyErrorMessage(t: ComposerTranslation, error: Error | unknown)
         return t('errors.cryptoKeys.httpError')
     } else if (error instanceof z.ZodError) {
         return t('errors.cryptoKeys.schemaValidation')
+    } else if (error instanceof NetworkConnectionError) {
+        return t('errors.cryptoKeys.serverDown')
     }
     return t('errors.unexpected')
 }

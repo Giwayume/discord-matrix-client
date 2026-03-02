@@ -3,9 +3,13 @@
         <ScrollPanel>
             <div class="application__spaces__scroll-content">
                 <button
-                    v-tooltip.right="{ value: t('layout.directMessages') }"
-                    class="application__space application__space--dm application__space--active"
+                    v-tooltip.right="{ value: isTouchEventsDetected ? undefined : t('layout.directMessages') }"
+                    class="application__space application__space--dm"
+                    :class="{
+                        'application__space--active': !currentTopLevelSpaceId,
+                    }"
                     :aria-label="t('layout.directMessages')"
+                    @click="viewDirectMessages"
                 >
                     <div class="application__space__icon">
                         <span class="pi pi-comments" aria-hidden="true" />
@@ -14,9 +18,13 @@
                 <hr>
                 <template v-for="space of joinedSpaces">
                     <button
-                        v-tooltip.right="{ value: space.name }"
+                        v-tooltip.right="{ value: isTouchEventsDetected ? undefined : space.name }"
                         class="application__space"
+                        :class="{
+                            'application__space--active': currentTopLevelSpaceId === space.roomId,
+                        }"
                         :aria-label="space.name"
+                        @click="viewSpace(space)"
                     >
                         <div class="application__space__icon">
                             <AuthenticatedImage
@@ -39,7 +47,7 @@
                     </button>
                 </template>
                 <button
-                    v-tooltip.right="{ value: t('layout.addSpace') }"
+                    v-tooltip.right="{ value: isTouchEventsDetected ? undefined : t('layout.addSpace') }"
                     class="application__space application__space--action"
                     :aria-label="t('layout.addSpace')"
                 >
@@ -48,7 +56,7 @@
                     </div>
                 </button>
                 <button
-                    v-tooltip.right="{ value: t('layout.discover') }"
+                    v-tooltip.right="{ value: isTouchEventsDetected ? undefined : t('layout.discover') }"
                     class="application__space application__space--action"
                     :aria-label="t('layout.discover')"
                 >
@@ -62,9 +70,10 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useSessionStore } from '@/stores/session'
+import { storeToRefs } from 'pinia'
+import { useApplication } from '@/composables/application'
 import { useSpaceStore } from '@/stores/space'
 
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
@@ -72,15 +81,26 @@ import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
 import ScrollPanel from 'primevue/scrollpanel'
 import vTooltip from 'primevue/tooltip'
 
+import type { SpaceSummary } from '@/types'
+
 const { t } = useI18n()
-const { homeserverBaseUrl } = storeToRefs(useSessionStore())
-const { joinedSpaces } = storeToRefs(useSpaceStore())
+const router = useRouter()
+const { isTouchEventsDetected } = useApplication()
+const { currentTopLevelSpaceId, joinedSpaces } = storeToRefs(useSpaceStore())
 
 function createAcronym(spaceName: string) {
     const wordSplit = spaceName.toUpperCase().split(' ')
     return wordSplit.length >= 2
         ? wordSplit.slice(0, 2).map((word) => word[0]).join('')
         : wordSplit[0]?.slice(0, 2)
+}
+
+function viewDirectMessages() {
+    router.push({ name: 'home' })
+}
+
+function viewSpace(space: SpaceSummary) {
+    router.push({ name: 'room', params: { roomId: space.roomId } })
 }
 </script>
 

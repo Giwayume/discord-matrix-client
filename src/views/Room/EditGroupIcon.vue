@@ -4,7 +4,7 @@
         modal
         :header="t('editGroupIcon.title')"
         :draggable="false"
-        :style="{ width: '100%', maxWidth: '30rem' }"
+        :style="{ width: 'calc(100% - 1rem)', maxWidth: '30rem' }"
         @update:visible="(visible) => emit('update:visible', visible)"
     >
         <div class="flex justify-center items-center">

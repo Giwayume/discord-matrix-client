@@ -27,14 +27,14 @@
                 <div class="flex">
                     <div class="photo-viewer__control-group">
                         <Button
-                            v-tooltip.bottom="{ value: zoomScale > 1 ? t('photoViewer.zoomOutButton') : t('photoViewer.zoomInButton') }"
+                            v-tooltip.bottom="{ value: isTouchEventsDetected ? undefined : zoomScale > 1 ? t('photoViewer.zoomOutButton') : t('photoViewer.zoomInButton') }"
                             :icon="'pi ' + (zoomScale > 1 ? 'pi-search-minus' : 'pi-search-plus')"
                             severity="secondary"
                             :aria-label="zoomScale > 1 ? t('photoViewer.zoomOutButton') : t('photoViewer.zoomInButton')"
                             @click="toggleZoom()"
                         />
                         <Button
-                            v-tooltip.bottom="{ value: t('photoViewer.downloadButton') }"
+                            v-tooltip.bottom="{ value: isTouchEventsDetected ? undefined : t('photoViewer.downloadButton') }"
                             icon="pi pi-download"
                             severity="secondary"
                             :aria-label="t('photoViewer.downloadButton')"
@@ -42,7 +42,7 @@
                         />
                     </div>
                     <Button
-                        v-tooltip.bottom="{ value: t('photoViewer.closeButton') }"
+                        v-tooltip.bottom="{ value: isTouchEventsDetected ? undefined : t('photoViewer.closeButton') }"
                         icon="pi pi-times"
                         severity="secondary"
                         class="!w-10 !h-10"

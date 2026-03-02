@@ -15,6 +15,14 @@ export interface RoomSummary {
     roomVersion: string;
 }
 
+export interface SpaceSummary {
+    avatarUrl?: string;
+    creator: string;
+    name: string;
+    roomId: string;
+    roomVersion: string;
+}
+
 export type EventDataRecordFrom = {
     [K in keyof EventContentByType]?: EventContentByType[K];
 } & {

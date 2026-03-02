@@ -8,7 +8,7 @@ import {
     type ApiV3RefreshLoginResponse,
 } from '@/types'
 
-import { HttpError } from './error'
+import { HttpError, NetworkConnectionError } from './error'
 
 interface EnhancedRequestInit extends RequestInit {
     headers?: Record<string, string>
@@ -22,7 +22,13 @@ export async function fetch(input: RequestInfo | URL, init?: EnhancedRequestInit
         if (!init.headers) init.headers = {}
         init.headers['Authorization'] = `Bearer ${sessionStore.decryptedAccessToken}`
     }
-    let response = await window.fetch(input, init)
+    let response = await window.fetch(input, init).catch((error: Error) => {
+        if (error instanceof TypeError) {
+            throw new NetworkConnectionError(`${error}`)
+        } else {
+            throw error
+        }
+    })
 
     // Session expired
     if (response.status === 401 && init?.useAuthorization) {
@@ -53,7 +59,13 @@ export async function fetch(input: RequestInfo | URL, init?: EnhancedRequestInit
                     logout()
                     throw error
                 }
-                response = await window.fetch(input, init)
+                response = await window.fetch(input, init).catch((error: Error) => {
+                    if (error instanceof TypeError) {
+                        throw new NetworkConnectionError(`${error}`)
+                    } else {
+                        throw error
+                    }
+                })
             } else {
                 const { logout } = useLogout()
                 logout()

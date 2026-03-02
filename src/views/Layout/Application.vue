@@ -9,7 +9,7 @@
         </div>
     </div>
     <div v-else ref="applicationContainer" class="application">
-        <TitleBar :title="props.title" :titleIcon="props.titleIcon" />
+        <TitleBar :title="props.title" :titleIcon="props.titleIcon" :titleAvatar="props.titleAvatar" />
         <div
             v-if="isMobileView"
             class="application__mobile-drawer-layout"
@@ -132,6 +132,10 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    titleAvatar: {
+        type: String,
+        default: '',
+    },
 })
 
 const applicationContainer = ref<HTMLDivElement>()
@@ -210,10 +214,12 @@ function onWindowResize() {
 let primaryPointerDown: {
     pageX: number;
     pageY: number;
+    lastPageX: number;
     sidebarOpenOffset: number;
-    timestamp: number;
 } | undefined = undefined
 let isDraggingDrawer = ref<boolean | undefined>()
+let averageXSpeed: number = 0
+let averageXSpeedTimestamp: number = 0
 
 function pointDistance(p1x: number, p1y: number, p2x: number, p2y: number) {
     const dx = p2x - p1x
@@ -227,9 +233,11 @@ function onPointerDownMobileLayout(event: PointerEvent) {
         primaryPointerDown = {
             pageX: event.pageX,
             pageY: event.pageY,
+            lastPageX: event.pageX,
             sidebarOpenOffset: sidebarOpenOffset.value,
-            timestamp: window.performance.now(),
         }
+        averageXSpeed = 0
+        averageXSpeedTimestamp = window.performance.now()
     }
 }
 function onPointerMoveMobileLayout(event: PointerEvent) {
@@ -249,6 +257,10 @@ function onPointerMoveMobileLayout(event: PointerEvent) {
         event.preventDefault()
         event.stopPropagation()
         sidebarOpenOffset.value = Math.max(0, Math.min(window.innerWidth - sidebarOpenRightPadding, primaryPointerDown.sidebarOpenOffset + event.pageX - primaryPointerDown.pageX))
+        let speedProportion = Math.min(1, (window.performance.now() - averageXSpeedTimestamp) / 100)
+        averageXSpeed = ((event.pageX - primaryPointerDown.lastPageX) * speedProportion) + (averageXSpeed * (1 - speedProportion))
+        averageXSpeedTimestamp = window.performance.now()
+        primaryPointerDown.lastPageX = event.pageX
     }
 }
 function onPointerCancelMobileLayout(event: PointerEvent) {
@@ -259,20 +271,17 @@ function onPointerUpWindow(event: PointerEvent) {
         isAnimatingSidebarToggle.value = true
 
         const distanceDragged = Math.abs(event.pageX - primaryPointerDown.pageX)
-        const pixelsDraggedPerSecond = distanceDragged / (window.performance.now() - primaryPointerDown.timestamp) * 1000
 
         if (
             primaryPointerDown.sidebarOpenOffset > 0
-            && event.pageX < primaryPointerDown.pageX
             && distanceDragged >= 30
-            && pixelsDraggedPerSecond > 300
+            && averageXSpeed < -4
         ) {
             sidebarOpenOffset.value = 0
         } else if (
             primaryPointerDown.sidebarOpenOffset === 0
-            && event.pageX > primaryPointerDown.pageX
             && distanceDragged >= 30
-            && pixelsDraggedPerSecond > 300
+            && averageXSpeed > 4
         ) {
             sidebarOpenOffset.value = window.innerWidth - sidebarOpenRightPadding
         } else if (sidebarOpenOffset.value < (window.innerWidth - sidebarOpenRightPadding) / 2) {
@@ -300,7 +309,7 @@ function onPointerUpWindow(event: PointerEvent) {
     right: 0;
     bottom: 0;
     background: var(--background-base-lowest);
-    overflow: hidden; // Hide overflow for mobile view, main slides right which creates horizontal scrollbar
+    overflow: hidden; // Hide overflow for mobile view, main view slides right which creates horizontal scrollbar
 
     padding-top: env(safe-area-inset-top);
     padding-left: env(safe-area-inset-left);

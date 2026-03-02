@@ -59,7 +59,8 @@
             "encryptionNotSupported": "We failed to set up encryption keys for this device. Please use an updated browser that complies to the latest web standards.",
             "encryptionVerificationFailed": "We failed to verify some of the encryption keys actually work to decrypt messages.",
             "schemaValidation": "We failed to initialize encryption keys because one of the APIs responded in an unexpected format.",
-            "httpError": "A network error occurred; we cannot determine the state of the encryption keys. This could be a temporary error."
+            "httpError": "A network error occurred; we cannot determine the state of the encryption keys. This could be a temporary error.",
+            "serverDown": "The server is currently down. This could be a temporary error."
         },
         "profiles": {
             "missingSessionData": "This session is missing required data in order to load the user profile. We recommend logging in again in order to fix this issue."
@@ -69,6 +70,11 @@
             "httpError": "The server unexpectedly returned an error response when trying to sync chats. This could be a temporary error.",
             "serverDown": "The server is not responding to sync requests. This could be a temporary error."
         }
+    },
+    "fixDecryption": {
+        "title": "Fix Decryption",
+        "deviceEncryptionNotSupported": "Please visit this application in the most recent version of Chrome, Firefox, or Safari. This app relies on the SubtleCrypto web APIs, which your browser or webview does not support. These APIs can be disabled if this application is hosted without HTTPS security. Your best bet to fix this problem is to use a modern web browser.",
+        "unknownError": "We were unable to detect why this message can't be decrypted."
     },
     "home": {
         "title": "Friends",
@@ -128,6 +134,9 @@
         "directMessages": "Direct Messages",
         "addSpace": "Add a Space",
         "discover": "Discover",
+        "unnamedSpace": "Unnamed Space",
+        "inviteToSpace": "Invite to Space",
+        "browseRooms": "Browse Rooms",
         "userStatusSettings": "User Status & Settings",
         "userAvatarImage": "Avatar image",
         "mute": "Mute",
@@ -248,6 +257,7 @@
         "youHaveUnsavedChanges": "Careful - you have unsaved changes!",
         "resetLink": "Reset",
         "saveChangesButton": "Save Changes",
+        "navBackButton": "Go Back",
         "menu": {
             "userSettings": "User Settings",
             "myAccount": "My Account",

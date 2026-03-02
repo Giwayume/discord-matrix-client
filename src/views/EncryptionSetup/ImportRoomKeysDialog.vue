@@ -3,7 +3,7 @@
         :visible="visible"
         modal
         :header="t('importRoomKeys.title')"
-        :style="{ width: '100%', maxWidth: '30rem' }"
+        :style="{ width: 'calc(100% - 1rem)', maxWidth: '30rem' }"
         @update:visible="(visible) => emit('update:visible', visible)"
     >
         <p class="text-(--text-muted)">{{ t('importRoomKeys.subtitle') }}</p>

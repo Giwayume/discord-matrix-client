@@ -1,5 +1,5 @@
 <template>
-    <Application :title="t('home.title')" titleIcon="pi pi-users">
+    <Application key="mainApplication" :title="t('home.title')" titleIcon="pi pi-users">
         <template #sidebar-list>
             <SidebarListDirectMessages />
         </template>

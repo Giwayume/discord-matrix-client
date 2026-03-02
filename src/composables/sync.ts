@@ -8,7 +8,8 @@ import { useProfileStore } from '@/stores/profile'
 import { useSessionStore } from '@/stores/session'
 import { useSyncStore } from '@/stores/sync'
 import { useRoomStore } from '@/stores/room'
-import { fetchJson, HttpError } from '@/utils/fetch'
+import { fetchJson } from '@/utils/fetch'
+import { HttpError, NetworkConnectionError } from '@/utils/error'
 import { until } from '@/utils/vue'
 import * as z from 'zod'
 
@@ -26,7 +27,7 @@ function getFriendlyErrorMessage(t: ComposerTranslation, error: Error | unknown)
         return t('errors.sync.schemaValidation')
     } else if (error instanceof HttpError) {
         return t('errors.sync.httpError')
-    } else if (error instanceof TypeError) {
+    } else if (error instanceof NetworkConnectionError) {
         return t('errors.sync.serverDown')
     }
     return t('errors.unexpected')

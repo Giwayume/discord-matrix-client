@@ -3,7 +3,7 @@
         :visible="visible"
         modal
         :header="header"
-        :style="{ width: '100%', maxWidth: '30rem' }"
+        :style="{ width: 'calc(100% - 1rem)', maxWidth: '30rem' }"
         @update:visible="onUpdateVisible"
     >
         <slot name="subtitle" />

@@ -1,6 +1,7 @@
 import { ref, computed, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchJson, HttpError } from '@/utils/fetch'
+import { fetchJson } from '@/utils/fetch'
+import { HttpError, NetworkConnectionError } from '@/utils/error'
 import * as z from 'zod'
 
 import {
@@ -40,7 +41,7 @@ export function useServerDiscovery(scenario: 'login' | 'register') {
             return t('errors.discoverHomeserver.schemaValidation')
         } else if (error.value instanceof HttpError) {
             return t('errors.discoverHomeserver.httpError')
-        } else if (error.value instanceof TypeError) {
+        } else if (error.value instanceof NetworkConnectionError) {
             return t('errors.discoverHomeserver.serverDown')
         } else if (error.value instanceof DOMException && error.value.name === 'AbortError') {
             return undefined

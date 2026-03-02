@@ -18,21 +18,21 @@
         </Button>
         <div class="application__user-status-settings__actions">
             <Button
-                v-tooltip.top="{ value: t('layout.unmute') }"
+                v-tooltip.top="{ value: isTouchEventsDetected ? undefined : t('layout.unmute') }"
                 icon="pi pi-microphone"
                 variant="text"
                 severity="secondary"
                 :aria-label="t('layout.unmute')"
             />
             <Button
-                v-tooltip.top="{ value: t('layout.deafen') }"
+                v-tooltip.top="{ value: isTouchEventsDetected ? undefined : t('layout.deafen') }"
                 icon="pi pi-headphones"
                 variant="text"
                 severity="secondary"
                 :aria-label="t('layout.deafen')"
             />
             <Button
-                v-tooltip.top="{ value: t('layout.userSettings') }"
+                v-tooltip.top="{ value: isTouchEventsDetected ? undefined : t('layout.userSettings') }"
                 icon="pi pi-cog"
                 variant="text"
                 severity="secondary"
@@ -41,7 +41,7 @@
             />
             <Button
                 v-if="isFullscreenEnabled"
-                v-tooltip.top="{ value: t('layout.enterFullscreen') }"
+                v-tooltip.top="{ value: isTouchEventsDetected ? undefined : t('layout.enterFullscreen') }"
                 icon="pi pi-expand"
                 variant="text"
                 severity="secondary"
@@ -69,7 +69,7 @@ import SplitButton from 'primevue/splitbutton'
 import vTooltip from 'primevue/tooltip'
 
 const { t } = useI18n()
-const { isMobileView } = useApplication()
+const { isMobileView, isTouchEventsDetected } = useApplication()
 const { authenticatedUserAvatarUrl, authenticatedUserDisplayName } = storeToRefs(useProfileStore())
 const { userId } = storeToRefs(useSessionStore())
 
@@ -78,7 +78,7 @@ const emit = defineEmits<{
 }>()
 
 const isFullscreenEnabled = computed(() => {
-    return isMobileView.value && document.fullscreenEnabled
+    return isMobileView.value && document.fullscreenEnabled && import.meta.env.DEV
 })
 
 const username = computed(() => {

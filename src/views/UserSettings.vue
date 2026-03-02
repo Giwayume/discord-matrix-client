@@ -14,28 +14,44 @@
         @update:visible="onUpdateVisible"
     >
         <template #container="{ closeCallback }">
-            <div class="flex flex-row w-full h-full">
+            <div
+                class="flex flex-row w-full h-full relative"
+                @pointerdown="onPointerDownMobileLayout"
+                @pointermove="onPointerMoveMobileLayout"
+                @pointercancel="onPointerCancelMobileLayout"
+            >
                 <aside class="p-dialog-sidebar flex flex-col">
                     <div class="pl-1 pr-4">
-                        <Button variant="text" severity="secondary" class="!p-2 mb-2 w-full !justify-start">
-                            <AuthenticatedImage :mxcUri="authenticatedUserAvatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
-                                <template v-slot="{ src }">
-                                    <Avatar :image="src" shape="circle" size="xlarge" :aria-label="t('layout.userAvatarImage')" class="shrink-0" />
-                                </template>
-                                <template #error>
-                                    <Avatar icon="pi pi-user" shape="circle" size="xlarge" :aria-label="t('layout.userAvatarImage')" class="shrink-0" />
-                                </template>
-                            </AuthenticatedImage>
-                            <div class="flex flex-col items-start grow-1 ml-4 overflow-hidden">
-                                <div class="text-(--text-strong) overflow-hidden text-ellipsis w-full text-left">
-                                    {{ authenticatedUserDisplayName }}
+                        <div class="flex">
+                            <Button variant="text" severity="secondary" class="!p-2 mb-2 w-full !justify-start grow-1">
+                                <AuthenticatedImage :mxcUri="authenticatedUserAvatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
+                                    <template v-slot="{ src }">
+                                        <Avatar :image="src" shape="circle" size="xlarge" :aria-label="t('layout.userAvatarImage')" class="shrink-0" />
+                                    </template>
+                                    <template #error>
+                                        <Avatar icon="pi pi-user" shape="circle" size="xlarge" :aria-label="t('layout.userAvatarImage')" class="shrink-0" />
+                                    </template>
+                                </AuthenticatedImage>
+                                <div class="flex flex-col items-start grow-1 ml-4 overflow-hidden">
+                                    <div class="text-(--text-strong) overflow-hidden text-ellipsis w-full text-left">
+                                        {{ authenticatedUserDisplayName }}
+                                    </div>
+                                    <div class="text-sm">
+                                        {{ t('userSettings.editProfile') }}
+                                        <span class="pi pi-pencil !text-xs" aria-hidden="true" />
+                                    </div>
                                 </div>
-                                <div class="text-sm">
-                                    {{ t('userSettings.editProfile') }}
-                                    <span class="pi pi-pencil !text-xs" aria-hidden="true" />
-                                </div>
-                            </div>
-                        </Button>
+                            </Button>
+                            <Button
+                                icon="pi pi-times"
+                                severity="secondary"
+                                variant="text"
+                                class="p-dialog-mobile-only-button !p-0 !w-10 !h-10"
+                                :style="{ '--p-icon-size': '1.125rem' }"
+                                :aria-label="t('userSettings.navBackButton')"
+                                @click="closeCallback"
+                            />
+                        </div>
                         <IconField>
                             <InputIcon class="pi pi-search" />
                             <InputText class="w-full" :placeholder="t('userSettings.search')" />
@@ -65,8 +81,21 @@
                         </div>
                     </ScrollPanel>
                 </aside>
-                <div class="flex flex-col grow-1">
+                <div
+                    class="p-dialog-main flex flex-col grow-1"
+                    :class="{ 'p-dialog-main--visible': mainPanelVisible, 'p-dialog-main--animating': isAnimatingSidebarToggle }"
+                    :style="{ '--dialog-main-sidebar-offset': mainPanelSidebarOffset + 'px' }"
+                >
                     <div class="p-dialog-header !py-0 !flex !items-center !h-12 !border-b border-(--border-muted)">
+                        <Button
+                            icon="pi pi-arrow-left"
+                            severity="secondary"
+                            variant="text"
+                            class="p-dialog-mobile-only-button !p-0 !w-10 !h-10 !-ml-4"
+                            :style="{ '--p-icon-size': '1.125rem' }"
+                            :aria-label="t('userSettings.navBackButton')"
+                            @click="mainPanelVisible = false"
+                        />
                         <div class="p-dialog-title !text-base !font-normal">
                             {{ selectedMenuTitle }}
                         </div>
@@ -121,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 
@@ -142,7 +171,7 @@ import ScrollPanel from 'primevue/scrollpanel'
 import type { MenuItem, MenuItemCommandEvent } from 'primevue/menuitem'
 
 const { t } = useI18n()
-const { logout } = useLogout();
+const { logout } = useLogout()
 const { authenticatedUserAvatarUrl, authenticatedUserDisplayName } = storeToRefs(useProfileStore())
 
 const props = defineProps({
@@ -152,9 +181,28 @@ const props = defineProps({
     },
 })
 
+watch(() => props.visible, (visible, wasVisible) => {
+    if (visible && !wasVisible) {
+        mainPanelVisible.value = false
+        mainPanelSidebarOffset.value = 0
+    }
+})
+
 const emit = defineEmits<{
     (e: 'update:visible', visible: boolean): void
 }>()
+
+const mainPanelVisible = ref<boolean>(false)
+watch(() => mainPanelVisible.value, () => {
+    isAnimatingSidebarToggle.value = true
+    setTimeout(() => {
+        isAnimatingSidebarToggle.value = false
+        mainPanelSidebarOffset.value = 0
+    }, 300)
+})
+
+const mainPanelSidebarOffset = ref<number>(0)
+const isAnimatingSidebarToggle = ref<boolean>(false)
 
 const menuItems = ref([
     {
@@ -278,6 +326,8 @@ const menuItems = ref([
 
 function selectMenuItem(event: MenuItemCommandEvent) {
     selectedMenuItem.value = event.item
+    mainPanelSidebarOffset.value = 0
+    mainPanelVisible.value = true
 }
 
 const selectedMenuItem = ref<MenuItem>(menuItems.value[0]!.items[0]!)
@@ -299,4 +349,146 @@ function confirmLogout() {
     logout()
 }
 
+let primaryPointerDown: {
+    pageX: number;
+    pageY: number;
+    lastPageX: number;
+    mainPanelSidebarOffset: number;
+} | undefined = undefined
+let isDraggingDrawer = ref<boolean | undefined>()
+let averageXSpeed: number = 0
+let averageXSpeedTimestamp: number = 0
+
+function pointDistance(p1x: number, p1y: number, p2x: number, p2y: number) {
+    const dx = p2x - p1x
+    const dy = p2y - p1y
+    return Math.hypot(dx, dy)
+}
+
+function onPointerDownMobileLayout(event: PointerEvent) {
+    if (!primaryPointerDown && event.isPrimary && event.button === 0) {
+        isDraggingDrawer.value = undefined
+        primaryPointerDown = {
+            pageX: event.pageX,
+            pageY: event.pageY,
+            lastPageX: event.pageX,
+            mainPanelSidebarOffset: mainPanelSidebarOffset.value,
+        }
+        averageXSpeed = 0
+        averageXSpeedTimestamp = window.performance.now()
+    }
+}
+
+function onPointerMoveMobileLayout(event: PointerEvent) {
+    if (!primaryPointerDown || isDraggingDrawer.value === false) return
+    if (
+        !isDraggingDrawer.value
+        && pointDistance(event.pageX, event.pageY, primaryPointerDown.pageX, primaryPointerDown.pageY) > 8
+        && Math.abs(event.pageX - primaryPointerDown.pageX) > Math.abs(event.pageY - primaryPointerDown.pageY)
+        && (
+            (mainPanelSidebarOffset.value === 0 && event.pageX > primaryPointerDown.pageX)
+        )
+    ) {
+        isDraggingDrawer.value = true
+    }
+    if (isDraggingDrawer.value) {
+        event.preventDefault()
+        event.stopPropagation()
+        mainPanelSidebarOffset.value = Math.max(0, Math.min(window.innerWidth, primaryPointerDown.mainPanelSidebarOffset + event.pageX - primaryPointerDown.pageX))
+        let speedProportion = Math.min(1, (window.performance.now() - averageXSpeedTimestamp) / 100)
+        averageXSpeed = ((event.pageX - primaryPointerDown.lastPageX) * speedProportion) + (averageXSpeed * (1 - speedProportion))
+        averageXSpeedTimestamp = window.performance.now()
+        primaryPointerDown.lastPageX = event.pageX
+    }
+}
+
+function onPointerCancelMobileLayout(event: PointerEvent) {
+    onPointerUpWindow(event)
+}
+
+function onPointerUpWindow(event: PointerEvent) {
+    if (primaryPointerDown && isDraggingDrawer.value) {
+        isAnimatingSidebarToggle.value = true
+
+        const distanceDragged = Math.abs(event.pageX - primaryPointerDown.pageX)
+
+        if (
+            primaryPointerDown.mainPanelSidebarOffset === 0
+            && distanceDragged >= 30
+            && averageXSpeed > 4
+        ) {
+            mainPanelVisible.value = false
+        } else if (mainPanelSidebarOffset.value > (window.innerWidth) / 2) {
+            mainPanelVisible.value = false
+        }
+        mainPanelSidebarOffset.value = 0
+
+        setTimeout(() => {
+            isAnimatingSidebarToggle.value = false
+        }, 300)
+    }
+    isDraggingDrawer.value = undefined
+    primaryPointerDown = undefined
+}
+
+onMounted(() => {
+    window.addEventListener('pointerup', onPointerUpWindow, true)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('pointerup', onPointerUpWindow, true)
+})
+
 </script>
+
+<style lang="scss" scoped>
+.p-dialog-mobile-only-button {
+    display: none;
+}
+.p-dialog-close-button {
+    width: 2rem !important;
+    height: 2rem !important;
+}
+@media screen and (max-width: 800px) {
+    .p-dialog-mobile-only-button {
+        display: inline-flex;
+    }
+    .p-dialog-sidebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-width: none;
+
+        &:deep(.p-menu-item) {
+            --p-menu-item-active-background: var(--p-menu-item-background);
+        }
+    }
+    .p-dialog-main {
+        background: var(--p-dialog-background);
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-width: none;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateX(100%);
+        touch-action: pan-y;
+
+        &.p-dialog-main--visible {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(var(--dialog-main-sidebar-offset, 0));
+        }
+
+        &.p-dialog-main--animating {
+            transition: transform 0.2s, opacity 0.2s;
+        }
+    }
+    
+}
+</style>

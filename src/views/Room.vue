@@ -1,7 +1,12 @@
 <template>
-    <Application :title="isInsideSpace ? spaceName : t('home.directMessages')" titleIcon="pi pi-comments">
+    <Application
+        key="mainApplication"
+        :title="isInsideSpace ? currentTopLevelSpaceName : t('home.directMessages')"
+        titleIcon="pi pi-comments"
+        :titleAvatar="currentTopLevelSpaceAvatarUrl"
+    >
         <template #sidebar-list>
-            <SidebarSpaceRooms v-if="isInsideSpace" />
+            <SidebarListSpaceRooms v-if="isInsideSpace" />
             <SidebarListDirectMessages v-else />
         </template>
         <JoinedRoomView v-if="roomInfo.type === 'joined'" :room="roomInfo.room" />
@@ -12,14 +17,15 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
-import { useRoomStore } from '@/stores/room'
 
-import { isRoomPartOfSpace, getRoomName, getTopLevelSpace } from '@/utils/room'
+import { isRoomPartOfSpace } from '@/utils/room'
+import { useRoomStore } from '@/stores/room'
+import { useSpaceStore } from '@/stores/space'
 
 import Application from './Layout/Application.vue'
 import JoinedRoomView from './Room/JoinedRoom.vue'
 import SidebarListDirectMessages from './Layout/SidebarListDirectMessages.vue'
-import SidebarSpaceRooms from './Layout/SidebarSpaceRooms.vue'
+import SidebarListSpaceRooms from './Layout/SidebarListSpaceRooms.vue'
 
 import {
     type InvitedRoom,
@@ -31,6 +37,7 @@ import {
 const { t } = useI18n()
 const roomStore = useRoomStore()
 const { invited: invitedRooms, knocked: knockedRooms, joined: joinedRooms, left: leftRooms } = storeToRefs(roomStore)
+const { currentTopLevelSpaceName, currentTopLevelSpaceAvatarUrl } = storeToRefs(useSpaceStore())
 
 const props = defineProps({
     roomId: {
@@ -83,17 +90,6 @@ const roomInfo = computed<RoomInfo>(() => {
         }
     }
     return { type: 'unknown' }
-})
-
-const topLevelSpace = computed<InvitedRoom | KnockedRoom | JoinedRoom | LeftRoom | undefined>(() => {
-    if (roomInfo.value.type === 'unknown') return undefined
-    return getTopLevelSpace(roomInfo.value.room, roomStore)
-})
-
-const spaceName = computed<string | undefined>(() => {
-    if (roomInfo.value.type === 'unknown') return ''
-    if (topLevelSpace.value == null) return undefined
-    return getRoomName(topLevelSpace.value)
 })
 
 const isInsideSpace = computed<boolean>(() => {

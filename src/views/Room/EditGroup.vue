@@ -4,7 +4,7 @@
         modal
         :header="t('editGroup.title')"
         :draggable="false"
-        :style="{ width: '100%', maxWidth: '30rem' }"
+        :style="{ width: 'calc(100% - 1rem)', maxWidth: '30rem' }"
         @update:visible="(visible) => emit('update:visible', visible)"
     >
         <Message v-if="!room" severity="error" variant="simple">

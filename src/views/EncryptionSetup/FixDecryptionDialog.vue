@@ -2,11 +2,17 @@
     <Dialog
         :visible="visible"
         modal
-        :header="t('identityVerification.title')"
+        :header="t('fixDecryption.title')"
         :style="{ width: 'calc(100% - 1rem)', maxWidth: '30rem' }"
         @update:visible="(visible) => emit('update:visible', visible)"
     >
-        <p class="text-(--text-default)">{{ t('identityVerification.subtitle') }}</p>
+        <template v-if="encryptionNotSupported">
+            {{ t('fixDecryption.deviceEncryptionNotSupported') }}
+        </template>
+        <template v-else>
+            {{ t('fixDecryption.unknownError') }}
+        </template>
+        <!-- <p class="text-(--text-default)">{{ t('identityVerification.subtitle') }}</p>
         <div class="flex items-stretch justify-center gap-2 my-5">
             <Button severity="secondary">
                 <div class="flex flex-col items-center">
@@ -24,33 +30,42 @@
         <p class="text-sm text-(--text-muted)">
             {{ t('identityVerification.lostRecoveryMethods') }}
             <a href="javascript:void(0)">{{ t('identityVerification.resetIdentityLink') }}</a>
-        </p>
+        </p> -->
     </Dialog>
-    <EnterRecoveryKeyDialog v-model:visible="recoveryKeyDialogVisible" @success="emit('update:visible', false)" />
 </template>
 
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
 
-const EnterRecoveryKeyDialog = defineAsyncComponent(() => import('@/views/EncryptionSetup/EnterRecoveryKeyDialog.vue'))
+import { useCryptoKeysStore } from '@/stores/crypto-keys'
 
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 
 const { t } = useI18n()
+const {
+    encryptionNotSupported,
+} = storeToRefs(useCryptoKeysStore())
 
 const props = defineProps({
     visible: {
         type: Boolean,
         default: false,
     },
+    roomId: {
+        type: String,
+        default: undefined,
+    },
+    eventId: {
+        type: String,
+        default: undefined,
+    },
 })
 
 const emit = defineEmits<{
     (e: 'update:visible', visible: boolean): void
 }>()
-
-const recoveryKeyDialogVisible = ref<boolean>(false)
 
 </script>

@@ -1,17 +1,38 @@
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { defineStore, storeToRefs } from 'pinia'
 
+import { getRoomAvatarUrl, getRoomName, getTopLevelSpace } from '@/utils/room'
 import { useRoomStore } from '@/stores/room'
 
-interface SpaceSummary {
-    avatarUrl?: string;
-    creator: string;
-    name: string;
-    roomVersion: string;
-}
+import type { InvitedRoom, JoinedRoom, KnockedRoom, LeftRoom, SpaceSummary } from '@/types'
 
 export const useSpaceStore = defineStore('space', () => {
-    const { joined } = storeToRefs(useRoomStore())
+    const route = useRoute()
+    const roomStore = useRoomStore()
+    const { joined } = storeToRefs(roomStore)
+
+    const currentTopLevelSpace = computed<JoinedRoom | InvitedRoom | KnockedRoom | LeftRoom | undefined>(() => {
+        if (route.name !== 'room') return undefined
+        const currentRoomId = `${route.params.roomId}`
+        const currentRoom = joined.value[currentRoomId]
+        if (!currentRoom) return undefined
+        return getTopLevelSpace(currentRoom, roomStore)
+    })
+
+    const currentTopLevelSpaceId = computed<string | undefined>(() => {
+        return currentTopLevelSpace.value?.roomId
+    })
+
+    const currentTopLevelSpaceName = computed<string | undefined>(() => {
+        if (!currentTopLevelSpace.value) return undefined
+        return getRoomName(currentTopLevelSpace.value)
+    })
+
+    const currentTopLevelSpaceAvatarUrl = computed<string | undefined>(() => {
+        if (!currentTopLevelSpace.value) return undefined
+        return getRoomAvatarUrl(currentTopLevelSpace.value)
+    })
 
     const joinedSpaces = computed<SpaceSummary[]>(() => {
         const joinedSpaces: SpaceSummary[] = []
@@ -31,6 +52,7 @@ export const useSpaceStore = defineStore('space', () => {
                         : roomCreateEvent.content.creator
                 ) ?? '',
                 name: roomNameEvent?.content.name ?? '',
+                roomId,
                 roomVersion,
             })
         }
@@ -38,6 +60,9 @@ export const useSpaceStore = defineStore('space', () => {
     })
 
     return {
+        currentTopLevelSpaceId,
+        currentTopLevelSpaceName,
+        currentTopLevelSpaceAvatarUrl,
         joinedSpaces,
     }
 })

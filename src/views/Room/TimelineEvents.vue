@@ -1,11 +1,17 @@
 <template>
-    <div v-if="room" :data-timeline-id="componentUuid" class="p-chattimeline">
+    <div
+        v-if="room"
+        :data-timeline-id="componentUuid"
+        class="p-chattimeline"
+        @pointerdown="onPointerDownTimeline"
+        @pointerup="onPointerUpTimeline"
+    >
         <ScrollPanel ref="scrollPanel">
             <!-- <MessagePlaceholder /> -->
             <template v-for="chunk of visibleEventChunks" :key="chunk.id">
                 <template v-for="e of chunk.events" :key="e.event.eventId">
                     <div v-if="e.currentDateDivider && e.event.type !== 'm.room.create'" class="p-chattimeline-date-heading">
-                        <time datetime="e.isoTimestamp">{{ e.currentDateDivider }}</time>
+                        <time :datetime="e.isoTimestamp">{{ e.currentDateDivider }}</time>
                     </div>
                     <div
                         v-if="e.category === 'message'"
@@ -84,7 +90,7 @@
                         <!-- Encrypted Event -->
                         <div v-else-if="e.event.type === 'm.room.encrypted'" class="text-(--channels-default)">
                             <span class="pi pi-exclamation-triangle mr-1 !text-sm" aria-hidden="true" />{{ i18nText.unableToDecryptMessage }}
-                            <span class="link" role="button" tabindex="0">{{ i18nText.learnFixDecrypt }}</span>
+                            <span data-link-id="fixDecrypt" class="link" role="button" tabindex="0">{{ i18nText.learnFixDecrypt }}</span>
                         </div>
                     </div>
                     <div
@@ -101,7 +107,7 @@
                                 <span class="link" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
                             </strong>
                             {{ i18nText.changedGroupIcon }}
-                            <span class="link" role="button" tabindex="0" @click="editGroup">{{ i18nText.editGroupButton }}</span>
+                            <span data-link-id="editGroup" class="link" role="button" tabindex="0">{{ i18nText.editGroupButton }}</span>
                             <time :datetime="e.isoTimestamp">{{ e.headerTime }}</time>
                         </template>
                         <template v-else-if="e.event.type === 'm.room.member'">
@@ -126,11 +132,12 @@
                                 <span class="link" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
                             </strong>
                             {{ i18nText.changedGroupNamePrefix }}<strong>{{ e.event.content.name }}</strong>{{ i18nText.changedGroupNameSuffix }}
+                            <span data-link-id="fixDecrypt" class="link" role="button" tabindex="0">{{ i18nText.editGroupButton }}</span>
                             <time :datetime="e.isoTimestamp">{{ e.headerTime }}</time>
                         </template>
                         <template v-else-if="e.event.type === 'm.room.encryption'">
                             <!-- Encryption Enabled -->
-                             <span class="p-chattimeline-event-icon pi pi-lock" aria-hidden="true" />
+                            <span class="p-chattimeline-event-icon pi pi-lock" aria-hidden="true" />
                             {{ i18nText.roomEncryptionEnabled }}
                             <time :datetime="e.isoTimestamp">{{ e.headerTime }}</time>
                         </template>
@@ -154,6 +161,7 @@
         </ScrollPanel>
         <EditGroup v-model:visible="editGroupDialogVisible" :roomId="props.room.roomId" />
         <PhotoViewer v-model:visible="photoViewerVisible" :imageEvent="photoViewerImageEvent" />
+        <FixDecryptionDialog v-model:visible="fixDecryptDialogVisible" :roomId="room.roomId" :eventId="fixDecryptEventId" />
     </div>
 </template>
 
@@ -172,6 +180,7 @@ import { useRoomStore } from '@/stores/room'
 
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
 const EditGroup = defineAsyncComponent(() => import('./EditGroup.vue'))
+const FixDecryptionDialog = defineAsyncComponent(() => import('@/views/EncryptionSetup/FixDecryptionDialog.vue'))
 import MessageBeginning from './MessageBeginning.vue'
 import MessagePlaceholder from './MessagePlaceholder.vue'
 const PhotoViewer = defineAsyncComponent(() => import('./PhotoViewer.vue'))
@@ -303,6 +312,8 @@ const chunksPerView = 10
 const offsetEventId = ref<string | undefined>()
 const offsetChunk = ref<number>(0) // Relative to offsetEventId. Negative numbers scroll up for older messages
 const editGroupDialogVisible = ref<boolean>(false)
+const fixDecryptDialogVisible = ref<boolean>(false)
+const fixDecryptEventId = ref<string>()
 const photoViewerVisible = ref<boolean>(false)
 const photoViewerImageEvent = ref<ApiV3SyncClientEventWithoutRoomId<EventImageContent> | undefined>()
 
@@ -444,8 +455,43 @@ onUnmounted(() => {
     window.dispatchEvent(new CustomEvent('discortix-timeline-unmounted', { detail: { id: componentUuid } }))
 })
 
-function editGroup() {
-    editGroupDialogVisible.value = true
+let pointerDownTimelineTarget: HTMLElement | null
+let pointerDownTimelineItemX: number = 0
+let pointerDownTimelineItemY: number = 0
+let pointerDownTimelineTimestamp: number = 0
+
+function onPointerDownTimeline(event: PointerEvent) {
+    pointerDownTimelineTarget = event.target as HTMLElement
+    pointerDownTimelineItemX = event.pageX
+    pointerDownTimelineItemY = event.pageY
+    pointerDownTimelineTimestamp = window.performance.now()
+}
+
+function onPointerUpTimeline(event: PointerEvent) {
+    // "Click" / "Tap" simulation. Need to do this because of the Safari "double tap with hover states" issue.
+    if (
+        event.target && event.target === pointerDownTimelineTarget
+        && window.performance.now() - pointerDownTimelineTimestamp <= 500
+        && Math.abs(event.pageX - pointerDownTimelineItemX) < 8
+        && Math.abs(event.pageY - pointerDownTimelineItemY) < 8
+    ) {
+        const link = (event.target as HTMLElement)?.closest('[data-link-id],[data-user-id]')
+        if (!link) return
+        const linkId = link.getAttribute('data-link-id')
+        switch (linkId) {
+            case 'editGroup':
+                editGroupDialogVisible.value = true
+                return
+            case 'fixDecrypt':
+                fixDecryptEventId.value = link.closest('[data-event-id]')?.getAttribute('data-event-id') ?? undefined
+                fixDecryptDialogVisible.value = true
+                return
+            default:
+                break
+        }
+        const userId = (event.target as HTMLElement)?.closest('[data-user-id]')
+        // TODO open user modal
+    }
 }
 
 function viewPhoto(event: ApiV3SyncClientEventWithoutRoomId<EventImageContent>) {

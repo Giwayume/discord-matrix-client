@@ -4,7 +4,7 @@
         modal
         :header="t('cropImageDialog.title')"
         :draggable="false"
-        :style="{ width: '100%', maxWidth: '30rem' }"
+        :style="{ width: 'calc(100% - 1rem)', maxWidth: '30rem' }"
         @update:visible="(visible) => emit('update:visible', visible)"
     >
         <div class="crop-image-dialog__image-preview max-h-88 w-full">
@@ -18,7 +18,7 @@
                 <Slider v-model="zoomLevel" :aria-label="t('cropImageDialog.zoomLevel')" :min="1" :max="2" :step="0.01" class="w-30 mx-4" />
                 <span class="pi pi-image" :style="{ '--p-icon-size': '1.25rem' }" aria-hidden="true" />
             </div>
-            <Button v-tooltip.top="{ value: t('cropImageDialog.rotate') }" icon="pi pi-refresh" severity="secondary" variant="text" :aria-label="t('cropImageDialog.rotate')" />
+            <Button v-tooltip.top="{ value: isTouchEventsDetected ? undefined : t('cropImageDialog.rotate') }" icon="pi pi-refresh" severity="secondary" variant="text" :aria-label="t('cropImageDialog.rotate')" />
         </div>
 
         <template #footer>
@@ -37,10 +37,14 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { useApplication } from '@/composables/application'
+
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Slider from 'primevue/slider'
 import vTooltip from 'primevue/tooltip'
+
+const { isTouchEventsDetected } = useApplication()
 
 const props = defineProps({
     visible: {
