@@ -219,6 +219,7 @@
     white-space: break-spaces;
 
     img[data-mx-emoticon] {
+        display: inline;
         text-indent: -9999px;
         height: var(--custom-emoji-size-emoji);
     }

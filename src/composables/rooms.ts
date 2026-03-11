@@ -19,6 +19,7 @@ import {
     type ApiV3RoomTypingRequest,
     ApiV3RoomSendMessageEventResponseSchema, type ApiV3RoomSendMessageEventResponse,
     type ApiV3SyncClientEventWithoutRoomId,
+    type ApiV3RoomRedactMessageRequest, ApiV3RoomRedactMessageResponseSchema
 } from '@/types'
 
 const log = createLogger(import.meta.url)
@@ -222,10 +223,21 @@ export function useRooms() {
         return false
     }
 
-    async function redactEvent(roomId: string, eventId: string) {
-        if (!redactUnsentEvent(roomId, eventId, true)) {
-            console.log('Do the API call!')
-        }
+    async function redactEvent(roomId: string, eventId: string, reason?: string) {
+        if (redactUnsentEvent(roomId, eventId, true)) return
+
+        await fetchJson(
+            `${homeserverBaseUrl.value}/_matrix/client/v3/rooms/${roomId}/redact/${eventId}/${uuidv4()}`,
+            {
+                method: 'PUT',
+                useAuthorization: true,
+                body: JSON.stringify({
+                    reason,
+                } satisfies ApiV3RoomRedactMessageRequest),
+                jsonSchema: ApiV3RoomRedactMessageResponseSchema,
+            }
+        )
+        
     }
 
     onTabMessage((message) => {

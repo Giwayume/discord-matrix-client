@@ -30,7 +30,7 @@
                 </AuthenticatedImage>
             </div>
         </template>
-        <template v-if="e.event.type === 'm.room.message'">
+        <template v-if="e.event.type === 'm.room.message' && e.event.content">
             <!-- Message -->
             <template v-if="e.event.content.msgtype === 'm.audio'">
                 <!-- Audio -->
@@ -142,7 +142,7 @@
             <span data-link-id="editGroup" class="link" role="button" tabindex="0">{{ i18nText.editGroupButton }}</span>
             <time :datetime="e.isoTimestamp">{{ e.headerTime }}</time>
         </template>
-        <template v-else-if="e.event.type === 'm.room.member'">
+        <template v-else-if="e.event.type === 'm.room.member' && e.event.content">
             <!-- Member Join/Leave room -->
             <span class="p-chattimeline-event-icon pi" :class="[e.event.content.membership === 'join' ? 'pi-arrow-right' : 'pi-info-circle']" aria-hidden="true" />
             <span v-if="e.event.content.membership === 'join'" class="mr-1">
@@ -157,7 +157,7 @@
             </template>
             <time :datetime="e.isoTimestamp">{{ e.headerTime }}</time>
         </template>
-        <template v-else-if="e.event.type === 'm.room.name'">
+        <template v-else-if="e.event.type === 'm.room.name' && e.event.content">
             <!-- Chat group name changed -->
             <span class="p-chattimeline-event-icon pi pi-pencil" aria-hidden="true" />
             <strong>

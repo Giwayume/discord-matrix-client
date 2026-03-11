@@ -329,6 +329,10 @@
             "roomKeysDescription": "Room keys are used to encrypt your messages in chats. If you lose these keys, you will not be able to read old encrypted chat messages.",
             "exportRoomKeysButton": "Export Keys",
             "importRoomKeysButton": "Import Keys"
+        },
+        "advanced": {
+            "developerMode": "Developer Mode",
+            "developerModeDescription": "Developer Mode exposes context menu items helpful for debugging this application."
         }
     }
 }

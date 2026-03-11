@@ -114,6 +114,7 @@
                     </div>
                     <div class="p-dialog-content relative">
                         <EncryptionSettings v-if="selectedMenuItem.key === 'encryption'" />
+                        <AdvancedSettings v-else-if="selectedMenuItem.key === 'advanced'" />
                         <div v-if="hasPendingChanges" class="absolute left-0 bottom-0 right-0 p-4">
                             <div class="flex items-center justify-between mx-auto max-w-174 p-[0.625rem] pl-4 bg-(--background-surface-highest) border-1 border-(--border-subtle) rounded-(--radius-sm) shadow-(--legacy-elevation-high)">
                                 <span class="font-medium">{{ t('userSettings.youHaveUnsavedChanges') }}</span>
@@ -159,6 +160,7 @@ import { useProfileStore } from '@/stores/profile'
 
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
 const EncryptionSettings = defineAsyncComponent(() => import('./UserSettings/Encryption.vue'))
+const AdvancedSettings = defineAsyncComponent(() => import('./UserSettings/Advanced.vue'))
 
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
@@ -288,7 +290,7 @@ const menuItems = ref([
             {
                 key: 'keybinds',
                 label: t('userSettings.menu.keybinds'),
-                icon: 'pi pi-search',
+                icon: 'pi pi-th-large',
                 command: selectMenuItem,
             },
             {
@@ -306,7 +308,7 @@ const menuItems = ref([
             {
                 key: 'advanced',
                 label: t('userSettings.menu.advanced'),
-                icon: 'pi pi-eye-slash',
+                icon: 'pi pi-ellipsis-h',
                 command: selectMenuItem,
             },
         ],
@@ -317,7 +319,7 @@ const menuItems = ref([
             {
                 key: 'activityPrivacy',
                 label: t('userSettings.menu.activityPrivacy'),
-                icon: 'pi pi-search',
+                icon: 'pi pi-eye-slash',
                 command: selectMenuItem,
             },
         ],

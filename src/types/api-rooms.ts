@@ -91,6 +91,15 @@ export const ApiV3RoomMessagesResponseSchema = camelizeSchema(z.object({
 }))
 export type ApiV3RoomMessagesResponse = z.infer<typeof ApiV3RoomMessagesResponseSchema>
 
+/** @see https://spec.matrix.org/v1.17/client-server-api/#put_matrixclientv3roomsroomidredacteventidtxnid */
+export interface ApiV3RoomRedactMessageRequest {
+    reason?: string;
+}
+export const ApiV3RoomRedactMessageResponseSchema = camelizeSchema(z.object({
+    event_id: z.string().optional(),
+}))
+export type ApiV3RoomRedactMessageResponse = z.infer<typeof ApiV3RoomRedactMessageResponseSchema>
+
 /** @see https://spec.matrix.org/v1.17/client-server-api/#put_matrixclientv3roomsroomidtypinguserid */
 export interface ApiV3RoomTypingRequest {
     timeout?: number;
