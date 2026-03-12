@@ -8,15 +8,44 @@
         :class="{
             'p-chattimeline-event--groupstart': e.displayHeader,
             'p-chattimeline-event--sending': !!e.event.txnId,
-            'p-chattimeline-event--hover': messageActionsTargetEventId === e.event.eventId || messageActionsContextMenuTargetEventId === e.event.eventId
+            'p-chattimeline-event--hover': messageActionsTargetEventId === e.event.eventId || messageActionsContextMenuTargetEventId === e.event.eventId,
+            'p-chattimeline-event--flash': highlightEventId === e.event.eventId,
         }"
         :data-event-id="e.event.eventId"
         :data-event-sender="e.event.sender"
     >
         <!-- Message type events (most common) -->
+
+        <!-- Reply to header -->
+        <div v-if="e.replyTo" class="p-chattimeline-replyto">
+            <span data-link-id="jumpToMessage" :data-jump-to-event-id="e.replyTo.eventId" class="p-chattimeline-replyto-spine" />
+            <span data-link-id="viewUserProfile" :data-user-id="e.replyTo.userId" class="link" role="button" tabindex="0">
+                <div class="p-avatar p-avatar-circle p-avatar-sm">
+                    <AuthenticatedImage :mxcUri="e.replyTo.avatarUrl" type="thumbnail" :width="48" :height="48" method="scale">
+                        <template v-slot="{ src }">
+                            <img :src="src" class="w-full h-full">
+                        </template>
+                        <template #error>
+                            <span class="p-avatar-icon pi pi-user" />
+                        </template>
+                    </AuthenticatedImage>
+                </div>
+                <span>{{ e.replyTo.displayname ?? i18nText.unknownUserDisplayname }}</span>
+            </span>
+            <span role="button" tabindex="0" data-link-id="jumpToMessage" :data-jump-to-event-id="e.replyTo.eventId">
+                <template v-if="e.replyTo.bodyPreview">
+                    {{ e.replyTo.bodyPreview }}
+                </template>
+                <em v-else>
+                    {{ e.replyTo.isAttachment ? i18nText.replyToNoAttachmentPreview : i18nText.replyToNoMessagePreview }}
+                </em>
+                <span v-if="e.replyTo.isAttachment" class="pi pi-image" aria-hidden="true" />
+            </span>
+        </div>
+        <!-- Username / Avatar Header -->
         <template v-if="e.displayHeader">
             <h3 class="p-chattimeline-event-header">
-                <span class="link" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
+                <span class="link" data-link-id="viewUserProfile" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
                 <time :datetime="e.isoTimestamp">{{ e.headerTime }}</time>
             </h3>
             <div class="p-avatar p-avatar-circle p-avatar-chat">
@@ -63,14 +92,10 @@
                     </template>
                 </AuthenticatedImage>
             </template>
-            <template v-else-if="e.event.content.msgtype === 'm.sticker'">
-                <!-- Sticker -->
-                {{ e.event.content.msgtype }}
-            </template>
             <template v-else-if="e.event.content.msgtype === 'm.text'">
                 <!-- Text -->
                 <div class="p-chattimeline-event-content">
-                    <div v-if="e.event.content.format === 'org.matrix.custom.html'" v-dompurify-html="e.event.content.formattedBody" />
+                    <div v-if="formattedBody" class="p-chattimeline-event-content-formatted" v-dompurify-html="formattedBody" />
                     <template v-else>{{ e.event.content.body }}</template>
                     <span v-if="e.replacementEvent" v-tooltip.top="{ value: isTouchEventsDetected ? undefined : e.replacementDate }" class="p-chattimeline-edited">{{ i18nText.messageEditedIndicator }}</span>
                 </div>
@@ -79,6 +104,24 @@
                 <!-- Video -->
                 {{ e.event.content.msgtype }}
             </template>
+        </template>
+        <template v-else-if="e.event.type === 'm.sticker'">
+            <!-- Sticker -->
+            <AuthenticatedImage
+                :mxcUri="e.event.content?.url"
+                type="download"
+            >
+                <template v-slot="{ src }">
+                    <img
+                        :src="src"
+                        :alt="e.event.content?.body"
+                        :title="e.event.content?.body"
+                        class="p-chattimeline-event-sticker"
+                        tabindex="0"
+                        @dragstart.prevent
+                    >
+                </template>
+            </AuthenticatedImage>
         </template>
         <!-- Encrypted Event -->
         <div v-else-if="e.event.type === 'm.room.encrypted'" class="text-(--channels-default)">
@@ -128,6 +171,7 @@
         :class="{
             'p-chattimeline-event--groupstart': e.displayHeader,
             'p-chattimeline-event--hover': messageActionsTargetEventId === e.event.eventId,
+            'p-chattimeline-event--flash': highlightEventId === e.event.eventId,
         }"
         :data-event-id="e.event.eventId"
     >
@@ -136,7 +180,7 @@
             <!-- Chat room icon/avatar changed -->
             <span class="p-chattimeline-event-icon pi pi-pencil" aria-hidden="true" />
             <strong>
-                <span class="link" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
+                <span class="link" data-link-id="viewUserProfile" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
             </strong>
             {{ i18nText.changedGroupIcon }}
             <span data-link-id="editGroup" class="link" role="button" tabindex="0">{{ i18nText.editGroupButton }}</span>
@@ -146,11 +190,11 @@
             <!-- Member Join/Leave room -->
             <span class="p-chattimeline-event-icon pi" :class="[e.event.content.membership === 'join' ? 'pi-arrow-right' : 'pi-info-circle']" aria-hidden="true" />
             <span v-if="e.event.content.membership === 'join'" class="mr-1">
-                {{ i18nText.joinedTheRoomPrefix }}<strong><span class="link" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span></strong>{{ i18nText.joinedTheRoomSuffix }}
+                {{ i18nText.joinedTheRoomPrefix }}<strong><span class="link" data-link-id="viewUserProfile" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span></strong>{{ i18nText.joinedTheRoomSuffix }}
             </span>
             <template v-else>
                 <strong class="mr-1">
-                    <span class="link" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
+                    <span class="link" data-link-id="viewUserProfile" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
                 </strong>
                 <span v-if="e.event.content.membership === 'leave'">{{ i18nText.leftTheRoom }}</span>
                 <span v-if="e.event.content.membership === 'ban'">{{ i18nText.bannedFromTheRoom }}</span>
@@ -161,7 +205,7 @@
             <!-- Chat group name changed -->
             <span class="p-chattimeline-event-icon pi pi-pencil" aria-hidden="true" />
             <strong>
-                <span class="link" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
+                <span class="link" data-link-id="viewUserProfile" :data-user-id="e.event.sender" role="button" tabindex="0">{{ e.displayname }}</span>
             </strong>
             {{ i18nText.changedGroupNamePrefix }}<strong>{{ e.event.content.name }}</strong>{{ i18nText.changedGroupNameSuffix }}
             <span data-link-id="editGroup" class="link" role="button" tabindex="0">{{ i18nText.editGroupButton }}</span>
@@ -186,7 +230,8 @@
 </template>
 
 <script setup lang="ts">
-import { type PropType } from 'vue'
+import { computed, type PropType } from 'vue'
+import linkifyHtml from 'linkify-html'
 
 import { useApplication } from '@/composables/application'
 
@@ -225,10 +270,24 @@ const props = defineProps({
         type: String,
         default: undefined,
     },
+    highlightEventId: {
+        type: String,
+        default: undefined,
+    }
 })
 
 const emit = defineEmits<{
     (e: 'viewPhoto', event: ApiV3SyncClientEventWithoutRoomId): void
 }>()
+
+const formattedBody = computed<string | undefined>(() => {
+    if (props.e.event.type === 'm.room.message' && props.e.event.content?.msgtype === 'm.text') {
+        if (props.e.event.content.format === 'org.matrix.custom.html') {
+            return props.e.event.content.formattedBody
+        } else if (props.e.event.content?.body) {
+            return linkifyHtml(props.e.event.content.body)
+        }
+    }
+})
 
 </script>

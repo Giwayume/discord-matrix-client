@@ -23,6 +23,8 @@ export const useClientSettingsStore = defineStore('clientSettings', () => {
 
     const settings = reactive<ClientSettings>({
         isDeveloperMode: false,
+        sendReadReceipts: true,
+        sendTypingIndicators: true,
     })
 
     const loadSettingsPromises: Promise<void>[] = []

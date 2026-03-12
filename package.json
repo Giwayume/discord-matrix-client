@@ -24,6 +24,8 @@
         "camelcase-keys": "^10.0.2",
         "eruda": "^3.4.3",
         "google-libphonenumber": "^3.2.44",
+        "linkify-html": "^4.3.2",
+        "micromark": "^4.0.2",
         "mitt": "^3.0.1",
         "pinia": "^3.0.4",
         "primeicons": "^7.0.0",

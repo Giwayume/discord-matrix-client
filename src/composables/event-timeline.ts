@@ -68,6 +68,13 @@ export const messageEventMessageTypes = [
 ]
 
 export const visibleMembershipStatuses = ['join', 'leave', 'ban']
+export const attachmentEventMessageTypes = [
+    'm.audio',
+    'm.file',
+    'm.image',
+    'm.location',
+    'm.video'
+]
 
 function isEventVisible(event: ApiV3SyncClientEventWithoutRoomId) {
     if (

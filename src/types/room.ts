@@ -147,7 +147,16 @@ export interface EventWithRenderInfo {
     isoTimestamp: string;
     avatarUrl?: string;
     event: ApiV3SyncClientEventWithoutRoomId;
+    reactions: RoomEventReactionRender[];
     replacementEvent?: ApiV3SyncClientEventWithoutRoomId;
     replacementDate?: string;
-    reactions: RoomEventReactionRender[];
+    replyTo?: {
+        userId?: string;
+        displayname?: string;
+        avatarUrl?: string;
+        eventId: string;
+        bodyPreview?: string;
+        messageType: string;
+        isAttachment: boolean;
+    };
 }

@@ -115,6 +115,7 @@
                     <div class="p-dialog-content relative">
                         <EncryptionSettings v-if="selectedMenuItem.key === 'encryption'" />
                         <AdvancedSettings v-else-if="selectedMenuItem.key === 'advanced'" />
+                        <ActivityPrivacySettings v-else-if="selectedMenuItem.key === 'activityPrivacy'" />
                         <div v-if="hasPendingChanges" class="absolute left-0 bottom-0 right-0 p-4">
                             <div class="flex items-center justify-between mx-auto max-w-174 p-[0.625rem] pl-4 bg-(--background-surface-highest) border-1 border-(--border-subtle) rounded-(--radius-sm) shadow-(--legacy-elevation-high)">
                                 <span class="font-medium">{{ t('userSettings.youHaveUnsavedChanges') }}</span>
@@ -161,6 +162,7 @@ import { useProfileStore } from '@/stores/profile'
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
 const EncryptionSettings = defineAsyncComponent(() => import('./UserSettings/Encryption.vue'))
 const AdvancedSettings = defineAsyncComponent(() => import('./UserSettings/Advanced.vue'))
+const ActivityPrivacySettings = defineAsyncComponent(() => import('./UserSettings/ActivityPrivacy.vue'))
 
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
@@ -444,6 +446,12 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.p-dialog-header {
+    background: var(--background-base-low);
+}
+.p-dialog-content {
+    background: var(--background-base-low);
+}
 .p-dialog-mobile-only-button {
     display: none;
 }

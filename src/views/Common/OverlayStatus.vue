@@ -22,7 +22,7 @@ const props = defineProps({
         default: 'lowest',
     },
     size: {
-        type: String as PropType<'small' | 'medium'>,
+        type: String as PropType<'small' | 'medium' | 'xlarge'>,
         default: 'medium',
     },
     invisible: {

@@ -5,12 +5,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { useBroadcast } from '@/composables/broadcast'
 import { createLogger } from '@/composables/logger'
 
+import { useClientSettingsStore } from '@/stores/client-settings'
 import { useRoomStore } from '@/stores/room'
 import { useSpaceStore } from '@/stores/space'
 import { useSessionStore } from '@/stores/session'
 
 import { fetchJson } from '@/utils/fetch'
-import { snakeCaseApiRequest } from '@/utils/zod'
+import { camelizeSchema, snakeCaseApiRequest } from '@/utils/zod'
 
 import {
     type ApiV1RoomHierarchyRequest, ApiV1RoomHierarchyResponseSchema, type ApiV1RoomHierarchyResponse,
@@ -18,7 +19,7 @@ import {
     type ApiV3RoomMessagesRequest, ApiV3RoomMessagesResponseSchema, type ApiV3RoomMessagesResponse,
     type ApiV3RoomTypingRequest,
     ApiV3RoomSendMessageEventResponseSchema, type ApiV3RoomSendMessageEventResponse,
-    type ApiV3SyncClientEventWithoutRoomId,
+    type ApiV3SyncClientEventWithoutRoomId, ApiV3SyncClientEventWithoutRoomIdSchema,
     type ApiV3RoomRedactMessageRequest, ApiV3RoomRedactMessageResponseSchema
 } from '@/types'
 
@@ -34,6 +35,7 @@ const hierarcyFetchFrequency = 1.8e+6 // 30 minutes
 
 export function useRooms() {
     const { onTabMessage, broadcastMessageFromTab } = useBroadcast()
+    const { settings } = useClientSettingsStore()
     const { homeserverBaseUrl, userId } = storeToRefs(useSessionStore())
     const roomStore = useRoomStore()
     const { joined, left } = storeToRefs(roomStore)
@@ -161,6 +163,7 @@ export function useRooms() {
     }
 
     async function sendTypingNotification(roomId: string, typing: boolean) {
+        if (!settings.sendTypingIndicators) return
         await fetchJson(
             `${homeserverBaseUrl.value}/_matrix/client/v3/rooms/${roomId}/typing/${userId.value}`,
             {
@@ -170,6 +173,17 @@ export function useRooms() {
                     timeout: typing ? 20000 : undefined,
                     typing,
                 } satisfies ApiV3RoomTypingRequest),
+            }
+        )
+    }
+
+    async function getMessageEvent(roomId: string, eventId: string): Promise<ApiV3SyncClientEventWithoutRoomId> {
+        return await fetchJson(
+            `${homeserverBaseUrl.value}/_matrix/client/v3/rooms/${roomId}/event/${eventId}`,
+            {
+                method: 'GET',
+                useAuthorization: true,
+                jsonSchema: camelizeSchema(ApiV3SyncClientEventWithoutRoomIdSchema),
             }
         )
     }
@@ -252,6 +266,7 @@ export function useRooms() {
         getPreviousMessages,
         getRoomHierarchy,
         sendTypingNotification,
+        getMessageEvent,
         sendMessageEvent,
         redactEvent,
     }

@@ -20,7 +20,7 @@
         </div>
         <template v-if="!isTouchEventsDetected">
             <h3 class="text-(--text-feedback-positive) text-sm uppercase font-bold leading-4">{{ t('deleteMessageConfirm.protipTitle') }}</h3>
-            <p class="text-(--text-default) text-sm pb-2">{{ t('deleteMessageConfirm.protipContent') }}</p>
+            <p class="text-(--text-default) text-sm pb-2" v-html="micromark(t('deleteMessageConfirm.protipContent'))" />
         </template>
         <Message v-if="hasDeletionError" severity="error" size="small" variant="simple">
             <template #icon>
@@ -41,6 +41,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { micromark } from 'micromark'
 
 import { useApplication } from '@/composables/application'
 import { useRooms } from '@/composables/rooms'

@@ -310,14 +310,25 @@ function getTimelineEventIndexById(
     timeline: ApiV3SyncClientEventWithoutRoomId[],
     eventId?: string,
     limit: number = Infinity,
+    start?: number,
 ): number | undefined {
     if (eventId == null) return
     const lowerLimit = Math.max(0, timeline.length - 1 - limit)
-    for (let eventIndex = timeline.length - 1; eventIndex >= lowerLimit; eventIndex--)  {
+    const upperLimit = start != null ? Math.min(timeline.length - 1, start) : timeline.length - 1
+    for (let eventIndex = upperLimit; eventIndex >= lowerLimit; eventIndex--)  {
         if (timeline[eventIndex]?.eventId === eventId) {
             return eventIndex
         }
     }
+}
+
+function getTimelineEventById(
+    timeline: ApiV3SyncClientEventWithoutRoomId[],
+    eventId?: string,
+    limit: number = Infinity,
+    start?: number,
+): ApiV3SyncClientEventWithoutRoomId | undefined {
+    return timeline[getTimelineEventIndexById(timeline, eventId, limit, start) ?? -1]
 }
 
 function getTimelineEventIndexByTransactionId(
@@ -950,6 +961,7 @@ export const useRoomStore = defineStore('room', () => {
         decryptedRoomEvents,
         directMessageRooms,
         getTimelineEventIndexById,
+        getTimelineEventById,
         associateTransactionIdWithEventId,
         populateSentMessageEvent,
         populateFromApiV3SyncResponse,

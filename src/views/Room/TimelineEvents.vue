@@ -1,6 +1,5 @@
 <template>
     <!-- This is here to trigger Vue update events. Wish I didn't have to hack it like this. -->
-    <!-- <div hidden>{{ visibleEventChunks?.[0]?.events[0]?.event.eventId }}</div> -->
     <div hidden>{{ eventChunkRenderUuid }}</div>
     <div
         v-if="room"
@@ -37,6 +36,7 @@
                                 :i18nText="i18nText"
                                 :messageActionsTargetEventId="messageActionsTargetEventId"
                                 :messageActionsContextMenuTargetEventId="messageActionsContextMenuTargetEventId"
+                                :highlightEventId="highlightEventId"
                                 @viewPhoto="viewPhoto($event)"
                             />
                         </template>
@@ -96,6 +96,8 @@
                 </a>
             </template>
         </ContextMenu>
+        <UserProfilePopover ref="userProfilePopover" :userId="viewingProfileForUserId" />
+        <MessagePreviewDialog v-model:visible="messagePreviewDialogVisble" :room="props.room" :event="messagePreviewEvent" :i18nText="i18nText" />
         <DeleteMessageConfirm v-model:visible="deleteMessageConfirmVisible" :room="props.room" :eventRenderInfo="deleteMessageConfirmEventRenderInfo" :i18nText="i18nText" />
         <EditGroup v-model:visible="editGroupDialogVisible" :roomId="props.room.roomId" />
         <PhotoViewer v-model:visible="photoViewerVisible" :imageEvent="photoViewerImageEvent" />
@@ -119,7 +121,7 @@ import { throttle } from '@/utils/timing'
 import { useApplication } from '@/composables/application'
 import { useKeyboard } from '@/composables/keyboard'
 import { useRooms } from '@/composables/rooms'
-import { messageEventTypes, settingsEventTypes } from '@/composables/event-timeline'
+import { attachmentEventMessageTypes, messageEventTypes, settingsEventTypes } from '@/composables/event-timeline'
 
 import { useClientSettingsStore } from '@/stores/client-settings'
 import { useCryptoKeysStore } from '@/stores/crypto-keys'
@@ -131,12 +133,15 @@ const DeleteMessageConfirm = defineAsyncComponent(() => import('./DeleteMessageC
 const EditGroup = defineAsyncComponent(() => import('./EditGroup.vue'))
 const FixDecryptionDialog = defineAsyncComponent(() => import('@/views/EncryptionSetup/FixDecryptionDialog.vue'))
 import MessagePlaceholder from './MessagePlaceholder.vue'
+const MessagePreviewDialog = defineAsyncComponent(() => import('./MessagePreviewDialog.vue'))
 const PhotoViewer = defineAsyncComponent(() => import('./PhotoViewer.vue'))
 import TimelineEventRender from './TimelineEventRender.vue'
+const UserProfilePopover = defineAsyncComponent(() => import('./UserProfilePopover.vue'))
 
 import Button from 'primevue/button'
 import ContextMenu from 'primevue/contextmenu'
 import ScrollPanel from 'primevue/scrollpanel'
+import { useToast } from 'primevue/usetoast'
 import vTooltip from 'primevue/tooltip'
 import type { MenuItem, MenuItemCommandEvent } from 'primevue/menuitem'
 
@@ -154,14 +159,15 @@ interface EventChunk {
 }
 
 const { t } = useI18n()
+const toast = useToast()
 const { settings } = useClientSettingsStore()
 const { profiles } = storeToRefs(useProfileStore())
 const { isTouchEventsDetected } = useApplication()
 const { isShiftKeyPressed } = useKeyboard()
-const { getPreviousMessages, redactEvent } = useRooms()
+const { getMessageEvent, getPreviousMessages, redactEvent } = useRooms()
 const roomStore = useRoomStore()
 const { currentRoomPermissions, decryptedRoomEvents } = storeToRefs(roomStore)
-const { getTimelineEventIndexById } = useRoomStore()
+const { getTimelineEventById, getTimelineEventIndexById } = useRoomStore()
 const { roomKeys } = storeToRefs(useCryptoKeysStore())
 const { userId: sessionUserId } = storeToRefs(useSessionStore())
 
@@ -200,6 +206,9 @@ const i18nText = {
     replyMessage: t('room.replyMessage'),
     forwardMessage: t('room.forwardMessage'),
     moreActionsMessage: t('room.moreActionsMessage'),
+    replyToNoMessagePreview: t('room.replyToNoMessagePreview'),
+    replyToNoAttachmentPreview: t('room.replyToNoAttachmentPreview'),
+    unknownUserDisplayname: t('room.unknownUserDisplayname'),
 }
 
 const eventChunkSwapReadyUuid = ref<string | undefined>()
@@ -339,11 +348,39 @@ const loadingEventChunks = computed<EventChunk[]>(() => {
 
             const replacementEvent = props.room.replacements[event.eventId]?.find((replacementEvent) => replacementEvent.sender === event.sender)
 
+            const mentionedUserIds: string[] = event.content?.['m.mentions']?.userIds ?? []
+            const replyToEventId: string | undefined = event.content?.['m.relates_to']?.['m.in_reply_to']?.eventId
+            let replyTo: EventWithRenderInfo['replyTo'] = undefined
+            if (replyToEventId) {
+                const replyToEvent = getTimelineEventById(props.room.visibleTimeline, replyToEventId, 200, currentChunkBottomEventIndex)
+                const replyToReplacementEvent = props.room.replacements[replyToEventId]?.find((replacementEvent) => replacementEvent.sender === event.sender)
+                const replyUserId = replyToEvent?.sender ?? mentionedUserIds[0]
+                const userProfile = profiles.value[replyUserId ?? '']
+                const replyToEventContent = (replyToReplacementEvent && decryptedRoomEvents.value[replyToReplacementEvent.eventId])
+                    ? decryptedRoomEvents.value[replyToReplacementEvent.eventId]
+                    : (replyToReplacementEvent?.content)
+                        ? replyToReplacementEvent.content
+                        : (replyToEvent && decryptedRoomEvents.value[replyToEventId])
+                            ? decryptedRoomEvents.value[replyToEventId].content
+                            : replyToEvent?.content
+                const isAttachment = attachmentEventMessageTypes.includes(replyToEventContent?.msgtype)
+                replyTo = {
+                    userId: replyUserId,
+                    displayname: userProfile?.displayname ?? replyUserId,
+                    avatarUrl: userProfile?.avatarUrl,
+                    eventId: replyToEventId,
+                    bodyPreview: !isAttachment ? replyToEventContent?.body?.substring(0, 1000) : undefined,
+                    messageType: replyToEventContent?.msgtype ?? 'm.text',
+                    isAttachment,
+                }
+            }
+
             chunk.events.push({
                 category,
                 currentDateDivider,
                 displayHeader: previousEvent?.sender !== event.sender
                     || category !== previousCategory
+                    || !!replyTo
                     || !!currentDateDivider
                     || originDate.getTime() - previousEventOriginDate.getTime() > 300000,
                 displayname: profiles.value[event.sender]?.displayname ?? event.sender,
@@ -357,6 +394,7 @@ const loadingEventChunks = computed<EventChunk[]>(() => {
                 replacementEvent,
                 replacementDate: replacementEvent?.originServerTs ? new Date(replacementEvent.originServerTs).toLocaleString() : undefined,
                 reactions,
+                replyTo,
             })
 
             previousEvent = event
@@ -373,6 +411,7 @@ const loadingEventChunks = computed<EventChunk[]>(() => {
                 }
                 const roomKey = roomKeys.value[props.room.roomId]?.[event.event.content.sessionId]?.[event.event.content.senderKey]
                 if (!roomKey) continue
+                // TODO - wait until all events are decrypted then assign at once (to create only a single re-render)
                 decryptPromises.push(
                     decryptMegolmEvent(event.replacementEvent.content, roomKey).then((decrypted) => {
                         const decryptedEvent = {
@@ -931,30 +970,37 @@ let pointerDownTimelineItemY: number = 0
 let pointerDownTimelineTimestamp: number = 0
 
 function onPointerDownTimeline(event: PointerEvent) {
-    pointerDownTimelineTarget = event.target as HTMLElement
-    pointerDownTimelineItemX = event.pageX
-    pointerDownTimelineItemY = event.pageY
-    pointerDownTimelineTimestamp = window.performance.now()
+    if (event.button === 0) {
+        pointerDownTimelineTarget = event.target as HTMLElement
+        pointerDownTimelineItemX = event.pageX
+        pointerDownTimelineItemY = event.pageY
+        pointerDownTimelineTimestamp = window.performance.now()
+    }
 }
 
 function onPointerUpTimeline(event: PointerEvent) {
     // "Click" / "Tap" simulation. Need to do this because of the Safari "double tap with hover states" issue.
     if (
-        event.target && event.target === pointerDownTimelineTarget
+        event.button === 0
+        && event.target && event.target === pointerDownTimelineTarget
         && window.performance.now() - pointerDownTimelineTimestamp <= 500
         && Math.abs(event.pageX - pointerDownTimelineItemX) < 8
         && Math.abs(event.pageY - pointerDownTimelineItemY) < 8
     ) {
-        const link = (event.target as HTMLElement)?.closest('a[href],[data-link-id],[data-user-id]')
+        const link = (event.target as HTMLElement)?.closest('a[href],[data-link-id]')
         if (!link) return
         const href = link.getAttribute('href')
         if (link.tagName === 'A' && href) {
             if (href.startsWith('https://matrix.to/#/!')) {
                 const [roomId, eventId] = href.replace('https://matrix.to/#/', '').split('/')
-                // TODO - handle user click
+                if (roomId === props.room.roomId) {
+                    jumpToMessage(eventId)
+                } else {
+                    // TODO - handle event redirect click
+                }
             } else if (href.startsWith('https://matrix.to/#/@')) {
                 const userId = href.replace('https://matrix.to/#/', '')
-                // TODO - open user modal
+                showUserProfile(event, userId)
             } else {
                 window.open(href, '_blank')
             }
@@ -970,8 +1016,18 @@ function onPointerUpTimeline(event: PointerEvent) {
                 fixDecryptEventId.value = eventId
                 fixDecryptDialogVisible.value = true
                 return
+            case 'jumpToMessage':
+                const jumpToEventId = link.getAttribute('data-jump-to-event-id')
+                if (!jumpToEventId) return
+                jumpToMessage(jumpToEventId)
+                return
             case 'retrySendMessage':
                 emit('retrySendMessage', eventId)
+                return
+            case 'viewUserProfile':
+                const userId = link.getAttribute('data-user-id')
+                if (!userId) return
+                showUserProfile(event, userId)
                 return
             default:
                 break
@@ -990,6 +1046,64 @@ function onClickTimeline(event: MouseEvent) {
 function viewPhoto(event: ApiV3SyncClientEventWithoutRoomId<EventImageContent>) {
     photoViewerImageEvent.value = event
     photoViewerVisible.value = true
+}
+
+/*--------------------*\
+| User Profile Popover |
+\*--------------------*/
+
+const userProfilePopover = ref<InstanceType<typeof UserProfilePopover>>()
+const viewingProfileForUserId = ref<string>()
+
+function showUserProfile(event: Event, userId: string) {
+    viewingProfileForUserId.value = userId
+    userProfilePopover.value?.show(event)
+}
+
+/*---------------*\
+| Jump to Message |
+\*---------------*/
+
+const highlightEventId = ref<string | undefined>()
+let highlightEventTimeoutHandle: number | undefined = undefined
+
+const messagePreviewEvent = ref<ApiV3SyncClientEventWithoutRoomId>()
+const messagePreviewDialogVisble = ref<boolean>(false)
+
+async function jumpToMessage(eventId?: string) {
+    if (!eventId || !scrollPanelContent.value || !scrollContentContainer.value) return
+
+    const renderedEvent = scrollContentContainer.value.querySelector<HTMLDivElement>(`[data-event-id="${eventId}"]`)
+    if (renderedEvent) {
+        scrollPanelContent.value.scrollTop = Math.max(0, renderedEvent.offsetTop + (renderedEvent.offsetHeight / 2) - (scrollPanelContent.value.offsetHeight / 2))
+        highlightEventId.value = eventId
+
+        clearTimeout(highlightEventTimeoutHandle)
+        highlightEventTimeoutHandle = setTimeout(() => {
+            highlightEventId.value = undefined
+        }, 5000)
+    } else {
+        const eventIndex = getTimelineEventIndexById(props.room.visibleTimeline, eventId)
+        if (eventIndex != null) {
+            offsetEventId.value = eventId
+            offsetChunk.value = Math.round(chunksPerView / 2)
+            highlightEventId.value = eventId
+            props.room.nonSequentialUpdateUuid = uuidv4()
+
+            clearTimeout(highlightEventTimeoutHandle)
+            highlightEventTimeoutHandle = setTimeout(() => {
+                highlightEventId.value = undefined
+            }, 5000)
+        } else {
+            try {
+                messagePreviewEvent.value = await getMessageEvent(props.room.roomId, eventId)
+                if (!messagePreviewEvent.value) throw new Error('Missing message')
+                messagePreviewDialogVisble.value = true
+            } catch (error) {
+                toast.add({ severity: 'error', summary: t('messagePreviewDialog.unableToView'), life: 5000 })
+            }
+        }
+    }
 }
 
 /*--------------*\
