@@ -41,9 +41,10 @@
             ref="timelineEvents"
             :key="`TimelineEventsFor${props.room.roomId}`"
             :room="props.room"
-            :replyToEventId="replyToEventId"
+            :referenceEventId="replyToEventId || editEventId"
             @update:anchoredToBottom="isAnchoredToBottom = $event"
-            @update:replyToEventId="replyToEventId = $event"
+            @update:editEventId="onUpdateEditEventId"
+            @update:replyToEventId="onUpdateReplyToEventId"
             @retrySendMessage="retrySendMessage($event)"
             @selectEmoji="showExpressionPicker"
             @toggleEmoji="onEmojiSelected"
@@ -61,12 +62,17 @@
                     </I18nT>
                 </div>
             </div>
-            <div v-if="replyToEventId" class="joined-room__reply-bar">
-                {{ t('room.replyingTo') }} <strong>{{ replyToDisplayName }}</strong>
+            <div v-if="replyToEventId || editEventId" class="joined-room__reply-bar">
+                <template v-if="replyToEventId">
+                    {{ t('room.replyingTo') }} <strong>{{ replyToDisplayName }}</strong>
+                </template>
+                <template v-else>
+                    {{ t('room.messageEditing') }}
+                </template>
                 <Button
                     icon="pi pi-times-circle" rounded severity="secondary"
-                    variant="text" :aria-label="t('room.messageCancelReplyButton')"
-                    @click="replyToEventId = undefined"
+                    variant="text" :aria-label="replyToEventId ? t('room.messageCancelReplyButton') : t('room.messageCancelEditButton')"
+                    @click="onCancelEditOrReply()"
                 />
             </div>
             <form class="joined-room__chat-bar" @submit.prevent="onSubmitMessageForm">
@@ -116,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, reactive, ref, type PropType } from 'vue'
+import { computed, defineAsyncComponent, reactive, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
@@ -184,14 +190,16 @@ const props = defineProps({
     }
 })
 
+/*-----------------*\
+|                   |
+|   General state   |
+|                   |
+\*-----------------*/
+
 const timelineEvents = ref<InstanceType<typeof TimelineEvents>>()
-const expressionPicker = ref<InstanceType<typeof ExpressionPicker>>()
-const expressionPickerTriggerReferenceEventId = ref<string | undefined>()
-const expressionPickerEmojiOnly = ref<boolean>(false)
 const isAnchoredToBottom = ref<boolean>(false)
 const message = ref<string>('')
 const messageTextarea = ref<InstanceType<typeof Textarea>>()
-const replyToEventId = ref<string | undefined>()
 
 const replyToDisplayName = computed<string | undefined>(() => {
     if (!replyToEventId.value) return
@@ -229,6 +237,12 @@ const otherMembersDisplayed = computed(() => {
     return otherMembers.value.slice(0, 5)
 })
 
+/*---------------------*\
+|                       |
+|   Typing indicators   |
+|                       |
+\*---------------------*/
+
 const typingUserIds = computed(() => {
     return props.room.typingUserIds.filter((id) => id != userId.value)
 })
@@ -248,6 +262,16 @@ const typingDisplayMessageKey = computed(() => {
         return 'room.typingIndicatorSeveral'
     }
 })
+
+/*-----------------------------*\
+|                               |
+|   Expression / emoji picker   |
+|                               |
+\*-----------------------------*/
+
+const expressionPicker = ref<InstanceType<typeof ExpressionPicker>>()
+const expressionPickerTriggerReferenceEventId = ref<string | undefined>()
+const expressionPickerEmojiOnly = ref<boolean>(false)
 
 function showExpressionPicker(event: Event, referenceEventId?: string) {
     expressionPickerTriggerReferenceEventId.value = referenceEventId
@@ -290,6 +314,59 @@ async function onExpressionPickerHidden() {
     timelineEvents.value?.resetMessageActionsContextMenuTargetEventId()
 }
 
+/*---------------------------------*\
+|                                   |
+|   Editing / replying to message   |
+|                                   |
+\*---------------------------------*/
+
+const editEventId = ref<string | undefined>()
+const replyToEventId = ref<string | undefined>()
+
+function onUpdateEditEventId(eventId: string | undefined) {
+    replyToEventId.value = undefined
+    editEventId.value = eventId
+    const event = props.room.replacements[eventId ?? '']?.[0] ?? getTimelineEventById(props.room.visibleTimeline, eventId)
+    if (event) {
+        message.value = event.content?.['com.reeksite.discortix.unredacted_body']
+            ?? event.content?.body ?? ''
+    }
+    if (eventId) {
+        (messageTextarea.value as any)?.$el?.focus()
+    }
+}
+
+function onUpdateReplyToEventId(eventId: string | undefined) {
+    if (editEventId.value) {
+        editEventId.value = undefined
+        message.value = ''
+    }
+    replyToEventId.value = eventId
+    if (eventId) {
+        (messageTextarea.value as any)?.$el?.focus()
+    }
+}
+
+function onCancelEditOrReply() {
+    replyToEventId.value = undefined
+    if (editEventId.value) {
+        editEventId.value = undefined
+        message.value = ''
+    }
+}
+
+watch(() => props.room.roomId, () => {
+    editEventId.value = undefined
+    replyToEventId.value = undefined
+    message.value = ''
+})
+
+/*------------------------------*\
+|                                |
+|   Typing in message textarea   |
+|                                |
+\*------------------------------*/
+
 function onKeydownMessageTextarea(event: KeyboardEvent) {
     if (event.code === 'Enter' && !event.shiftKey && !isTouchEventsDetected.value) {
         event.preventDefault()
@@ -312,12 +389,19 @@ const onInputMessageTextarea = throttle(() => {
         onStopTyping()
     }
 }, 2500)
+
 function onStopTyping() {
     lastTypingNotificationSentTimestamp = 0
     clearTimeout(stopTypingTimeoutHandle)
     stopTypingTimeoutHandle = undefined
     sendTypingNotification(props.room.roomId, false)
 }
+
+/*---------------------*\
+|                       |
+|   Sending a message   |
+|                       |
+\*---------------------*/
 
 function formatMessage() {
     let html = micromark(message.value, {
@@ -333,8 +417,10 @@ function formatMessage() {
             return match
         }
     });
+    const messageContainsSpoilers = message.value.includes('||')
     return {
-        body: replaceSpoilers(message.value, t('room.spoilerRedacted')),
+        body: messageContainsSpoilers ? replaceSpoilers(message.value, t('room.spoilerRedacted')) : message.value,
+        unredactedBody: messageContainsSpoilers ? message.value : undefined,
         formattedBody: html,
     }
 }
@@ -345,7 +431,7 @@ async function onSubmitMessageForm() {
     await timelineEvents.value?.scrollToBottom()
 
     const txnId = uuidv4()
-    const { body, formattedBody } = formatMessage()
+    const { body, unredactedBody, formattedBody } = formatMessage()
 
     const eventContent: EventTextContent = {
         body,
@@ -354,11 +440,27 @@ async function onSubmitMessageForm() {
         msgtype: 'm.text',
     }
 
+    if (unredactedBody) {
+        eventContent['com.reeksite.discortix.unredacted_body'] = unredactedBody
+    }
+
     if (replyToEventId.value) {
         eventContent['m.relates_to'] = {
             'm.in_reply_to': {
                 eventId: replyToEventId.value,
             },
+        }
+    } else if (editEventId.value) {
+        eventContent['m.relates_to'] = {
+            relType: 'm.replace',
+            eventId: editEventId.value,
+        }
+        eventContent['m.new_content'] = {
+            ...eventContent,
+        }
+        eventContent.body = '* ' + eventContent.body
+        if (eventContent.formattedBody) {
+            eventContent.formattedBody = '* ' + eventContent.formattedBody
         }
     }
 
@@ -374,6 +476,7 @@ async function onSubmitMessageForm() {
 
     message.value = ''
     replyToEventId.value = undefined
+    editEventId.value = undefined
 
     populateSentMessageEvent(props.room.roomId, event)
 

@@ -246,6 +246,9 @@
     line-height: 1;
     user-select: none;
 }
+.p-chattimeline-event-header ~ .p-chattimeline-event-content .p-chattimeline-edited {
+    margin-top: 0.3125rem;
+}
 
 .p-chattimeline-date-heading {
     position: relative;

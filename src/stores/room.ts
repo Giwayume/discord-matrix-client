@@ -8,6 +8,8 @@ import { useEventTimeline } from '@/composables/event-timeline'
 import { useSessionStore } from '@/stores/session'
 
 import {
+    getAllTableKeys as getAllDiscortixTableKeys,
+    deleteTableKey as deleteDiscortixTableKey,
     loadTableKey as loadDiscortixTableKey,
     saveTableKey as saveDiscortixTableKey,
 } from '@/stores/database/discortix'
@@ -459,36 +461,40 @@ export const useRoomStore = defineStore('room', () => {
 
     async function initialize() {
         try {
-            await Promise.all([
-                loadDiscortixTableKey('rooms', 'invited').then((invitedRooms) => {
-                    if (!invitedRooms) return
-                    invited.value = invitedRooms
-                }),
-                loadDiscortixTableKey('rooms', 'knocked').then((knockedRooms) => {
-                    if (!knockedRooms) return
-                    knocked.value = knockedRooms
-                }),
-                loadDiscortixTableKey('rooms', 'joined').then((joinedRooms) => {
-                    if (!joinedRooms) return
-                    joined.value = joinedRooms
-
-                    // Mark recent unsent messages as errored.
-                    const checkLimit = Math.max(Math.round(1000 / Object.keys(joined.value).length), 20)
-                    for (const roomId in joined.value) {
-                        const joinedRoom = joined.value[roomId]!
-                        const lowerLimit = Math.max(0, joinedRoom.visibleTimeline.length - checkLimit)
-                        for (let i = joinedRoom.visibleTimeline.length - 1; i >= lowerLimit; i--) {
-                            const event = joinedRoom.visibleTimeline[i]
-                            if (!event?.txnId) continue
-                            event.sendError = true
+            invited.value = {}
+            knocked.value = {}
+            joined.value = {}
+            left.value = {}
+            const tableKeys: [[string, string]] = await getAllDiscortixTableKeys('rooms')
+            const loadPromises: Promise<void>[] = []
+            for (const [membershipType, roomId] of tableKeys) {
+                loadPromises.push(
+                    loadDiscortixTableKey('rooms', [membershipType, roomId]).then((room) => {
+                        if (membershipType === 'invited') {
+                            invited.value[roomId] = room
+                        } else if (membershipType === 'knocked') {
+                            knocked.value[roomId] = room
+                        } else if (membershipType === 'joined') {
+                            joined.value[roomId] = room
+                        } else if (membershipType === 'left') {
+                            left.value[roomId] = room
                         }
-                    }
-                }),
-                loadDiscortixTableKey('rooms', 'left').then((leftRooms) => {
-                    if (!leftRooms) return
-                    left.value = leftRooms
-                }),
-            ])
+                    })
+                )
+            }
+            await Promise.allSettled(loadPromises)
+
+            // Mark recent unsent messages as errored.
+            const checkLimit = Math.max(Math.round(1000 / Object.keys(joined.value).length), 20)
+            for (const roomId in joined.value) {
+                const joinedRoom = joined.value[roomId]!
+                const lowerLimit = Math.max(0, joinedRoom.visibleTimeline.length - checkLimit)
+                for (let i = joinedRoom.visibleTimeline.length - 1; i >= lowerLimit; i--) {
+                    const event = joinedRoom.visibleTimeline[i]
+                    if (!event?.txnId) continue
+                    event.sendError = true
+                }
+            }
         } catch (error) {
             if (error instanceof Error) {
                 roomsLoadError.value = error
@@ -503,11 +509,17 @@ export const useRoomStore = defineStore('room', () => {
     async function populateFromApiV3SyncResponse(sync: ApiV3SyncResponse) {
         if (!sync.rooms) return
 
-        let touchedRoomTypes: Set<'invited' | 'knocked' | 'joined' | 'left'> = new Set()
+        let updatedInvitedRoomIds: Set<string> = new Set()
+        let deletedInvitedRoomIds: Set<string> = new Set()
+        let updatedKnockedRoomIds: Set<string> = new Set()
+        let deletedKnockedRoomIds: Set<string> = new Set()
+        let updatedJoinedRoomIds: Set<string> = new Set()
+        let deletedJoinedRoomIds: Set<string> = new Set()
+        let updatedLeftRoomIds: Set<string> = new Set()
+        let deletedLeftRoomIds: Set<string> = new Set()
 
         // Populate invited room state
         if (sync.rooms.invite) {
-            touchedRoomTypes.add('invited')
             for (const roomId in sync.rooms.invite) {
                 const invitedRoomsSync = sync.rooms.invite[roomId]
                 if (!invitedRoomsSync) continue
@@ -519,17 +531,19 @@ export const useRoomStore = defineStore('room', () => {
                     }
                 }
 
+                updatedInvitedRoomIds.add(roomId)
+
                 if (knocked.value[roomId]) {
                     delete knocked.value[roomId]
-                    touchedRoomTypes.add('knocked')
+                    deletedKnockedRoomIds.add(roomId)
                 }
                 if (joined.value[roomId]) {
                     delete joined.value[roomId]
-                    touchedRoomTypes.add('joined')
+                    deletedJoinedRoomIds.add(roomId)
                 }
                 if (left.value[roomId]) {
                     delete left.value[roomId]
-                    touchedRoomTypes.add('left')
+                    deletedLeftRoomIds.add(roomId)
                 }
 
                 if (invitedRoomsSync.inviteState?.events) {
@@ -542,7 +556,6 @@ export const useRoomStore = defineStore('room', () => {
 
         // Populate knocked room state
         if (sync.rooms.knock) {
-            touchedRoomTypes.add('knocked')
             for (const roomId in sync.rooms.knock) {
                 const knockedRoomsSync = sync.rooms.knock[roomId]
                 if (!knockedRoomsSync) continue
@@ -554,17 +567,19 @@ export const useRoomStore = defineStore('room', () => {
                     }
                 }
 
+                updatedKnockedRoomIds.add(roomId)
+
                 if (invited.value[roomId]) {
                     delete invited.value[roomId]
-                    touchedRoomTypes.add('invited')
+                    deletedInvitedRoomIds.add(roomId)
                 }
                 if (joined.value[roomId]) {
                     delete joined.value[roomId]
-                    touchedRoomTypes.add('joined')
+                    deletedJoinedRoomIds.add(roomId)
                 }
                 if (left.value[roomId]) {
                     delete left.value[roomId]
-                    touchedRoomTypes.add('left')
+                    deletedLeftRoomIds.add(roomId)
                 }
 
                 if (knockedRoomsSync.knockState?.events) {
@@ -577,7 +592,6 @@ export const useRoomStore = defineStore('room', () => {
 
         // Populate joined room state
         if (sync.rooms.join) {
-            touchedRoomTypes.add('joined')
             for (const roomId in sync.rooms.join) {
                 const joinedRoomSync = sync.rooms.join[roomId]
                 if (!joinedRoomSync) continue
@@ -602,17 +616,19 @@ export const useRoomStore = defineStore('room', () => {
                     }
                 }
 
+                updatedJoinedRoomIds.add(roomId)
+
                 if (invited.value[roomId]) {
                     delete invited.value[roomId]
-                    touchedRoomTypes.add('invited')
+                    deletedInvitedRoomIds.add(roomId)
                 }
                 if (knocked.value[roomId]) {
                     delete knocked.value[roomId]
-                    touchedRoomTypes.add('knocked')
+                    deletedKnockedRoomIds.add(roomId)
                 }
                 if (left.value[roomId]) {
                     delete left.value[roomId]
-                    touchedRoomTypes.add('left')
+                    deletedLeftRoomIds.add(roomId)
                 }
 
                 if (joinedRoomSync.accountData?.events) {
@@ -663,7 +679,6 @@ export const useRoomStore = defineStore('room', () => {
 
         // Populate left room state
         if (sync.rooms.leave) {
-            touchedRoomTypes.add('left')
             const leftRooms: Record<string, ApiV3SyncLeftRoom> = sync.rooms.leave ?? {}
             for (const roomId in leftRooms) {
                 const leftRoomSync = leftRooms[roomId]
@@ -684,17 +699,19 @@ export const useRoomStore = defineStore('room', () => {
                     }
                 }
 
+                updatedLeftRoomIds.add(roomId)
+
                 if (invited.value[roomId]) {
                     delete invited.value[roomId]
-                    touchedRoomTypes.add('invited')
+                    deletedInvitedRoomIds.add(roomId)
                 }
                 if (knocked.value[roomId]) {
                     delete knocked.value[roomId]
-                    touchedRoomTypes.add('knocked')
+                    deletedKnockedRoomIds.add(roomId)
                 }
                 if (joined.value[roomId]) {
                     delete joined.value[roomId]
-                    touchedRoomTypes.add('joined')
+                    deletedJoinedRoomIds.add(roomId)
                 }
 
                 if (leftRoomSync.accountData?.events) {
@@ -722,34 +739,59 @@ export const useRoomStore = defineStore('room', () => {
         }
 
         if (isLeader.value) {
-            if (touchedRoomTypes.has('invited')) {
-                try {
-                    await saveDiscortixTableKey('rooms', 'invited', toRaw(invited.value))
-                } catch (error) {
-                    localStorage.setItem('mx_full_sync_required', 'true')
-                }
+            const deletePromises: Promise<void>[] = []
+            for (const roomId of deletedInvitedRoomIds) {
+                deletePromises.push(
+                    deleteDiscortixTableKey('rooms', ['invited', roomId])
+                )
             }
-            if (touchedRoomTypes.has('knocked')) {
-                try {
-                    await saveDiscortixTableKey('rooms', 'knocked', toRaw(knocked.value))
-                } catch (error) {
-                    localStorage.setItem('mx_full_sync_required', 'true')
-                }
+            for (const roomId of deletedKnockedRoomIds) {
+                deletePromises.push(
+                    deleteDiscortixTableKey('rooms', ['knocked', roomId])
+                )
             }
-            if (touchedRoomTypes.has('joined')) {
-                try {
-                    await saveDiscortixTableKey('rooms', 'joined', toRaw(joined.value))
-                } catch (error) {
-                    localStorage.setItem('mx_full_sync_required', 'true')
-                }
+            for (const roomId of deletedJoinedRoomIds) {
+                deletePromises.push(
+                    deleteDiscortixTableKey('rooms', ['joined', roomId])
+                )
             }
-            if (touchedRoomTypes.has('left')) {
-                try {
-                    await saveDiscortixTableKey('rooms', 'left', toRaw(left.value))
-                } catch (error) {
-                    localStorage.setItem('mx_full_sync_required', 'true')
-                }
+            for (const roomId of deletedLeftRoomIds) {
+                deletePromises.push(
+                    deleteDiscortixTableKey('rooms', ['left', roomId])
+                )
             }
+            await Promise.allSettled(deletePromises)
+
+            const updatePromises: Promise<void>[] = []
+            for (const roomId of updatedInvitedRoomIds) {
+                updatePromises.push(
+                    saveDiscortixTableKey('rooms', ['invited', roomId], toRaw(invited.value[roomId])).catch(() => {
+                        localStorage.setItem('mx_full_sync_required', 'true')
+                    })
+                )
+            }
+            for (const roomId of updatedKnockedRoomIds) {
+                updatePromises.push(
+                    saveDiscortixTableKey('rooms', ['knocked', roomId], toRaw(knocked.value[roomId])).catch((error) => {
+                        localStorage.setItem('mx_full_sync_required', 'true')
+                    })
+                )
+            }
+            for (const roomId of updatedJoinedRoomIds) {
+                updatePromises.push(
+                    saveDiscortixTableKey('rooms', ['joined', roomId], toRaw(joined.value[roomId])).catch(() => {
+                        localStorage.setItem('mx_full_sync_required', 'true')
+                    })
+                )
+            }
+            for (const roomId of updatedLeftRoomIds) {
+                updatePromises.push(
+                    saveDiscortixTableKey('rooms', ['left', roomId], toRaw(left.value[roomId])).catch((error) => {
+                        localStorage.setItem('mx_full_sync_required', 'true')
+                    })
+                )
+            }
+            await Promise.allSettled(updatePromises)
         }
 
     }
@@ -759,7 +801,7 @@ export const useRoomStore = defineStore('room', () => {
         if (!room) return
         addJoinedOrLeftRoomTimelineEvent(room, event)
 
-        updateJoinedRoomDatabase()
+        updateJoinedRoomDatabase(roomId)
     }
 
     async function associateTransactionIdWithEventId(roomId: string, txnId: string, eventId: string) {
@@ -782,7 +824,7 @@ export const useRoomStore = defineStore('room', () => {
             }
         }
 
-        updateJoinedRoomDatabase()
+        updateJoinedRoomDatabase(roomId)
     }
 
     async function populateFromApiV3RoomMessagesResponse(roomId: string, messages: ApiV3RoomMessagesResponse) {
@@ -822,13 +864,13 @@ export const useRoomStore = defineStore('room', () => {
         if (isLeader.value) {
             if (joinedRoom) {
                 try {
-                    await saveDiscortixTableKey('rooms', 'joined', toRaw(joined.value))
+                    await saveDiscortixTableKey('rooms', ['joined', roomId], toRaw(joined.value[roomId]))
                 } catch (error) {
                     // Ignore - It is not critical that message history is updated. Can fetch again.
                 }
             } else if (leftRoom) {
                 try {
-                    await saveDiscortixTableKey('rooms', 'left', toRaw(left.value))
+                    await saveDiscortixTableKey('rooms', ['left', roomId], toRaw(left.value[roomId]))
                 } catch (error) {
                     // Ignore - It is not critical that message history is updated. Can fetch again.
                 }
@@ -836,10 +878,10 @@ export const useRoomStore = defineStore('room', () => {
         }
     }
 
-    async function updateJoinedRoomDatabase() {
+    async function updateJoinedRoomDatabase(roomId: string) {
         if (isLeader.value) {
             try {
-                await saveDiscortixTableKey('rooms', 'joined', toRaw(joined.value))
+                await saveDiscortixTableKey('rooms', ['joined', roomId], toRaw(joined.value[roomId]))
             } catch (error) {
                 // Ignore - It is not critical that message history is updated. Can fetch again.
             }

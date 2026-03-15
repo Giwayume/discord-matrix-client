@@ -37,7 +37,7 @@
                                 :messageActionsTargetEventId="messageActionsTargetEventId"
                                 :messageActionsContextMenuTargetEventId="messageActionsContextMenuTargetEventId"
                                 :highlightEventId="highlightEventId"
-                                :replyToEventId="replyToEventId"
+                                :referenceEventId="referenceEventId"
                                 @viewPhoto="viewPhoto($event)"
                             />
                         </template>
@@ -73,6 +73,7 @@
                 v-if="currentRoomPermissions.sendMessage && messageActionsTargetEventSender === sessionUserId"
                 v-tooltip.top="{ value: i18nText.editMessage }"
                 icon="pi pi-pencil" :aria-label="i18nText.editMessage" severity="secondary" variant="text"
+                data-link-id="editMessage"
             />
             <Button
                 v-if="currentRoomPermissions.sendMessage && messageActionsTargetEventSender !== sessionUserId"
@@ -180,7 +181,7 @@ const props = defineProps({
         type: Object as PropType<JoinedRoom>,
         required: true,
     },
-    replyToEventId: {
+    referenceEventId: {
         type: String,
         default: undefined,
     },
@@ -188,6 +189,7 @@ const props = defineProps({
 
 const emit = defineEmits<{
     (e: 'update:anchoredToBottom', isAnchoredToBottom: boolean): void
+    (e: 'update:editEventId', editEventId?: string): void
     (e: 'update:replyToEventId', replyToEventId?: string): void
     (e: 'retrySendMessage', eventId?: string): void
     (e: 'selectEmoji', event: Event, referenceEventId: string): void
@@ -258,6 +260,9 @@ const photoViewerVisible = ref<boolean>(false)
 const photoViewerImageEvent = ref<ApiV3SyncClientEventWithoutRoomId<EventImageContent> | undefined>()
 
 const isAnchoredToBottom = ref<boolean>(true)
+const isActivelyScrolling = ref<boolean>(false)
+let isAnchorScrollBottomRepeat = false
+let anchorScrollBottomRepeatTimeoutHandle: number | undefined = undefined
 watch(() => props.room, () => {
     isAnchoredToBottom.value = true
 })
@@ -305,6 +310,7 @@ watch(() => showNewEventMessagePlaceholder.value, () => {
     }
 }, { immediate: true })
 
+const isAllLoadingEventChunksReady = ref<boolean>(true)
 const loadingEventChunks = computed<EventChunk[]>(() => {
     const today = new Date()
     const chunks: EventChunk[] = []
@@ -412,6 +418,7 @@ const loadingEventChunks = computed<EventChunk[]>(() => {
             currentDateDividerTs = event.type === 'm.room.create' ? 0 : (event.originServerTs > currentDateDividerTs ? event.originServerTs : currentDateDividerTs)
         }
 
+        isAllLoadingEventChunksReady.value = false
         const decryptPromises: Promise<void>[] = []
         for (const event of chunk.events) {
             if (event.replacementEvent?.type === 'm.room.encrypted') {
@@ -459,13 +466,14 @@ const loadingEventChunks = computed<EventChunk[]>(() => {
             
         }
         Promise.allSettled(decryptPromises).then(() => {
-            chunk.loading = false
+            isAllLoadingEventChunksReady.value = true
         })
         chunks.push(chunk)
     }
     return chunks
 })
-watch(() => loadingEventChunks.value, (eventChunks) => {
+watch(() => [loadingEventChunks.value, isAllLoadingEventChunksReady.value] as const, ([eventChunks, isAllLoadingEventChunksReady]) => {
+    if (!isAllLoadingEventChunksReady) return
     if (eventChunkSwapReadyUuid.value) {
         swapEventChunkBuffers()
     }
@@ -488,6 +496,9 @@ onUpdated(() => {
         if (isAnchoredToBottom.value) {
             swapEventChunkBuffers()
         }
+    }
+    if (isAnchoredToBottom.value && isAnchorScrollBottomRepeat) {
+        scrollPanelContent.value!.scrollTop = scrollPanelContent.value!.scrollHeight - scrollPanelContent.value!.offsetHeight
     }
 })
 
@@ -526,6 +537,7 @@ function swapEventChunkBuffers() {
         activeContainer.parentElement?.classList.add('p-chattimeline-scroll-content-sizer')
         if (
             isAnchoredToBottom.value
+            && !isActivelyScrolling.value
             && (
                 (
                     offsetEventId.value === lastBufferSwapOffsetEventId.value
@@ -539,6 +551,9 @@ function swapEventChunkBuffers() {
             )
         ) {
             scrollPanelContent.value!.scrollTop = scrollPanelContent.value!.scrollHeight - scrollPanelContent.value!.offsetHeight
+            isAnchorScrollBottomRepeat = true
+            clearTimeout(anchorScrollBottomRepeatTimeoutHandle)
+            anchorScrollBottomRepeatTimeoutHandle = setTimeout(anchorScrollBottomRepeatCallback, 50)
         } else {
             scrollPanelContent.value!.scrollTop = oldScrollTop + (newReferenceScrollTop - oldReferenceScrollTop) + (newReferenceClientRect.height - oldReferenceClientRect.height) + oldMessagePlaceholderGap
         }
@@ -552,6 +567,9 @@ function swapEventChunkBuffers() {
     lastBufferSwapOffsetEventId.value = offsetEventId.value
     lastBufferSwapOffsetChunk.value = offsetChunk.value
     lastBufferSwapVisibleTimelineLength.value = props.room.visibleTimeline.length
+}
+function anchorScrollBottomRepeatCallback() {
+    isAnchorScrollBottomRepeat = false
 }
 
 let fetchOldEventsAbortController: AbortController | undefined
@@ -656,6 +674,7 @@ onMounted(() => {
     if (scrollPanel.value) {
         scrollPanelContent.value = (scrollPanel.value as any).$el?.querySelector('.p-scrollpanel-content')
         scrollPanelContent.value?.addEventListener('scroll', onScrollContent)
+        scrollPanelContent.value?.addEventListener('wheel', onWheelContent)
     }
 
     // TODO - update to latest message whenever scrolled to bottom (live view)
@@ -687,6 +706,7 @@ onMounted(() => {
 onUnmounted(() => {
     window.dispatchEvent(new CustomEvent('discortix-timeline-unmounted', { detail: { id: componentUuid } }))
     scrollPanelContent.value?.removeEventListener('scroll', onScrollContent)
+    scrollPanelContent.value?.removeEventListener('wheel', onWheelContent)
     fetchOldEventsAbortController?.abort()
     fetchNewEventsAbortController?.abort()
 })
@@ -771,6 +791,17 @@ const onScrollContentDeferred = throttle((event: Event) => {
         
     }
 }, 100)
+
+let wheelEndTimeoutHandle: number | undefined = undefined
+function onWheelContent(event: WheelEvent) {
+    isActivelyScrolling.value = true
+    clearTimeout(wheelEndTimeoutHandle)
+    wheelEndTimeoutHandle = setTimeout(onWheelContentEnd, 80)
+}
+
+function onWheelContentEnd() {
+    isActivelyScrolling.value = false
+}
 
 async function scrollToBottom() {
     if (scrollPanelContent.value) {
@@ -916,6 +947,9 @@ async function runMoreMessageActionsContextMenuCommand(event: MenuItemCommandEve
             messageActionsContextMenuTargetEventId.value = eventId
             keepMessageActionsContextMenuTargetEventId.value = true
             break
+        case 'editMessage':
+            emit('update:editEventId', eventId)
+            break
         case 'replyToMessage':
             emit('update:replyToEventId', eventId)
             break
@@ -1007,9 +1041,11 @@ function onMouseLeaveTimeline(event: MouseEvent) {
     messageActionsTargetEventId.value = undefined
 }
 
-/*--------------------------------*\
-| Handle Interaction with Timeline |
-\*--------------------------------*/
+/*------------------------------------*\
+|                                      |
+|   Handle Interaction with Timeline   |
+|                                      |
+\*------------------------------------*/
 
 let pointerDownTimelineTarget: HTMLElement | null
 let pointerDownTimelineItemX: number = 0
@@ -1082,6 +1118,9 @@ function onPointerUpTimeline(event: PointerEvent) {
             case 'editGroup':
                 editGroupDialogVisible.value = true
                 return
+            case 'editMessage':
+                emit('update:editEventId', eventId ?? messageActionsTargetEventId.value)
+                return
             case 'fixDecrypt':
                 fixDecryptEventId.value = eventId
                 fixDecryptDialogVisible.value = true
@@ -1121,9 +1160,11 @@ function viewPhoto(event: ApiV3SyncClientEventWithoutRoomId<EventImageContent>) 
     photoViewerVisible.value = true
 }
 
-/*--------------------*\
-| User Profile Popover |
-\*--------------------*/
+/*------------------------*\
+|                          |
+|   User Profile Popover   |
+|                          |
+\*------------------------*/
 
 const userProfilePopover = ref<InstanceType<typeof UserProfilePopover>>()
 const viewingProfileForUserId = ref<string>()
@@ -1133,9 +1174,11 @@ function showUserProfile(event: Event, userId: string) {
     userProfilePopover.value?.show(event)
 }
 
-/*---------------*\
-| Jump to Message |
-\*---------------*/
+/*-------------------*\
+|                     |
+|   Jump to Message   |
+|                     |
+\*-------------------*/
 
 const highlightEventId = ref<string | undefined>()
 let highlightEventTimeoutHandle: number | undefined = undefined

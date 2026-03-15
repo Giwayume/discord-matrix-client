@@ -10,7 +10,7 @@
             'p-chattimeline-event--sending': !!e.event.txnId,
             'p-chattimeline-event--hover': messageActionsTargetEventId === e.event.eventId || messageActionsContextMenuTargetEventId === e.event.eventId,
             'p-chattimeline-event--flash': highlightEventId === e.event.eventId,
-            'p-chattimeline-event--reference': replyToEventId === e.event.eventId,
+            'p-chattimeline-event--reference': referenceEventId === e.event.eventId,
         }"
         :data-event-id="e.event.eventId"
         :data-event-sender="e.event.sender"
@@ -188,7 +188,7 @@
             'p-chattimeline-event--groupstart': e.displayHeader,
             'p-chattimeline-event--hover': messageActionsTargetEventId === e.event.eventId || messageActionsContextMenuTargetEventId === e.event.eventId,
             'p-chattimeline-event--flash': highlightEventId === e.event.eventId,
-            'p-chattimeline-event--reference': replyToEventId === e.event.eventId,
+            'p-chattimeline-event--reference': referenceEventId === e.event.eventId,
         }"
         :data-event-id="e.event.eventId"
     >
@@ -293,7 +293,7 @@ const props = defineProps({
         type: String,
         default: undefined,
     },
-    replyToEventId: {
+    referenceEventId: {
         type: String,
         default: undefined,
     },

@@ -299,6 +299,8 @@
         "messageEmojiButton": "Insert emoji",
         "replyingTo": "Replying To",
         "messageCancelReplyButton": "Cancel Reply",
+        "messageEditing": "Editing Message",
+        "messageCancelEditButton": "Cancel Edit",
         "messageSendButton": "Send message",
         "messageSendError": "Failed to send message.",
         "messageSendRetry": "Retry?",

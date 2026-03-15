@@ -5,9 +5,11 @@ import { PushNotificationPushRuleSchema } from './api-push-notifications'
 import { EncryptedFileSchema } from './encryption'
 
 const EventRelatesToContentSchema = z.object({
+    eventId: z.string().optional(),
     'm.in_reply_to': z.object({
         eventId: z.string().optional(),
     }).optional(),
+    relType: z.string().optional(),
 })
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#maudio */
@@ -22,6 +24,20 @@ export const EventAudioContentSchema = z.object({
         mimetype: z.string().optional(),
         size: z.number().optional(),
     }).optional(),
+    'm.new_content': z.object({
+        body: z.string(),
+        file: EncryptedFileSchema.optional(),
+        filename: z.string().optional(),
+        format: z.string().optional(),
+        formattedBody: z.string().optional(),
+        info: z.object({
+            duration: z.number().optional(),
+            mimetype: z.string().optional(),
+            size: z.number().optional(),
+        }).optional(),
+        msgtype: z.enum(['m.audio']),
+        url: z.string().optional(),
+    }).optional(),
     'm.relates_to': EventRelatesToContentSchema.optional(),
     msgtype: z.enum(['m.audio']),
     url: z.string().optional(),
@@ -33,6 +49,12 @@ export const EventEmoteContentSchema = z.object({
     body: z.string(),
     format: z.string().optional(),
     formattedBody: z.string().optional(),
+    'm.new_content': z.object({
+        body: z.string(),
+        format: z.string().optional(),
+        formattedBody: z.string().optional(),
+        msgtype: z.enum(['m.emote']),
+    }).optional(),
     'm.relates_to': EventRelatesToContentSchema.optional(),
     msgtype: z.enum(['m.emote']),
 })
@@ -56,6 +78,27 @@ export const EventFileContentSchema = z.object({
             w: z.number().optional(),
         }).optional(),
         thumbnailUrl: z.string().optional(),
+    }).optional(),
+    'm.new_content': z.object({
+        body: z.string(),
+        file: EncryptedFileSchema.optional(),
+        filename: z.string().optional(),
+        format: z.string().optional(),
+        formattedBody: z.string().optional(),
+        info: z.object({
+            mimetype: z.string().optional(),
+            size: z.number().optional(),
+            thumbnailFile: EncryptedFileSchema.optional(),
+            thumbnailInfo: z.object({
+                h: z.number().optional(),
+                mimetype: z.string().optional(),
+                size: z.number().optional(),
+                w: z.number().optional(),
+            }).optional(),
+            thumbnailUrl: z.string().optional(),
+        }).optional(),
+        msgtype: z.enum(['m.file']),
+        url: z.string().optional(),
     }).optional(),
     'm.relates_to': EventRelatesToContentSchema.optional(),
     msgtype: z.enum(['m.file']),
@@ -99,6 +142,29 @@ export const EventImageContentSchema = z.object({
         }).optional(),
         thumbnailUrl: z.string().optional(),
         w: z.number().optional(),
+    }).optional(),
+    'm.new_content': z.object({
+        body: z.string(),
+        file: EncryptedFileSchema.optional(),
+        filename: z.string().optional(),
+        format: z.enum(['org.matrix.custom.html']).optional(),
+        formattedBody: z.string().optional(),
+        info: z.object({
+            h: z.number().optional(),
+            mimetype: z.string().optional(),
+            size: z.number().optional(),
+            thumbnailFile: EncryptedFileSchema.optional(),
+            thumbnailInfo: z.object({
+                h: z.number().optional(),
+                mimetype: z.string().optional(),
+                size: z.number().optional(),
+                w: z.number().optional(),
+            }).optional(),
+            thumbnailUrl: z.string().optional(),
+            w: z.number().optional(),
+        }).optional(),
+        msgtype: z.enum(['m.image']),
+        url: z.string().optional(),
     }).optional(),
     'm.relates_to': EventRelatesToContentSchema.optional(),
     msgtype: z.enum(['m.image']),
@@ -149,6 +215,21 @@ export const EventLocationContentSchema = z.object({
         }).optional(),
         thumbnailUrl: z.string().optional(),
     }).optional(),
+    'm.new_content': z.object({
+        body: z.string(),
+        geoUri: z.string(),
+        info: z.object({
+            thumbnailFile: EncryptedFileSchema.optional(),
+            thumbnailInfo: z.object({
+                h: z.number().optional(),
+                mimetype: z.string().optional(),
+                size: z.number().optional(),
+                w: z.number().optional(),
+            }).optional(),
+            thumbnailUrl: z.string().optional(),
+        }).optional(),
+        msgtype: z.enum(['m.location']),
+    }).optional(),
     'm.relates_to': EventRelatesToContentSchema.optional(),
     msgtype: z.enum(['m.location']),
 })
@@ -159,6 +240,12 @@ export const EventNoticeContentSchema = z.object({
     body: z.string(),
     format: z.string().optional(),
     formattedBody: z.string().optional(),
+    'm.new_content': z.object({
+        body: z.string(),
+        format: z.string().optional(),
+        formattedBody: z.string().optional(),
+        msgtype: z.enum(['m.notice']),
+    }).optional(),
     'm.relates_to': EventRelatesToContentSchema.optional(),
     msgtype: z.enum(['m.notice']),
 })
@@ -412,8 +499,16 @@ export type EventSpaceParentContent = z.infer<typeof EventSpaceParentContentSche
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mtext */
 export const EventTextContentSchema = z.object({
     body: z.string(),
+    'com.reeksite.discortix.unredacted_body': z.string().optional(),
     format: z.string().optional(),
     formattedBody: z.string().optional(),
+    'm.new_content': z.object({
+        body: z.string(),
+        'com.reeksite.discortix.unredacted_body': z.string().optional(),
+        format: z.string().optional(),
+        formattedBody: z.string().optional(),
+        msgtype: z.enum(['m.text']),
+    }).optional(),
     'm.relates_to': EventRelatesToContentSchema.optional(),
     msgtype: z.enum(['m.text']),
 })
@@ -446,6 +541,30 @@ export const EventVideoContentSchema = z.object({
         }).optional(),
         thumbnailUrl: z.string().optional(),
         w: z.number().optional(),
+    }).optional(),
+    'm.new_content': z.object({
+        body: z.string(),
+        file: EncryptedFileSchema.optional(),
+        filename: z.string().optional(),
+        format: z.string().optional(),
+        formattedBody: z.string().optional(),
+        info: z.object({
+            duration: z.number().optional(),
+            h: z.number().optional(),
+            mimetype: z.string().optional(),
+            size: z.number().optional(),
+            thumbnailFile: EncryptedFileSchema.optional(),
+            thumbnailInfo: z.object({
+                h: z.number().optional(),
+                mimetype: z.string().optional(),
+                size: z.number().optional(),
+                w: z.number().optional(),
+            }).optional(),
+            thumbnailUrl: z.string().optional(),
+            w: z.number().optional(),
+        }).optional(),
+        msgtype: z.enum(['m.video']),
+        url: z.string().optional(),
     }).optional(),
     'm.relates_to': EventRelatesToContentSchema.optional(),
     msgtype: z.enum(['m.video']),

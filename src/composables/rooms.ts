@@ -308,7 +308,7 @@ export function useRooms() {
                     },
                 })
             }
-            updateJoinedRoomDatabase()
+            updateJoinedRoomDatabase(roomId)
             return true
         }
         return false

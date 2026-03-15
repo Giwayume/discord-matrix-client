@@ -34,9 +34,12 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
+import { useBroadcast } from '@/composables/broadcast'
+
 import { useClientSettingsStore } from '@/stores/client-settings'
 import { useSyncStore } from '@/stores/sync'
 import {
+    getAllTableKeys as getAllDiscortixTableKeys,
     deleteTableKey as deleteDiscortixTableKey,
 } from '@/stores/database/discortix'
 
@@ -44,17 +47,19 @@ import Button from 'primevue/button'
 import ToggleSwitch from 'primevue/toggleswitch'
 
 const { t } = useI18n()
+const { isLeader } = useBroadcast()
 const { settings } = useClientSettingsStore()
 const { setNextBatch } = useSyncStore()
 
 async function resyncAllRooms() {
     setNextBatch(undefined)
-    await Promise.allSettled([
-        deleteDiscortixTableKey('rooms', 'invited'),
-        deleteDiscortixTableKey('rooms', 'knocked'),
-        deleteDiscortixTableKey('rooms', 'joined'),
-        deleteDiscortixTableKey('rooms', 'left'),
-    ])
+    isLeader.value = false
+    const keypairs: [[string, string]] = await getAllDiscortixTableKeys('rooms')
+    const deletePromises: Promise<void>[] = []
+    for (const [membershipType, roomId] of keypairs) {
+        deletePromises.push(deleteDiscortixTableKey('rooms', [membershipType, roomId]))
+    }
+    await Promise.allSettled(deletePromises)
     localStorage.removeItem('mx_broadcast_lock_leader_id')
     localStorage.removeItem('mx_broadcast_lock_leader_ts')
     window.location.reload()
