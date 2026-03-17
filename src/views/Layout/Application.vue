@@ -76,6 +76,7 @@ import { storeToRefs } from 'pinia'
 import { until } from '@/utils/vue'
 import { useApplication } from '@/composables/application'
 import { useCryptoKeys } from '@/composables/crypto-keys'
+import { createLogger } from '@/composables/logger'
 import { useProfiles } from '@/composables/profiles'
 import { useSync } from '@/composables/sync'
 import { useCryptoKeysStore } from '@/stores/crypto-keys'
@@ -92,6 +93,8 @@ const IdentityVerificationDialog = defineAsyncComponent(() => import('@/views/En
 import ProgressBar from 'primevue/progressbar'
 import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'
+
+const log = createLogger(import.meta.url)
 
 const router = useRouter()
 const { t } = useI18n()
@@ -165,6 +168,7 @@ async function initialize() {
         try {
             await initializeCryptoKeys()
         } catch (error) {
+            log.error('Initialization error:', error)
             initializeErrorMessage.value = getFriendlyCryptoKeysErrorMessage(error)
             return
         }
@@ -181,10 +185,12 @@ async function initialize() {
         ...(!secureSessionInitialized.value ? [initializeProfiles()] : []),
     ])
     if (syncSettled?.status === 'rejected') {
+        log.error('Initialization error:', syncSettled.reason)
         initializeErrorMessage.value = getFriendlySyncErrorMessage(syncSettled.reason)
         return
     }
     if (profilesSettled?.status === 'rejected') {
+        log.error('Initialization error:', profilesSettled.reason)
         initializeErrorMessage.value = getFriendlyProfilesErrorMessage(profilesSettled.reason)
         return
     }

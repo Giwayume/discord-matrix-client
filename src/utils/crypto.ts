@@ -4,7 +4,7 @@ import {
     // MegolmMessage,
 } from 'vodozemac-wasm-bindings'
 
-import { decodeBase64 } from './base64'
+import { decodeBase64, encodeUnpaddedBase64 } from './base64'
 import { camelizeApiResponse } from '@/utils/zod'
 
 import {
@@ -21,7 +21,7 @@ export interface Ed25519KeyPair {
 
 export async function generateEd25519Key(): Promise<Ed25519KeyPair> {
     const pair = await crypto.subtle.generateKey(
-        { name: 'ED25519', namedCurve: 'ED25519' },
+        { name: 'Ed25519' },
         true,
         ['sign', 'verify'],
     )
@@ -40,17 +40,72 @@ export async function generateEd25519Key(): Promise<Ed25519KeyPair> {
     }
 }
 
-export async function signWithEd25519Key(data: string, keyPair: CryptoKeyPair): Promise<ArrayBuffer> {
-    return await crypto.subtle.sign(
-        { name: 'ED25519' },
-        keyPair.privateKey,
-        new TextEncoder().encode(data),
-    );
+async function importMatrixEd25519Seed(seed: Uint8Array): Promise<CryptoKey> {
+    if (!(seed instanceof Uint8Array) || seed.length !== 32) {
+        throw new Error('Ed25519 seed must be 32 bytes')
+    }
+
+    // PKCS#8 DER prefix for Ed25519 private keys (RFC 8410)
+    const prefix = new Uint8Array([
+        0x30,0x2e, // SEQUENCE
+        0x02,0x01,0x00, // version
+        0x30,0x05, // AlgorithmIdentifier
+        0x06,0x03,0x2b,0x65,0x70, // OID 1.3.101.112 (Ed25519)
+        0x04,0x22, // OCTET STRING (34 bytes)
+        0x04,0x20  // inner OCTET STRING (32 bytes seed)
+    ])
+
+    const pkcs8 = new Uint8Array(prefix.length + 32)
+    pkcs8.set(prefix, 0)
+    pkcs8.set(seed, prefix.length)
+
+    return crypto.subtle.importKey(
+        'pkcs8',
+        pkcs8,
+        { name: 'Ed25519' },
+        false,
+        ['sign']
+    )
 }
 
-export async function createSigningJson(value: any, keyPair: CryptoKeyPair) {
+export async function signWithEd25519Key(
+    message: string,
+    privateKeyBytes: Uint8Array,
+): Promise<string> {
+    const cryptoKey = await importMatrixEd25519Seed(privateKeyBytes)
+
+    const encoder = new TextEncoder()
+    const messageBytes = encoder.encode(message)
+
+    const signature = await crypto.subtle.sign(
+        'Ed25519',
+        cryptoKey,
+        messageBytes
+    );
+
+    return encodeUnpaddedBase64(new Uint8Array(signature))
+}
+
+export async function verifyEd25519Signature(message: string, signature: Uint8Array, publicKey: Uint8Array) {
+    const key = await crypto.subtle.importKey(
+        "raw",
+        publicKey as never,
+        { name: "Ed25519" },
+        false,
+        ["verify"]
+    )
+
+    return crypto.subtle.verify(
+        { name: "Ed25519" },
+        key,
+        signature as never,
+        new TextEncoder().encode(message)
+    )
+}
+
+export async function createSigningJson(value: any, signingPrivateKey: Uint8Array) {
     const canonicalJson = canonicalJsonStringify(value, ['signatures', 'unsigned'])
-    return await signWithEd25519Key(canonicalJson, keyPair)
+    return await signWithEd25519Key(canonicalJson, signingPrivateKey)
 }
 
 export async function decryptMegolmEvent<T = any>(

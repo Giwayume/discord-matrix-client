@@ -20,13 +20,18 @@ function claimLeadership() {
 
     // If no lock or lock is stale (>10 s), try to become leader
     if (!lockLeaderId || now - lockLeaderTs > 10000) {
-        localStorage.setItem('mx_broadcast_lock_leader_id', tabId)
-        localStorage.setItem('mx_broadcast_lock_leader_ts', now + '')
-        // Verify we actually got it (another tab could race)
-        const checkLeaderId = localStorage.getItem('mx_broadcast_lock_leader_id')
-        if (checkLeaderId === tabId) {
-            becomeLeader()
-        }
+        forceClaimLeadership()
+    }
+}
+
+function forceClaimLeadership() {
+    const now = Date.now()
+    localStorage.setItem('mx_broadcast_lock_leader_id', tabId)
+    localStorage.setItem('mx_broadcast_lock_leader_ts', now + '')
+    // Verify we actually got it (another tab could race)
+    const checkLeaderId = localStorage.getItem('mx_broadcast_lock_leader_id')
+    if (checkLeaderId === tabId) {
+        becomeLeader()
     }
 }
 
@@ -140,5 +145,6 @@ export function useBroadcast(options?: UseBroadcastOptions) {
         onTabMessage,
         broadcastMessageFromLeader,
         broadcastMessageFromTab,
+        forceClaimLeadership,
     }
 }

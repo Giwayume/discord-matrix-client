@@ -161,6 +161,7 @@ export interface EventWithRenderInfo {
         messageType: string;
         isAttachment: boolean;
     };
+    showUnencryptedWarning: boolean;
 }
 
 export interface EmojiPickerEmojiItem {

@@ -353,6 +353,14 @@ export const EventRoomEncryptedContentSchema = z.object({
 })
 export type EventRoomEncryptedContent = z.infer<typeof EventRoomEncryptedContentSchema>
 
+/** @see https://spec.matrix.org/v1.17/client-server-api/#mroomencryption */
+export const EventRoomEncryptionContentSchema = z.object({
+    algorithm: z.enum(['m.megolm.v1.aes-sha2']),
+    rotationPeriodMs: z.number().optional(),
+    rotationPeriodMsgs: z.number().optional(),
+})
+export type EventRoomEncryptionContent = z.infer<typeof EventRoomEncryptionContentSchema>
+
 /** @see https://spec.matrix.org/v1.17/client-server-api/#mroomguest_access */
 export const EventRoomGuestAccessContentSchema = z.object({
     guestAccess: z.enum(['can_join', 'forbidden']),
@@ -591,6 +599,7 @@ export const eventContentSchemaByType = {
     'm.room.canonical_alias': EventRoomCanonicalAliasContentSchema,
     'm.room.create': EventRoomCreateContentSchema,
     'm.room.encrypted': EventRoomEncryptedContentSchema,
+    'm.room.encryption': EventRoomEncryptionContentSchema,
     'm.room.guest_access': EventRoomGuestAccessContentSchema,
     'm.room.history_visibility': EventRoomHistoryVisibilityContentSchema,
     'm.room.join_rules': EventRoomJoinRulesContentSchema,
@@ -629,6 +638,7 @@ export interface EventContentByType {
     'm.room.canonical_alias': EventRoomCanonicalAliasContent,
     'm.room.create': EventRoomCreateContent,
     'm.room.encrypted': EventRoomEncryptedContent,
+    'm.room.encryption': EventRoomEncryptionContent,
     'm.room.guest_access': EventRoomGuestAccessContent,
     'm.room.history_visibility': EventRoomHistoryVisibilityContent,
     'm.room.join_rules': EventRoomJoinRulesContent,

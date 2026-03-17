@@ -28,6 +28,7 @@ export const useClientSettingsStore = defineStore('clientSettings', () => {
         pointerPressTimeout: 1500,
         sendReadReceipts: true,
         sendTypingIndicators: true,
+        warnUnencryptedMessageInEncryptedRoom: true,
     })
 
     const loadSettingsPromises: Promise<void>[] = []

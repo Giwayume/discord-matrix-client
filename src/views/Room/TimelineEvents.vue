@@ -171,7 +171,7 @@ const { isTouchEventsDetected } = useApplication()
 const { isShiftKeyPressed } = useKeyboard()
 const { getMessageEvent, getPreviousMessages, redactEvent } = useRooms()
 const roomStore = useRoomStore()
-const { currentRoomPermissions, decryptedRoomEvents } = storeToRefs(roomStore)
+const { currentRoomEncryptionEnabledTimestamp, currentRoomPermissions, decryptedRoomEvents } = storeToRefs(roomStore)
 const { getTimelineEventById, getTimelineEventIndexById } = useRoomStore()
 const { roomKeys } = storeToRefs(useCryptoKeysStore())
 const { userId: sessionUserId } = storeToRefs(useSessionStore())
@@ -202,6 +202,8 @@ const componentUuid = uuidv4()
 const i18nText = {
     roomEncryptionEnabled: t('room.roomEncryptionEnabled'),
     unableToDecryptMessage: t('room.unableToDecryptMessage'),
+    messageUnencryptedWarning: t('room.messageUnencryptedWarning'),
+    messageUnencryptedWarningLearnMoreLink: t('room.messageUnencryptedWarningLearnMoreLink'),
     learnFixDecrypt: t('room.learnFixDecrypt'),
     joinedTheRoomPrefix: t('room.joinedTheRoomPrefix'),
     joinedTheRoomSuffix: t('room.joinedTheRoomSuffix'),
@@ -412,6 +414,7 @@ const loadingEventChunks = computed<EventChunk[]>(() => {
                 replacementDate: replacementEvent?.originServerTs ? new Date(replacementEvent.originServerTs).toLocaleString() : undefined,
                 reactions,
                 replyTo,
+                showUnencryptedWarning: settings.warnUnencryptedMessageInEncryptedRoom && currentRoomEncryptionEnabledTimestamp.value != null && event.type !== 'm.room.encrypted' && event.originServerTs > currentRoomEncryptionEnabledTimestamp.value
             })
 
             previousEvent = event

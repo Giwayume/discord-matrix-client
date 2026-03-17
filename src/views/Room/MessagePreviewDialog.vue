@@ -31,6 +31,7 @@ import { decryptMegolmEvent } from '@/utils/crypto'
 
 import { messageEventTypes, settingsEventTypes } from '@/composables/event-timeline'
 
+import { useClientSettingsStore } from '@/stores/client-settings'
 import { useCryptoKeysStore } from '@/stores/crypto-keys'
 import { useProfileStore } from '@/stores/profile'
 import { useRoomStore } from '@/stores/room'
@@ -49,9 +50,10 @@ import {
 } from '@/types'
 
 const { t } = useI18n()
+const { settings } = useClientSettingsStore()
 const { roomKeys } = storeToRefs(useCryptoKeysStore())
 const { profiles } = storeToRefs(useProfileStore())
-const { decryptedRoomEvents } = storeToRefs(useRoomStore())
+const { currentRoomEncryptionEnabledTimestamp, decryptedRoomEvents } = storeToRefs(useRoomStore())
 const { userId: sessionUserId } = storeToRefs(useSessionStore())
 
 const props = defineProps({
@@ -117,6 +119,7 @@ const eventRenderInfo = computed<EventWithRenderInfo | undefined>(() => {
         replacementDate: replacementEvent?.originServerTs ? new Date(replacementEvent.originServerTs).toLocaleString() : undefined,
         reactions,
         replyTo: undefined,
+        showUnencryptedWarning: settings.warnUnencryptedMessageInEncryptedRoom && currentRoomEncryptionEnabledTimestamp.value != null && event.type !== 'm.room.encrypted' && event.originServerTs > currentRoomEncryptionEnabledTimestamp.value,
     })
 
     if (event.type === 'm.room.encrypted') {

@@ -7,5 +7,6 @@ export const ClientSettingsSchema = z.object({
     pointerPressTimeout: z.number(),
     sendReadReceipts: z.boolean(),
     sendTypingIndicators: z.boolean(),
+    warnUnencryptedMessageInEncryptedRoom: z.boolean(),
 })
 export type ClientSettings = z.infer<typeof ClientSettingsSchema>

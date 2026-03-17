@@ -65,6 +65,8 @@ export const ApiV3DeviceInformationSchema = camelizeSchemaWithoutTransform(z.obj
     }).optional(),
     user_id: z.string(),
 }))
+export type ApiV3DeviceInformation = z.infer<typeof ApiV3DeviceInformationSchema>
+
 export const ApiV3CrossSigningKeySchema = camelizeSchemaWithoutTransform(z.object({
     keys: z.record(
         z.string(), // <algorithm>:<unpadded_base64_public_key>
@@ -74,6 +76,8 @@ export const ApiV3CrossSigningKeySchema = camelizeSchemaWithoutTransform(z.objec
     usage: z.array(z.string()),
     user_id: z.string(),
 }))
+export type ApiV3CrossSigningKey = z.infer<typeof ApiV3CrossSigningKeySchema>
+
 export const ApiV3KeysQueryResponseSchema = camelizeSchema(z.object({
     device_keys: z.record(
         z.string(), // User ID
@@ -111,6 +115,7 @@ export interface ApiV3KeysUploadRequest {
         user_id: string;
     };
     fallback_keys?: Record<string, string | {
+        fallback?: boolean;
         key: string;
         signatures: Record<string, any>;
     }>;
@@ -144,3 +149,35 @@ export interface ApiV3KeysDeviceSigningUploadRequest {
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3keyssignaturesupload */
 export type ApiV3KeysSignaturesUploadRequest = Record<string, Record<string, any>>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#put_matrixclientv3sendtodeviceeventtypetxnid */
+export interface ApiV3SendEventToDeviceRequest {
+    messages: Record<string, Record<string, any>>;
+}
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#molmv1curve25519-aes-sha2 */
+export interface OlmPayload<C = any> {
+    content: C;
+    keys: {
+        ed25519: string;
+    };
+    recipient: string;
+    recipientKeys: {
+        ed25519: string;
+    };
+    sender: string;
+    senderDeviceKeys?: {
+        algorithms: string[];
+        deviceId: string;
+        keys: Record<string, string>;
+        signatures: Record<
+            string, // User ID
+            Record<
+                string, // <algorithm>:<device_id>
+                string // Signature
+            >
+        >;
+        userId: string;
+    };
+    type: string;
+}

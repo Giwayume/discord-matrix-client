@@ -1,3 +1,5 @@
+import { type ComposerTranslation } from 'vue-i18n'
+
 export interface ThrottleOptions {
     leading?: boolean,
     trailing?: boolean
@@ -39,4 +41,32 @@ export function throttle<T = (...args: any) => void>(func: T, wait: number, opti
         }
         return result
     } as unknown as T
+}
+
+export function timeAgo(ts: number | null | undefined, t: ComposerTranslation) {
+    if (ts == null) return t('timeSince.unknown')
+
+    const now = Date.now()
+    const diff = now - ts
+
+    const seconds = Math.round(diff / 1000)
+    if (seconds < 60) return t('timeSince.secondsAgo', seconds)
+
+    const minutes = Math.round(seconds / 60)
+    if (minutes < 60) return t('timeSince.minutesAgo', minutes)
+
+    const hours = Math.round(minutes / 60)
+    if (hours < 24) t('timeSince.hoursAgo', hours)
+
+    const days = Math.round(hours / 24)
+    if (days < 7) return t('timeSince.daysAgo', days)
+
+    const weeks = Math.round(days / 7)
+    if (weeks < 4) return t('timeSince.weeksAgo', weeks)
+
+    const months = Math.round(days / 30)
+    if (months < 12) return t('timeSince.monthsAgo', months)
+
+    const years = Math.round(days / 365)
+    return t('timeSince.yearsAgo', years)
 }

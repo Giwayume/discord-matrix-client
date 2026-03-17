@@ -1,13 +1,17 @@
 import { computed, getCurrentInstance, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n, type ComposerTranslation } from 'vue-i18n'
+
 import { useBroadcast } from '@/composables/broadcast'
+import { useCryptoKeys } from '@/composables/crypto-keys'
 import { createLogger } from '@/composables/logger'
+
 import { useAccountDataStore } from '@/stores/account-data'
 import { useProfileStore } from '@/stores/profile'
 import { useSessionStore } from '@/stores/session'
 import { useSyncStore } from '@/stores/sync'
 import { useRoomStore } from '@/stores/room'
+
 import { fetchJson } from '@/utils/fetch'
 import { HttpError, NetworkConnectionError } from '@/utils/error'
 import { until } from '@/utils/vue'
@@ -36,6 +40,7 @@ function getFriendlyErrorMessage(t: ComposerTranslation, error: Error | unknown)
 export function useSync() {
     const { t } = useI18n()
     const { isLeader, onFollowerMessage, broadcastMessageFromLeader } = useBroadcast()
+    const { manageCryptoKeysFromApiV3SyncResponse } = useCryptoKeys()
     const accountDataStore = useAccountDataStore()
     const { accountDataLoading, accountDataLoadError } = storeToRefs(accountDataStore)
     const { populateFromApiV3SyncResponse: populateAccountDataFromApiV3SyncResponse } = accountDataStore
@@ -74,6 +79,11 @@ export function useSync() {
             populateProfilesFromApiV3SyncResponse(syncResponse)
         } catch (error) {
             log.error('Error when populating profiles from sync.', error)
+        }
+        try {
+            manageCryptoKeysFromApiV3SyncResponse(syncResponse)
+        } catch (error) {
+            log.error('Error when managing crypto keys from sync.', error)
         }
     }
 
@@ -117,6 +127,7 @@ export function useSync() {
                 populateAllFromApiSyncResponse(syncResponse)
                 broadcastMessageFromLeader({ type: 'apiV3Sync', data: syncResponse })
                 setNextBatch(syncResponse.nextBatch)
+
                 syncStatus.value = 'online'
                 if (syncRequestParams.timeout === 0) {
                     // Wait just in case some bug keeps it in a full sync loop.

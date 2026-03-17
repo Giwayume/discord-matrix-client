@@ -20,10 +20,13 @@ async function init(): Promise<void> {
             const db = request.result
             db.createObjectStore('4s')
             db.createObjectStore('accountData')
+            db.createObjectStore('authentication')
             db.createObjectStore('clientSettings')
             db.createObjectStore('profiles')
             db.createObjectStore('rooms')
             db.createObjectStore('roomKeys')
+            db.createObjectStore('olm')
+            db.createObjectStore('pickleKey')
         }
     })
 }

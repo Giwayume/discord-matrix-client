@@ -938,6 +938,14 @@ export const useRoomStore = defineStore('room', () => {
         return rooms
     })
 
+    const currentRoomEncryptionEnabledTimestamp = computed(() => {
+        const currentRoomId = route.name === 'room' ? `${route.params?.roomId}` : ''
+        const roomEncryptionEvent = joined.value[currentRoomId]?.stateEventsByType['m.room.encryption']?.[0]
+        return roomEncryptionEvent?.originServerTs
+    })
+
+    // event.event.type === 'm.room.encrypted'
+
     // Permissions in the current chat room for the current user
     const currentRoomPermissions = computed(() => {
         const currentRoomId = route.name === 'room' ? `${route.params?.roomId}` : ''
@@ -1003,6 +1011,7 @@ export const useRoomStore = defineStore('room', () => {
         knocked: computed(() => knocked.value),
         joined: computed(() => joined.value),
         left: computed(() => left.value),
+        currentRoomEncryptionEnabledTimestamp,
         currentRoomPermissions,
         decryptedRoomEvents,
         directMessageRooms,

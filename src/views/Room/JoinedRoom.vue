@@ -131,6 +131,7 @@ import { micromark } from 'micromark'
 import { vPointer } from '@/directives/pointer'
 
 import { useApplication } from '@/composables/application'
+import { useCryptoKeys } from '@/composables/crypto-keys'
 import { useEmoji } from '@/composables/emoji'
 import { createLogger } from '@/composables/logger'
 import { useRooms } from '@/composables/rooms'
@@ -172,6 +173,7 @@ const toast = useToast()
 const { isTouchEventsDetected } = useApplication()
 const { sendTypingNotification, sendMessageEvent, sendMessageReaction } = useRooms()
 
+const { fetchUserKeys } = useCryptoKeys()
 const { currentRoomCustomEmojiByCode } = useEmoji()
 const roomStore = useRoomStore()
 const {
@@ -236,6 +238,22 @@ const otherMembers = computed(() => {
 const otherMembersDisplayed = computed(() => {
     return otherMembers.value.slice(0, 5)
 })
+
+/*-------------------------*\
+|                           |
+|   Fetch Encryption Keys   |
+|                           |
+\*-------------------------*/
+
+watch(() => props.room.stateEventsByType['m.room.member'], (members) => {
+    if (!members) return
+    const userIds: string[] = []
+    for (const member of members) {
+        if (member.content?.membership !== 'join') continue
+        userIds.push(member.sender)
+    }
+    fetchUserKeys(userIds)
+}, { immediate: true })
 
 /*---------------------*\
 |                       |

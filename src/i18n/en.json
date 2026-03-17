@@ -58,6 +58,7 @@
         "rateLimited": "You are being rate limited. Please try again shortly.",
         "unexpected": "An unexpected error occurred. Please try again later.",
         "clipboardApiNotSupported": "The clipboard API is not supported. If updating to the latest version of a modern web browser doesn't fix this issue, contact the server admin.",
+        "schemaValidation": "Your homeserver sent an unexpected response that does not comply with the Matrix spec. Please report a bug with your homeserver.",
         "crash": {
             "title": "Well, this is awkward",
             "subtitle": "Looks like we had a problem displaying this page.",
@@ -101,9 +102,15 @@
     },
     "fixDecryption": {
         "title": "Fix Decryption",
+        "noEncryptionTitle": "Message Not Encrypted",
+        "messageNotEncryptedInEncryptedRoom": "You cannot trust that this message was actually sent from **{messageSenderDisplayname}**.\n\nThere are a few possibilities:\n* **{messageSenderDisplayname}** is using a chat client that doesn't support message encryption.\n* **{messageSenderDisplayname}**'s chat client bugged out and sent an unencrypted message, not understanding that the room is encrypted.\n* A malicious homeserver has spoofed this message.",
         "deviceEncryptionNotSupported": "Please visit this app in the most recent version of Chrome, Firefox, or Safari. This app relies on the SubtleCrypto web APIs, which your browser or webview does not support. Your best bet to fix this problem is to use a modern web browser.",
         "deviceEncryptionNotEnabledSecureContext": "This app is being hosted without HTTPS security, which disables its ability to use encryption. Please contact the administrator who hosts this website and ask them to fix it.",
-        "unknownError": "We were unable to detect why this message can't be decrypted."
+        "unknownError": "We were unable to detect why this message can't be decrypted.",
+        "roomKeyRequestInstructions": "Another user's device must be online in order to receive decryption keys. We can manually request, and see if we receive them.",
+        "roomKeyRequestError": "An error occured while requesting keys. Sorry about that. Try again later.",
+        "roomKeyRequestDiscoveringUsers": "Discovering users...",
+        "requestKeysButton": "Request Keys"
     },
     "home": {
         "title": "Friends",
@@ -265,6 +272,8 @@
         "removeFriendButton": "Remove Friend",
         "blockButton": "Block",
         "roomEncryptionEnabled": "Chat room encryption is enabled.",
+        "messageUnencryptedWarning": "This message is not encrypted.",
+        "messageUnencryptedWarningLearnMoreLink": "Why is this a problem?",
         "editGroupIconButton": "Edit Group Icon",
         "changedGroupIcon": "changed the group icon.",
         "changedGroupNamePrefix": "changed the group name: ",
@@ -324,6 +333,16 @@
             "room": "Room Settings"
         }
     },
+    "timeSince": {
+        "unknown": "Long ago",
+        "secondsAgo": "1 second ago | {count} seconds ago",
+        "minutesAgo": "1 minute ago | {count} minutes ago",
+        "hoursAgo": "1 hour ago | {count} hours ago",
+        "daysAgo": "1 day ago | {count} days ago",
+        "weeksAgo": "1 week ago | {count} weeks ago",
+        "monthsAgo": "1 month ago | {count} months ago",
+        "yearsAgo": "1 year ago | {count} years ago"
+    },
     "userProfilePopover": {
         "messagePlaceholder": "Message {'@'}{displayname}",
         "moreButton": "More",
@@ -370,11 +389,30 @@
         "encryption": {
             "identityHeading": "Identity Keys",
             "identityDescription": "Identity signing keys are used to verify your identity with others. If you lose these keys, you will need to re-generate them, which can result in losing access to all of your encrypted messages.",
+            "identityVerificationRequired": "You have identity keys in your account, but this device cannot access them.",
+            "verifyIdentityButton": "Verify Your Identity",
             "changeIdentityRecoveryKeyButton": "Change Identity Recovery Key",
             "roomKeysHeading": "Room Keys",
             "roomKeysDescription": "Room keys are used to encrypt your messages in chats. If you lose these keys, you will not be able to read old encrypted chat messages.",
             "exportRoomKeysButton": "Export Keys",
-            "importRoomKeysButton": "Import Keys"
+            "importRoomKeysButton": "Import Keys",
+            "warningsHeader": "Warnings",
+            "warnUnencryptedMessage": "Warn Potential Message Spoofing",
+            "warnUnencryptedMessageDescription": "Show a warning when an unencrypted message is sent in an encrypted chat. This could be a bad actor trying to impersonate the user sending the message."
+        },
+        "devices": {
+            "instructions": "Here are all the devices that are currently logged in with your account. You can log out of each one individually or all other devices.\n\nIf you see an entry you don't recognize, log out of that device and change your account password immediately.",
+            "currentDeviceHeading": "Current Device",
+            "otherDevicesHeading": "Other Devices",
+            "unnamedDevice": "Unnamed Device",
+            "unknownIp": "Unknown IP Address",
+            "deleteDeviceButton": "Delete Device",
+            "logOutAllHeading": "Log out of all known devices",
+            "logOutAllDescription": "You'll have to log back in on all logged out devices.",
+            "logOutAllButton": "Log Out All Known Devices",
+            "loadError": {
+                "unknown": "An error occurred when retrieving the list of devices. Please try again later."
+            }
         },
         "advanced": {
             "developerMode": "Developer Mode",

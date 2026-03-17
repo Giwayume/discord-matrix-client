@@ -131,6 +131,13 @@
         </div>
         <!-- Display time -->
         <time v-if="!e.displayHeader" class="p-chattimeline-asidetime" :datetime="e.isoTimestamp">{{ e.time }}</time>
+        <!-- Unencrypted Warning -->
+        <div v-if="e.showUnencryptedWarning" class="text-(--channels-default)">
+            <span class="pi pi-exclamation-triangle mr-1 !text-sm" aria-hidden="true" />{{ i18nText.messageUnencryptedWarning }}
+            <span data-link-id="fixDecrypt" class="link" role="button" tabindex="0">
+                {{ i18nText.messageUnencryptedWarningLearnMoreLink }}
+            </span>
+        </div>
         <!-- Reactions -->
         <div v-if="e.reactions.length > 0" class="flex flex-wrap">
             <span

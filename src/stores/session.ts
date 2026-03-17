@@ -3,10 +3,11 @@ import { defineStore, storeToRefs } from 'pinia'
 
 import { onLogout } from '@/composables/logout'
 import {
-    loadTableKey as loadMatrixReactSdkTableKey,
-    saveTableKey as saveMatrixReactSdkTableKey,
-    deleteTableKey as deleteMatrixReactSdkTableKey,
-} from './database/matrix-react-sdk'
+    loadTableKey as loadDiscortixTableKey,
+    saveTableKey as saveDiscortixTableKey,
+    deleteTableKey as deleteDiscortixTableKey,
+    clearTable as clearDiscortixTable,
+} from './database/discortix'
 
 import type { AesHmacSha2EncryptedData, ApiV3LoginResponse } from '@/types'
 
@@ -45,7 +46,7 @@ export const useSessionStore = defineStore('session', () => {
             decryptedAccessToken.value = accessToken.value as string
             accessTokenLoading.value = false
         } else {
-            loadMatrixReactSdkTableKey('account', 'mx_access_token').then((value) => {
+            loadDiscortixTableKey('authentication', 'mx_access_token').then((value) => {
                 if (accessTokenLoading.value) {
                     accessToken.value = value
                 }
@@ -73,7 +74,7 @@ export const useSessionStore = defineStore('session', () => {
             if (accessToken) {
                 if (Object.prototype.toString.call(accessToken) === '[object Object]') {
                     localStorage.removeItem('mx_access_token')
-                    await saveMatrixReactSdkTableKey('account', 'mx_access_token', toRaw(accessToken))
+                    await saveDiscortixTableKey('authentication', 'mx_access_token', toRaw(accessToken))
                 } else {
                     localStorage.setItem('mx_access_token',
                         Object.prototype.toString.call(accessToken) === '[object String]'
@@ -83,7 +84,7 @@ export const useSessionStore = defineStore('session', () => {
                 }
             } else {
                 localStorage.removeItem('mx_access_token')
-                await deleteMatrixReactSdkTableKey('account', 'mx_access_token')
+                await deleteDiscortixTableKey('authentication', 'mx_access_token')
             }
         } catch (error) {
             localStorage.removeItem('mx_access_token')
@@ -102,7 +103,7 @@ export const useSessionStore = defineStore('session', () => {
             decryptedRefreshToken.value = refreshToken.value as string
             refreshTokenLoading.value = false
         } else {
-            loadMatrixReactSdkTableKey('account', 'mx_refresh_token').then((value) => {
+            loadDiscortixTableKey('authentication', 'mx_refresh_token').then((value) => {
                 if (refreshTokenLoading.value) {
                     refreshToken.value = value
                 }
@@ -130,7 +131,7 @@ export const useSessionStore = defineStore('session', () => {
             if (refreshToken) {
                 if (Object.prototype.toString.call(refreshToken) === '[object Object]') {
                     localStorage.removeItem('mx_refresh_token')
-                    await saveMatrixReactSdkTableKey('account', 'mx_refresh_token', toRaw(refreshToken))
+                    await saveDiscortixTableKey('authentication', 'mx_refresh_token', toRaw(refreshToken))
                 } else {
                     localStorage.setItem('mx_refresh_token',
                         Object.prototype.toString.call(refreshToken) === '[object String]'
@@ -139,7 +140,7 @@ export const useSessionStore = defineStore('session', () => {
                     )
                 }
             } else {
-                await deleteMatrixReactSdkTableKey('account', 'mx_refresh_token')
+                await deleteDiscortixTableKey('authentication', 'mx_refresh_token')
             }
         } catch (error) {
             localStorage.removeItem('mx_refresh_token')
@@ -186,7 +187,16 @@ export const useSessionStore = defineStore('session', () => {
         refreshToken.value = undefined
         userId.value = undefined
         isGuest.value = false
-    })
+
+        clearDiscortixTable('4s')
+        clearDiscortixTable('accountData')
+        clearDiscortixTable('authentication')
+        clearDiscortixTable('profiles')
+        clearDiscortixTable('rooms')
+        clearDiscortixTable('roomKeys')
+        clearDiscortixTable('olm')
+        clearDiscortixTable('pickleKey')
+    }, { permanent: true })
 
     return {
         accessToken,

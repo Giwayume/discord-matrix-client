@@ -1,4 +1,4 @@
-import { loadTableKey, saveTableKey, deleteTableKey } from '@/stores/database/matrix-react-sdk'
+import { loadTableKey, saveTableKey, deleteTableKey } from '@/stores/database/discortix'
 import { encodeUnpaddedBase64 } from '@/utils/base64'
 
 import type { EncryptedPickleKey } from '@/types'

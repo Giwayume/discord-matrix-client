@@ -86,7 +86,7 @@
                     :class="{ 'p-dialog-main--visible': mainPanelVisible, 'p-dialog-main--animating': isAnimatingSidebarToggle }"
                     :style="{ '--dialog-main-sidebar-offset': mainPanelSidebarOffset + 'px' }"
                 >
-                    <div class="p-dialog-header !py-0 !flex !items-center !h-12 !border-b border-(--border-muted)">
+                    <div class="p-dialog-header !py-0 !flex !items-center !h-12 !border-b border-(--border-subtle)">
                         <Button
                             icon="pi pi-arrow-left"
                             severity="secondary"
@@ -114,6 +114,7 @@
                     </div>
                     <div class="p-dialog-content relative">
                         <EncryptionSettings v-if="selectedMenuItem.key === 'encryption'" />
+                        <DevicesSettings v-else-if="selectedMenuItem.key === 'devices'" />
                         <AdvancedSettings v-else-if="selectedMenuItem.key === 'advanced'" />
                         <ActivityPrivacySettings v-else-if="selectedMenuItem.key === 'activityPrivacy'" />
                         <div v-if="hasPendingChanges" class="absolute left-0 bottom-0 right-0 p-4">
@@ -160,6 +161,7 @@ import { useLogout } from '@/composables/logout'
 import { useProfileStore } from '@/stores/profile'
 
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
+const DevicesSettings = defineAsyncComponent(() => import('./UserSettings/Devices.vue'))
 const EncryptionSettings = defineAsyncComponent(() => import('./UserSettings/Encryption.vue'))
 const AdvancedSettings = defineAsyncComponent(() => import('./UserSettings/Advanced.vue'))
 const ActivityPrivacySettings = defineAsyncComponent(() => import('./UserSettings/ActivityPrivacy.vue'))
