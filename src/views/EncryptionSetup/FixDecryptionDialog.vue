@@ -50,7 +50,7 @@
         </div>
         <p class="text-sm text-(--text-muted)">
             {{ t('identityVerification.lostRecoveryMethods') }}
-            <a href="javascript:void(0)">{{ t('identityVerification.resetIdentityLink') }}</a>
+            <a href="#">{{ t('identityVerification.resetIdentityLink') }}</a>
         </p> -->
     </Dialog>
 </template>
@@ -189,9 +189,6 @@ async function requestKeys() {
         }
 
         isDiscoveringUsers.value = false
-
-        console.log(userIds)
-
     } catch (error) {
         log.error('Error while requesting keys: ', error)
         isRequestKeysError.value = true

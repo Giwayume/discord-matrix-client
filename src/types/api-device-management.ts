@@ -17,3 +17,21 @@ export const ApiV3DevicesResponseSchema = camelizeSchema(z.object({
     devices: z.array(ApiV3DeviceResponseSchema).optional(),
 }))
 export type ApiV3DevicesResponse = z.infer<typeof ApiV3DevicesResponseSchema>
+
+/** @see https://spec.matrix.org/v1.17/client-server-api/#delete_matrixclientv3devicesdeviceid */
+export interface ApiV3DeleteDeviceRequest {
+    auth?: {
+        session?: string;
+        type?: string;
+        [key: string]: any;
+    }
+}
+export const ApiV3DeleteDeviceAuthenticationResponseSchema = camelizeSchema(z.object({
+    completed: z.array(z.string()).optional(),
+    flows: z.array(z.object({
+        stages: z.array(z.string()),
+    })),
+    params: z.record(z.string(), z.any()).optional(),
+    session: z.string().optional(),
+}))
+export type ApiV3DeleteDeviceAuthenticationResponse = z.infer<typeof ApiV3DeleteDeviceAuthenticationResponseSchema>

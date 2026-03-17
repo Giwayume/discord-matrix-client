@@ -7,7 +7,7 @@
         @update:visible="onUpdateVisible"
     >
         <slot name="subtitle" />
-        <form id="homeserver-change-form" action="javascript:void(0)" @submit="submitHomeserver">
+        <form id="homeserver-change-form" novalidate @submit.prevent="submitHomeserver">
             <div class="p-staticlabel flex flex-col gap-2 mt-4">
                 <label for="homeserver-host" class="text-(--text-strong)">{{ t('homeserverSelectionDialog.hostnameLabel') }}</label>
                 <InputText

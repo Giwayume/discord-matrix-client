@@ -23,7 +23,7 @@
         </div>
         <p class="text-sm text-(--text-muted)">
             {{ t('identityVerification.lostRecoveryMethods') }}
-            <a href="javascript:void(0)">{{ t('identityVerification.resetIdentityLink') }}</a>
+            <a href="#">{{ t('identityVerification.resetIdentityLink') }}</a>
         </p>
     </Dialog>
     <EnterRecoveryKeyDialog v-model:visible="recoveryKeyDialogVisible" @success="emit('update:visible', false)" />

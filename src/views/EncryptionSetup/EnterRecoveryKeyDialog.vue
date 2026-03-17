@@ -7,7 +7,7 @@
         @update:visible="(visible) => emit('update:visible', visible)"
     >
         <p class="text-(--text-muted)">{{ t('enterRecoveryKey.subtitle') }}</p>
-        <form id="recovery-key-entry-dialog-form" action="javascript:void(0)" novalidate @submit="submit">
+        <form id="recovery-key-entry-dialog-form" novalidate @submit.prevent="submit">
             
             <div class="p-staticlabel grow-1 flex flex-col gap-2 mt-5 mb-5">
                 <label for="recovery-key-entry" class="text-(--text-strong)">{{ t('enterRecoveryKey.recoveryKey') }}</label>

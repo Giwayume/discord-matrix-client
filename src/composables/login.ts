@@ -46,6 +46,7 @@ export function useLogin(options: {
             if (!formData && sessionId.value) {
                 loginResponse = await fetchJson(`${matrixBaseUrl}/_matrix/client/v3/login`, {
                     method: 'POST',
+                    skipErrorChecks: [401],
                     body: JSON.stringify({
                         session: sessionId.value,
                     }),
@@ -85,6 +86,7 @@ export function useLogin(options: {
                             device_id: deviceId.value,
                             session: sessionId.value,
                         } satisfies ApiV3LoginRequestPassword),
+                        skipErrorChecks: [401],
                         jsonSchema: ApiV3LoginResponseSchema,
                     }
                 )

@@ -1,14 +1,14 @@
 <template>
     <div class="register-page">
         <img class="register-page__logo" src="/assets/images/logo-light.svg">
-        <form class="register-form p-8" action="javascript:void(0)" novalidate @submit="registerSubmit">
+        <form class="register-form p-8" novalidate @submit.prevent="registerSubmit">
             <h1 class="text-2xl text-center text-(--text-strong) mb-2">{{ t('register.title') }}</h1>
             <!-- Homeserver Selection -->
             <div class="p-staticlabel flex flex-col gap-2 mt-5">
                 <label for="register-homeserver" class="text-(--text-strong)">{{ t('register.homeserverLabel') }}</label>
                 <div class="flex gap-2">
                     <span>{{ selectedServerHomeserverName }}</span>
-                    <a href="javascript:void(0)" @click="homeserverSelectionDialogVisible = true">Edit</a>
+                    <a href="#" @click.prevent="homeserverSelectionDialogVisible = true">Edit</a>
                 </div>
             </div>
             <HomeserverSelectionDialog

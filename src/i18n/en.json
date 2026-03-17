@@ -412,6 +412,17 @@
             "logOutAllButton": "Log Out All Known Devices",
             "loadError": {
                 "unknown": "An error occurred when retrieving the list of devices. Please try again later."
+            },
+            "deleteDevice": {
+                "deleteErrorTitle": "Delete Error",
+                "deleteErrorDescription": "An error occurred when trying to delete your device. Please try again later.",
+                "authenticationMethodNotSupported": "The server requires an authentication method which this client does not support. We cannot delete this device.",
+                "authenticationTitle": "Authentication",
+                "authenticationDescription": "Please enter your login password in order to delete this device.",
+                "passwordLabel": "Password",
+                "passwordRequired": "Password is required.",
+                "passwordInvalid": "Password did not match. Please try again.",
+                "authFormSubmitButton": "Submit"
             }
         },
         "advanced": {

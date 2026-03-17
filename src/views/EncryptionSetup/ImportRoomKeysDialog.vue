@@ -7,7 +7,7 @@
         @update:visible="(visible) => emit('update:visible', visible)"
     >
         <p class="text-(--text-muted)">{{ t('importRoomKeys.subtitle') }}</p>
-        <form id="import-room-keys-dialog-form" action="javascript:void(0)" novalidate @submit="submit">
+        <form id="import-room-keys-dialog-form" novalidate @submit.prevent="submit">
             <div class="flex gap-4 items-center mt-5">
                 <Button severity="secondary" class="shrink-1 text-nowrap" @click="selectBackupFile">{{ t('importRoomKeys.backupFile') }}</Button>
                 <p v-if="formData.backupFile" class="grow-1 overflow-hidden text-ellipsis">{{ formData.backupFile.name }}</p>

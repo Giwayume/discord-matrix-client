@@ -13,6 +13,7 @@ import { HttpError, NetworkConnectionError } from './error'
 interface EnhancedRequestInit extends RequestInit {
     headers?: Record<string, string>
     useAuthorization?: boolean;
+    skipErrorChecks?: number[];
 }
 
 export async function fetch(input: RequestInfo | URL, init?: EnhancedRequestInit) {
@@ -30,9 +31,10 @@ export async function fetch(input: RequestInfo | URL, init?: EnhancedRequestInit
         }
     })
 
+    let responseBody: Record<any, any> | undefined
+
     // Session expired
-    if (response.status === 401 && init?.useAuthorization) {
-        let responseBody: Record<any, any> | undefined
+    if (response.status === 401 && !init?.skipErrorChecks?.includes(401) && init?.useAuthorization) {
         try {
             responseBody = await response.json()
         } catch (_) { /* Ignore */ }
@@ -74,9 +76,8 @@ export async function fetch(input: RequestInfo | URL, init?: EnhancedRequestInit
     }
 
     // Account locked
-    if (response.status === 401 && init?.useAuthorization) {
+    if (response.status === 401 && !init?.skipErrorChecks?.includes(401) && init?.useAuthorization) {
         // This may appear to be duplicate logic from above, but after a token refresh the original API is called again.
-        let responseBody: Record<any, any> | undefined
         try {
             responseBody = await response.json()
         } catch (_) { /* Ignore */ }
@@ -86,15 +87,14 @@ export async function fetch(input: RequestInfo | URL, init?: EnhancedRequestInit
     }
 
     // Rate limited
-    if (response.status === 429) {
-        let responseBody: Record<any, any> | undefined
+    if (response.status === 429 && !init?.skipErrorChecks?.includes(429)) {
         try {
             responseBody = await response.json()
         } catch (_) { /* Ignore */ }
         if (responseBody?.errcode === 'M_LIMIT_EXCEEDED') {
             await new Promise((resolve) => setTimeout(
                 resolve,
-                responseBody.retry_after_ms ? responseBody.retry_after_ms + 5 : 1000
+                responseBody?.retry_after_ms ? responseBody.retry_after_ms + 5 : 1000
             ))
             response = await window.fetch(input, init)
         }
@@ -116,7 +116,7 @@ export async function fetchJson<T = any>(input: RequestInfo | URL, init?: Enhanc
     const response = await fetch(input, init)
     if (!response.ok && (!init?.successStatuses || !init.successStatuses.includes(response.status))) {
         let errorResponseBody: any
-        try { errorResponseBody = await response.json() } catch (error) {}
+        try { errorResponseBody = await response.json() } catch (error) { /* Ignore */ }
         throw new HttpError(response, errorResponseBody)
     }
     let responseBody = await response.json()

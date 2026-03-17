@@ -1,7 +1,7 @@
 <template>
     <div class="login-page">
         <img class="login-page__logo" src="/assets/images/logo-light.svg">
-        <form class="login-form p-8" action="javascript:void(0)" novalidate @submit="loginSubmit">
+        <form class="login-form p-8" novalidate @submit.prevent="loginSubmit">
             <h1 class="text-2xl text-center text-(--text-strong) mb-2">{{ t('login.title') }}</h1>
             <p class="text-center text-(--text-default)">{{ t('login.subtitle') }}</p>
             <!-- Homeserver Selection -->
@@ -9,7 +9,7 @@
                 <label for="login-homeserver" class="text-(--text-strong)">{{ t('login.homeserverLabel') }}</label>
                 <div class="flex gap-2">
                     <span>{{ selectedServerHomeserverName }}</span>
-                    <a href="javascript:void(0)" @click="homeserverSelectionDialogVisible = true">Edit</a>
+                    <a href="#" @click.prevent="homeserverSelectionDialogVisible = true">Edit</a>
                 </div>
             </div>
             <HomeserverSelectionDialog

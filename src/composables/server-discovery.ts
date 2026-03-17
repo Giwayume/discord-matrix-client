@@ -146,6 +146,7 @@ export function useServerDiscovery(scenario: 'login' | 'register') {
                                 initial_device_display_name: `${window.location.host}: ${window.navigator.userAgent}`,
                             } satisfies ApiV3RegisterRequest),
                             signal: loadAbortController.signal,
+                            skipErrorChecks: [401],
                             jsonSchema: {
                                 200: ApiV3RegisterResponseSchema,
                                 401: ApiV3RegisterFlowsSchema,
@@ -173,6 +174,7 @@ export function useServerDiscovery(scenario: 'login' | 'register') {
                                 initial_device_display_name: `${window.location.host}: ${window.navigator.userAgent}`,
                             } satisfies ApiV3RegisterRequest),
                             signal: loadAbortController.signal,
+                            skipErrorChecks: [401],
                             jsonSchema: {
                                 401: ApiV3RegisterFlowsSchema,
                             }
