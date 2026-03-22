@@ -1,0 +1,19 @@
+:root {
+    --p-chip-background: var(--background-mod-subtle);
+    --p-chip-color: var(--text-default);
+    --p-chip-padding-x: 0.5rem;
+    --p-chip-padding-y: 0.25rem;
+    --p-chip-border-radius: var(--radius-xs);
+    --p-chip-gap: 0.25rem;
+    --p-chip-transition-duration: 0.2s;
+
+    --p-chip-remove-icon-size: 0.875rem;
+    --p-chip-remove-icon-color: var(--text-default);
+}
+
+.p-chip {
+    border: 1px solid var(--border-subtle);
+    font-size: 0.875rem;
+
+    --p-icon-size: 0.875rem;
+}

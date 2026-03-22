@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { useBroadcast } from '@/composables/broadcast'
 import { useEventTimeline } from '@/composables/event-timeline'
+
+import { useAccountDataStore } from './account-data'
 import { useSessionStore } from '@/stores/session'
 
 import {
@@ -448,6 +450,7 @@ function populateEphemeralRoomEvents(room: JoinedRoom, events: Array<{ content: 
 export const useRoomStore = defineStore('room', () => {
     const route = useRoute()
     const { isLeader } = useBroadcast()
+    const { hiddenRooms } = storeToRefs(useAccountDataStore())
     const { userId: sessionUserId } = storeToRefs(useSessionStore())
 
     const roomsLoading = ref<boolean>(true)
@@ -998,7 +1001,11 @@ export const useRoomStore = defineStore('room', () => {
 
     const joinedDirectMessageRooms = computed(() => {
         return allDirectMessageRooms.value.filter((room) => {
-            return room.membershipType === 'joined' && !room.tags?.['m.server_notice']
+            return (
+                room.membershipType === 'joined'
+                && !room.tags?.['m.server_notice']
+                && !hiddenRooms.value[room.roomId]
+            )
         })
     })
 

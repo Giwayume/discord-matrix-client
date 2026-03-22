@@ -12,16 +12,9 @@ import {
 import {
     eventContentSchemaByType,
     type ApiV3SyncResponse,
+    type ApiV3UserDirectorySearchResponse,
+    type UserProfile,
 } from '@/types'
-
-interface UserProfile {
-    avatarUrl?: string;
-    currentlyActive: boolean;
-    displayname?: string;
-    lastActiveAgo?: number;
-    presence: 'online' | 'offline' | 'unavailable';
-    statusMessage?: string;
-}
 
 export const useProfileStore = defineStore('profile', () => {
     const { isLeader } = useBroadcast()
@@ -76,6 +69,33 @@ export const useProfileStore = defineStore('profile', () => {
     })
 
     async function populateFromApiV3SyncResponse(sync: ApiV3SyncResponse) {
+        let touchedUserIds = new Set<string>()
+        if (sync.rooms?.join) {
+            for (const roomId in sync.rooms.join) {
+                for (const memberEvent of sync.rooms.join[roomId]?.state?.events ?? []) {
+                    if (memberEvent.type === 'm.room.member') {
+                        const eventContentParse = eventContentSchemaByType['m.room.member'].safeParse(memberEvent.content)
+                        if (!eventContentParse.success) continue
+                        if (!profiles.value[memberEvent.sender]) {
+                            profiles.value[memberEvent.sender] = {
+                                userId: memberEvent.sender,
+                                currentlyActive: false,
+                                presence: 'offline',
+                            }
+                        }
+                        const profile = profiles.value[memberEvent.sender]
+                        if (!profile) continue
+                        touchedUserIds.add(memberEvent.sender)
+                        if (eventContentParse.data.avatarUrl != null) {
+                            profile.avatarUrl = eventContentParse.data.avatarUrl
+                        }
+                        if (eventContentParse.data.displayname != null) {
+                            profile.displayname = eventContentParse.data.displayname
+                        }
+                    }
+                }
+            }
+        }
         if (sync.presence?.events) {
             for (const event of sync.presence.events) {
                 if (!event.sender) continue
@@ -84,12 +104,14 @@ export const useProfileStore = defineStore('profile', () => {
                     if (!eventContentParse?.success) return
                     if (!profiles.value[event.sender]) {
                         profiles.value[event.sender] = {
+                            userId: event.sender,
                             currentlyActive: false,
                             presence: 'offline',
                         }
                     }
                     const profile = profiles.value[event.sender]
                     if (!profile) continue
+                    touchedUserIds.add(event.sender)
                     if (eventContentParse.data.avatarUrl != null) {
                         profile.avatarUrl = eventContentParse.data.avatarUrl
                     }
@@ -106,14 +128,48 @@ export const useProfileStore = defineStore('profile', () => {
                     if (eventContentParse.data.statusMsg != null) {
                         profile.statusMessage = eventContentParse.data.statusMsg
                     }
+                }
+            }
+        }
+        if (isLeader.value) {
+            for (const userId of touchedUserIds) {
+                if (!profiles.value[userId]) continue
+                try {
+                    saveDiscortixTableKey('profiles', userId, toRaw(profiles.value[userId]))
+                } catch (error) {
+                    // Ignore, can call profile API later.
+                }
+            }
+        }
+    }
 
-                    if (isLeader.value) {
-                        try {
-                            saveDiscortixTableKey('profiles', event.sender, toRaw(profile))
-                        } catch (error) {
-                            // Ignore, can call profile API later.
-                        }
-                    }
+    async function populateFromUserSearchResponse(response: ApiV3UserDirectorySearchResponse) {
+        let touchedUserIds = new Set<string>()
+        for (const user of response.results) {
+            if (!profiles.value[user.userId]) {
+                profiles.value[user.userId] = {
+                    userId: user.userId,
+                    currentlyActive: false,
+                    presence: 'offline',
+                }
+            }
+            const profile = profiles.value[user.userId]
+            if (!profile) continue
+            touchedUserIds.add(user.userId)
+            if (user.avatarUrl != null) {
+                profile.avatarUrl = user.avatarUrl
+            }
+            if (user.displayName != null) {
+                profile.displayname = user.displayName
+            }
+        }
+        if (isLeader.value) {
+            for (const userId of touchedUserIds) {
+                if (!profiles.value[userId]) continue
+                try {
+                    saveDiscortixTableKey('profiles', userId, toRaw(profiles.value[userId]))
+                } catch (error) {
+                    // Ignore, can call profile API later.
                 }
             }
         }
@@ -126,5 +182,6 @@ export const useProfileStore = defineStore('profile', () => {
         profilesLoading,
         profilesLoadError,
         populateFromApiV3SyncResponse,
+        populateFromUserSearchResponse,
     }
 })

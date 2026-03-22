@@ -6,7 +6,10 @@ import { MissingSessionDataError } from '@/utils/error'
 import { useSessionStore } from '@/stores/session'
 import { useProfileStore } from '@/stores/profile'
 
-import { ApiV3ProfileResponseSchema, type ApiV3ProfileResponse } from '@/types'
+import {
+    ApiV3ProfileResponseSchema, type ApiV3ProfileResponse,
+    ApiV3UserDirectorySearchResponseSchema, type ApiV3UserDirectorySearchResponse, type ApiV3UserDirectorySearchRequest, 
+} from '@/types'
 
 function getFriendlyErrorMessage(t: ComposerTranslation, error: Error | unknown) {
     if (error instanceof MissingSessionDataError) {
@@ -18,16 +21,38 @@ function getFriendlyErrorMessage(t: ComposerTranslation, error: Error | unknown)
 export function useProfiles() {
     const { t } = useI18n()
     const { homeserverBaseUrl, userId } = storeToRefs(useSessionStore())
-    const { authenticatedUserAvatarUrl, authenticatedUserDisplayName } = storeToRefs(useProfileStore())
+    const profileStore = useProfileStore()
+    const { authenticatedUserAvatarUrl, authenticatedUserDisplayName } = storeToRefs(profileStore)
+    const { populateFromUserSearchResponse } = profileStore
 
-    async function getProfile(userId: string) {
+    async function getProfile(userId: string, abortController?: AbortController) {
         return fetchJson<ApiV3ProfileResponse>(
             `${homeserverBaseUrl.value}/_matrix/client/v3/profile/${encodeURIComponent(userId)}`,
             {
+                signal: abortController?.signal,
                 useAuthorization: true,
                 jsonSchema: ApiV3ProfileResponseSchema,
             },
         )
+    }
+
+    async function searchUserDirectory(searchTerm: string, abortController?: AbortController) {
+        const request: ApiV3UserDirectorySearchRequest = {
+            limit: 10,
+            search_term: searchTerm,
+        }
+        const response = await fetchJson<ApiV3UserDirectorySearchResponse>(
+            `${homeserverBaseUrl.value}/_matrix/client/v3/user_directory/search`,
+            {
+                method: 'POST',
+                signal: abortController?.signal,
+                body: JSON.stringify(request),
+                useAuthorization: true,
+                jsonSchema: ApiV3UserDirectorySearchResponseSchema,
+            }
+        )
+        // populateFromUserSearchResponse(response)
+        return response
     }
 
     async function initialize() {
@@ -44,6 +69,7 @@ export function useProfiles() {
     return {
         getFriendlyErrorMessage: (error: Error | unknown) => getFriendlyErrorMessage(t, error),
         getProfile,
+        searchUserDirectory,
         initialize
     }
 }

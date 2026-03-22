@@ -2,9 +2,11 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
 
+import { useAccountData } from './account-data'
 import { useBroadcast } from '@/composables/broadcast'
 import { createLogger } from '@/composables/logger'
 
+import { useAccountDataStore } from '@/stores/account-data'
 import { useClientSettingsStore } from '@/stores/client-settings'
 import { useRoomStore } from '@/stores/room'
 import { useSpaceStore } from '@/stores/space'
@@ -39,7 +41,9 @@ const hierarcyFetchFrequency = 1.8e+6 // 30 minutes
 
 export function useRooms() {
     const { onTabMessage, broadcastMessageFromTab } = useBroadcast()
+    const { toggleRoomVisibility } = useAccountData()
     const { settings } = useClientSettingsStore()
+    const { hiddenRooms } = storeToRefs(useAccountDataStore())
     const { homeserverBaseUrl, userId: sessionUserId } = storeToRefs(useSessionStore())
     const roomStore = useRoomStore()
     const { joined, left } = storeToRefs(roomStore)
@@ -170,6 +174,9 @@ export function useRooms() {
     }
 
     async function joinRoom(roomId: string, reason?: string) {
+        if (hiddenRooms.value[roomId]) {
+            toggleRoomVisibility(roomId, true)
+        }
         const request: ApiV3RoomJoinRequest = {}
         if (reason) {
             request.reason = reason

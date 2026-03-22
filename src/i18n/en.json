@@ -246,6 +246,18 @@
         "joinRoomErrorToast": "An error occurred when trying to join the room. You can ignore the DM request if this issue persists.",
         "rejectInviteErrorToast": "An error occurred when rejecting the invite. Please try again later."
     },
+    "newMessageDialog": {
+        "title": "New Message",
+        "addCountLimit": "You can add {count} more people.",
+        "searchPlaceholder": "Search for people",
+        "searchingDirectory": "Searching for more people...",
+        "noUsersFound": "No results found.\n\nIf you are searching for someone you have not chatted with before, be sure to enter their **full username**.\n\nIf you know they are on a different homeserver, include the homeserver domain in your search, example: **@username:matrix.org**",
+        "someUsersFound": "If you are searching for someone you have not chatted with before, be sure to enter their **full username**.\n\nIf you know they are on a different homeserver, include the homeserver domain in your search, example: **@username:matrix.org**",
+        "cancelButton": "Cancel",
+        "groupNameLabel": "Group Name (optional)",
+        "createMessageButton": "Create Message",
+        "createGroupMessageButton": "Create Group Message"
+    },
     "olmAccountMissingDialog": {
         "title": "Device Needs Reset",
         "description": "This device previously had encryption keys which are now missing. In order to use encrypted rooms, this device profile needs to be deleted, which will log you out. You can then log back in and create a fresh session.",

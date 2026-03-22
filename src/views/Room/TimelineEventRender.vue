@@ -338,7 +338,6 @@ const formattedBody = computed<string | undefined>(() => {
         } else if (props.e.event.content?.body) {
             return linkifyHtml(
                 props.e.event.content.body.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;'),
-                // linkifyMatrixIdentifierOptions,
             )
         }
     }

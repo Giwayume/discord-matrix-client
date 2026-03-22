@@ -55,6 +55,15 @@
 .p-overlaystatus--lower {
     --p-overlaystatus-border-color: var(--background-base-lower);
 }
+.p-overlaystatus--high {
+    --p-overlaystatus-border-color: var(--background-surface-high);
+}
+.p-overlaystatus--higher {
+    --p-overlaystatus-border-color: var(--background-surface-higher);
+}
+.p-overlaystatus--highest {
+    --p-overlaystatus-border-color: var(--background-surface-highest);
+}
 
 .p-overlaystatus--small .p-overlaystatus-indicator {
     transform: scale(0.625);

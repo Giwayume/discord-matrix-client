@@ -19,6 +19,7 @@
     --neutral-35: hsl(233.333 calc(1*3.704%) 52.353%/1);
     --neutral-37: hsl(233.333 calc(1*3.557%) 49.608%/1);
     --neutral-43: hsl(234 calc(1*4.673%) 41.961%/1);
+    --neutral-50-hsl: 234.545 calc(1*6.509%) 33.137%;
     --neutral-55: hsl(234 calc(1*6.579%) 29.804%/1);
     --neutral-64: hsl(232.5 calc(1*6.557%) 23.922%/1);
     --neutral-73: hsl(230 calc(1*6.383%) 18.431%/1);
@@ -94,6 +95,19 @@
 
     --chat-background-default: var(--neutral-80);
     --chat-text-muted: var(--neutral-35);
+
+    --checkbox-background-active: var(--blurple-65);
+    --checkbox-background-default: hsl(var(--opacity-black-8-hsl)/0.0784313725490196);
+    --checkbox-background-hover: hsl(var(--opacity-black-8-hsl)/0.0784313725490196);
+    --checkbox-background-hover: hsl(var(--opacity-black-8-hsl)/0.0784313725490196);
+    --checkbox-background-selected-default: var(--blurple-50);
+    --checkbox-background-selected-hover: var(--blurple-60);
+    --checkbox-border-active: hsl(var(--opacity-12-hsl)/0.12156862745098039);
+    --checkbox-border-default: hsl(var(--opacity-64-hsl)/0.6392156862745098);
+    --checkbox-border-hover: hsl(var(--opacity-80-hsl)/0.8);
+    --checkbox-border-selected-default: hsl(var(--opacity-12-hsl)/0.12156862745098039);
+    --checkbox-border-selected-hover: hsl(var(--opacity-12-hsl)/0.12156862745098039);
+    --checkbox-icon-active: var(--neutral-1);
 
     --control-connected-background-default: var(--green-new-50);
     --control-connected-border-default: hsl(var(--opacity-white-8-hsl)/0.0784313725490196);

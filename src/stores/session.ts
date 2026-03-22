@@ -1,5 +1,5 @@
 import { computed, ref, toRaw, watch } from 'vue'
-import { defineStore, storeToRefs } from 'pinia'
+import { defineStore } from 'pinia'
 
 import { onLogout } from '@/composables/logout'
 import {
@@ -22,6 +22,11 @@ export const useSessionStore = defineStore('session', () => {
         } else {
             localStorage.removeItem('mx_user_id')
         }
+    })
+    const defaultUserIdHomeserver = computed(() => {
+        const homeserverIndex = userId.value?.indexOf(':')
+        if (homeserverIndex == null) return 'matrix.org'
+        return userId.value?.slice(homeserverIndex + 1) ?? 'matrix.org'
     })
 
     /* Device ID */
@@ -204,6 +209,7 @@ export const useSessionStore = defineStore('session', () => {
         accessTokenError,
         decryptedAccessToken,
         decryptedRefreshToken,
+        defaultUserIdHomeserver,
         deviceId,
         hasAuthenticatedSession,
         homeserverBaseUrl,

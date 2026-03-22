@@ -4,6 +4,7 @@ import { camelizeSchema, camelizeSchemaWithoutTransform } from '@/utils/zod'
 import { PushNotificationPushRuleSchema } from './api-push-notifications'
 import { EncryptedFileSchema } from './encryption'
 
+// Common
 const EventRelatesToContentSchema = z.object({
     eventId: z.string().optional(),
     'm.in_reply_to': z.object({
@@ -11,6 +12,18 @@ const EventRelatesToContentSchema = z.object({
     }).optional(),
     relType: z.string().optional(),
 })
+
+// Custom
+export const EventComReeksiteDiscortixHiddenRoomMetadataSchema = z.object({
+    hiddenAt: z.number().optional(), // Timestamp
+})
+export const EventComReeksiteDiscortixHiddenRoomsContentSchema = z.object({
+    hiddenRooms: z.record(
+        z.string(), // Room ID
+        EventComReeksiteDiscortixHiddenRoomMetadataSchema,
+    )
+})
+export type EventComReeksiteDiscortixHiddenRoomsContent = z.infer<typeof EventComReeksiteDiscortixHiddenRoomsContentSchema>
 
 /** @see https://spec.matrix.org/v1.17/client-server-api/#maudio */
 export const EventAudioContentSchema = z.object({
@@ -601,6 +614,7 @@ export const EventVideoContentSchema = z.object({
 export type EventVideoContent = z.infer<typeof EventVideoContentSchema>
 
 export const eventContentSchemaByType = {
+    'com.reeksite.discortix.hidden_rooms': EventComReeksiteDiscortixHiddenRoomsContentSchema,
     'im.ponies.room_emotes': EventImPoniesRoomEmotesContentSchema,
     'im.ponies.user_emotes': EventImPoniesUserEmotesContentSchema,
     'm.audio': EventAudioContentSchema,
@@ -643,6 +657,7 @@ export const eventContentSchemaByType = {
 } as const
 
 export interface EventContentByType {
+    'com.reeksite.discortix.hidden_rooms': EventComReeksiteDiscortixHiddenRoomsContent,
     'im.ponies.room_emotes': EventImPoniesRoomEmotesContent,
     'im.ponies.user_emotes': EventImPoniesUserEmotesContent,
     'm.audio': EventAudioContent,

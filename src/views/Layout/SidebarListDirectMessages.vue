@@ -43,6 +43,7 @@
                     class="!p-0 !w-8 !h-8 -my-2 -mr-1 shrink-0"
                     :style="{ '--p-button-sm-font-size': 'var(--text-xs)' }"
                     :aria-label="t('home.createMessage')"
+                    @click="newMessageDialogVisible = true"
                 />
             </div>
             <div
@@ -124,15 +125,17 @@
             </Button>
         </template>
     </Dialog>
+    <NewMessagedialog v-model:visible="newMessageDialogVisible" />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { micromark } from 'micromark'
 
+import { useAccountData } from '@/composables/account-data'
 import { useApplication } from '@/composables/application'
 import { createLogger } from '@/composables/logger'
 import { useRooms } from '@/composables/rooms'
@@ -141,6 +144,7 @@ import { useProfileStore } from '@/stores/profile'
 import { useRoomStore } from '@/stores/room'
 
 import AuthenticatedImage from '@/views/Common/AuthenticatedImage.vue'
+const NewMessagedialog = defineAsyncComponent(() => import('@/views/Layout/NewMessageDialog.vue'))
 import OverlayStatus from '@/views/Common/OverlayStatus.vue'
 import SidebarListBody from './SidebarListBody.vue'
 import SidebarListHeader from './SidebarListHeader.vue'
@@ -159,6 +163,7 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const toast = useToast()
+const { toggleRoomVisibility } = useAccountData()
 const { isTouchEventsDetected, toggleApplicationSidebar } = useApplication()
 const { leaveRoom, forgetRoom } = useRooms()
 const { joinedDirectMessageRooms, invitedDirectMessageRooms, serverNoticeRooms } = storeToRefs(useRoomStore())
@@ -262,6 +267,8 @@ function onPointerUpChat(event: PointerEvent, item: MenuItem) {
                 leaveRoomIsGroup.value = !item.isDirect
                 leaveRoomMenuItem.value = item
                 leaveRoomDialogVisible.value = true
+            } else {
+                toggleRoomVisibility(item.key!, false)
             }
         } else {
             selectChat(item)
@@ -299,6 +306,8 @@ async function leaveRoomConfirm(roomId?: string) {
         leaveRoomDialogVisible.value = false
     }
 }
+
+const newMessageDialogVisible = ref<boolean>(false)
 
 onMounted(() => {
     highlightMenuItem()

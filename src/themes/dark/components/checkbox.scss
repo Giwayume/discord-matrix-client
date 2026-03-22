@@ -1,0 +1,27 @@
+:root {
+    --p-checkbox-width: 1.25rem;
+    --p-checkbox-height: 1.25rem;
+    --p-checkbox-background: var(--checkbox-background-default);
+    --p-checkbox-border-color: var(--checkbox-border-default);
+    --p-checkbox-border-radius: var(--radius-xs);
+    --p-checkbox-transition-duration: var(--p-transition-duration);
+    --p-checkbox-shadow: none;
+
+    --p-checkbox-icon-size: 0.75rem;
+
+    --p-checkbox-disabled-background: var(--checkbox-background-default);
+    --p-checkbox-checked-disabled-border-color: var(--border-subtle);
+
+    --p-checkbox-hover-background: var(--checkbox-background-hover);
+    --p-checkbox-hover-border-color: var(--checkbox-border-hover);
+
+    --p-checkbox-checked-background: var(--checkbox-background-selected-default);
+    --p-checkbox-checked-border-color: var(--checkbox-border-selected-default);
+    --p-checkbox-icon-checked-color: var(--checkbox-icon-active);
+
+    --p-checkbox-checked-hover-background: var(--checkbox-background-selected-hover);
+    --p-checkbox-checked-hover-border-color: var(--checkbox-border-selected-hover);
+
+    --p-checkbox-icon-checked-hover-color: var(--checkbox-icon-active);
+
+}

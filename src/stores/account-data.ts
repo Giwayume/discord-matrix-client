@@ -12,6 +12,7 @@ import {
 
 import {
     eventContentSchemaByType,
+    type EventComReeksiteDiscortixHiddenRoomsContent,
     type ApiV3SyncAccountDataEvent,
     type ApiV3SyncResponse,
 } from '@/types'
@@ -24,6 +25,10 @@ export const useAccountDataStore = defineStore('accountData', () => {
     const accountDataLoading = ref<boolean>(true)
     const accountDataLoadError = ref<Error | null>(null)
     const accountData = ref<Record<string, any>>({})
+
+    const hiddenRooms = computed<EventComReeksiteDiscortixHiddenRoomsContent['hiddenRooms']>(() => {
+        return (accountData.value['com.reeksite.discortix.hidden_rooms'] as EventComReeksiteDiscortixHiddenRoomsContent)?.hiddenRooms ?? {}
+    })
 
     async function initialize() {
         try {
@@ -78,6 +83,7 @@ export const useAccountDataStore = defineStore('accountData', () => {
         accountDataLoading,
         accountDataLoadError,
         accountData: computed(() => accountData.value),
+        hiddenRooms,
         populateFromApiV3SyncResponse,
         populateByType,
     }

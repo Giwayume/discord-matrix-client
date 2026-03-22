@@ -18,7 +18,7 @@ const props = defineProps({
         default: 'offline',
     },
     level: {
-        type: String as PropType<'low' | 'lower' | 'lowest'>,
+        type: String as PropType<'highest' | 'higher' | 'high' | 'low' | 'lower' | 'lowest'>,
         default: 'lowest',
     },
     size: {
