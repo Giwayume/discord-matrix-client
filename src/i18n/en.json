@@ -3,7 +3,9 @@
         "title": "Create Chat Room",
         "inputPlaceholder": "Send your first message",
         "sendFirstMessage": "Other users will be invited to chat after you send your first message.",
-        "enableEncryption": "Enable encryption"
+        "enableEncryption": "Enable encryption",
+        "errorCreatingRoomToast": "An error occurred when creating the chat room. Please try again later.",
+        "errorSendingFirstMessageToast": "The chat room was created, but we could not send your message."
     },
     "cropImageDialog": {
         "title": "Edit Image",

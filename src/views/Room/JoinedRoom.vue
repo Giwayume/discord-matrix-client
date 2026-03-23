@@ -126,8 +126,6 @@ import { computed, defineAsyncComponent, reactive, ref, watch, type PropType } f
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
-import { micromark } from 'micromark'
-import linkifyHtml from 'linkify-html'
 
 import { vPointer } from '@/directives/pointer'
 
@@ -142,7 +140,7 @@ import { useRoomStore } from '@/stores/room'
 import { useSessionStore } from '@/stores/session'
 
 import { HttpError, PendingNetworkRequestError } from '@/utils/error'
-import { replaceSpoilers, spoilerSyntax, spoilerHtml } from '@/utils/micromark'
+import { formatMessage } from '@/utils/message'
 import { isRoomPartOfSpace } from '@/utils/room'
 import { throttle } from '@/utils/timing'
 
@@ -184,7 +182,7 @@ const {
     populateSentMessageEvent
 } = roomStore
 const { profiles } = storeToRefs(useProfileStore())
-const { userId } = storeToRefs(useSessionStore())
+const { userId: sessionUserId } = storeToRefs(useSessionStore())
 
 const props = defineProps({
     room: {
@@ -225,7 +223,8 @@ const isInsideSpace = computed<boolean>(() => {
 
 const otherMembers = computed(() => {
     return (props.room as JoinedRoom).stateEventsByType['m.room.member']?.filter((member) => {
-        return (member.content.membership === 'join' || member.content.membership === 'invite') && member.stateKey && member.stateKey != userId.value
+        const userId = member.content.membership === 'join' ? member.sender : member.content.membership === 'invite' ? member.stateKey : undefined
+        return userId && userId != sessionUserId.value
     }).map((member) => {
         const userId = member.stateKey!
         return {
@@ -263,7 +262,7 @@ watch(() => props.room.stateEventsByType['m.room.member'], (members) => {
 \*---------------------*/
 
 const typingUserIds = computed(() => {
-    return props.room.typingUserIds.filter((id) => id != userId.value)
+    return props.room.typingUserIds.filter((id) => id != sessionUserId.value)
 })
 
 const typingDisplayNames = computed(() => {
@@ -422,36 +421,13 @@ function onStopTyping() {
 |                       |
 \*---------------------*/
 
-function formatMessage() {
-    let html = micromark(message.value, {
-        extensions: [spoilerSyntax()],
-        htmlExtensions: [spoilerHtml()],
-    })
-    const emojiCodeRegex = /:(?!\s)([^:\s]+)(?<!\s):/g
-    html = html.replace(emojiCodeRegex, (match, inner) =>  {
-        const emoji = currentRoomCustomEmojiByCode.value[match]
-        if (emoji?.image?.url) {
-            return `<img data-mx-emoticon src="${emoji.image.url}" alt="${match}" title="${match}" height="32" vertical-align="middle">`
-        } else {
-            return match
-        }
-    });
-    const messageContainsSpoilers = message.value.includes('||')
-    html = linkifyHtml(html, { ignoreTags: ['script', 'style'] })
-    return {
-        body: messageContainsSpoilers ? replaceSpoilers(message.value, t('room.spoilerRedacted')) : message.value,
-        unredactedBody: messageContainsSpoilers ? message.value : undefined,
-        formattedBody: html,
-    }
-}
-
 async function onSubmitMessageForm() {
     if (message.value.trim() === '') return
 
     await timelineEvents.value?.scrollToBottom()
 
     const txnId = uuidv4()
-    const { body, unredactedBody, formattedBody } = formatMessage()
+    const { body, unredactedBody, formattedBody } = formatMessage(message.value, currentRoomCustomEmojiByCode.value, t)
 
     const eventContent: EventTextContent = {
         body,
@@ -488,7 +464,7 @@ async function onSubmitMessageForm() {
         content: eventContent,
         eventId: `PLACEHOLDER_${txnId}`,
         originServerTs: Date.now(),
-        sender: userId.value!,
+        sender: sessionUserId.value!,
         type: 'm.room.message',
         txnId,
         sendError: false,

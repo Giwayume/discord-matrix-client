@@ -77,7 +77,7 @@ const props = defineProps({
 
 const emit = defineEmits<{
     (e: 'update:visible', visible: boolean): void
-    (e: 'apply', imageObjectUrl: string): void
+    (e: 'apply', imageBlob: Blob): void
 }>()
 
 const { t } = useI18n()
@@ -121,7 +121,7 @@ function resetPreview() {
 
 async function apply() {
     if (props.file && zoomLevel.value === 1 && previewTranslateX.value === 0 && previewTranslateY.value === 0 && previewRotate.value === 0) {
-        emit('apply', URL.createObjectURL(new Blob([props.file])))
+        emit('apply', new Blob([props.file], { type: props.file.type }))
     } else {
         try {
             const image = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -162,12 +162,10 @@ async function apply() {
                     } else {
                         reject()
                     }
-                })
+                }, 'image/jpeg', 95)
             })
 
-            const croppedImageUrl = URL.createObjectURL(blob)
-
-            emit('apply', croppedImageUrl)
+            emit('apply', blob)
         } catch (error) {
             toast.add({ severity: 'error', summary: t('cropImageDialog.imageEditErrorToast'), life: 5000 })
         }

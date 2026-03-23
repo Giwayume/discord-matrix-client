@@ -268,6 +268,7 @@
 
 <script setup lang="ts">
 import { computed, type PropType } from 'vue'
+import { find } from 'linkifyjs'
 import linkifyHtml from 'linkify-html'
 
 import '@/utils/linkify'

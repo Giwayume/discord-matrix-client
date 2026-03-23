@@ -16,7 +16,10 @@
             </div>
         </MainHeader>
         <MainBody>
-            <MessageBeginning :room="simulatedJoinedRoom" :roomAvatarPreviewObjectUrl />
+            <div class="p-chattimeline w-full">
+                <MessagePlaceholder v-if="isCreatingRoom" />
+                <MessageBeginning v-else :room="simulatedJoinedRoom" :roomAvatarPreviewObjectUrl="roomAvatarPreviewObjectUrl" />
+            </div>
             <template #footer>
                 <form class="joined-room__chat-bar" @submit.prevent="onSubmitMessageForm">
                     <div class="joined-room__chat-bar-input">
@@ -57,11 +60,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { v4 as uuidv4 } from 'uuid'
+
+import { formatMessage } from '@/utils/message'
+import { until } from '@/utils/vue'
 
 import { useApplication } from '@/composables/application'
+import { useEmoji } from '@/composables/emoji'
+import { createMediaInfo, createLazyMediaUpload } from '@/composables/media'
+import { useRooms } from '@/composables/rooms'
 
 import { useRoomStore } from '@/stores/room'
 import { useSessionStore } from '@/stores/session'
@@ -72,23 +83,39 @@ const ExpressionPicker = defineAsyncComponent(() => import('@/views/Room/Express
 import MainBody from '@/views/Layout/MainBody.vue'
 import MainHeader from '@/views/Layout/MainHeader.vue'
 import MessageBeginning from '@/views/Room/MessageBeginning.vue'
+import MessagePlaceholder from '@/views/Room/MessagePlaceholder.vue'
 import SidebarListDirectMessages from '@/views/Layout/SidebarListDirectMessages.vue'
 import SidebarListSpaceRooms from '@/views/Layout/SidebarListSpaceRooms.vue'
 
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
+import { useToast } from 'primevue/usetoast'
 
 import {
     type EmojiPickerEmojiItem, type JoinedRoom,
+    type EventTextContent, type EventRoomAvatarContent,
     type ApiV3SyncClientEventWithoutRoomId,
-    type EventRoomNameContent, type EventRoomMemberContent
+    type ApiV3RoomCreateRequest,
+    type EventRoomNameContent, type EventRoomMemberContent,
+    type MediaInfo,
 } from '@/types'
 
 const { t } = useI18n()
+const router = useRouter()
+const toast = useToast()
 
 const { isTouchEventsDetected } = useApplication()
-const { draft } = storeToRefs(useRoomStore())
+const { currentRoomCustomEmojiByCode } = useEmoji()
+const { createRoom, sendMessageEvent } = useRooms()
+
+const { draft, joined: joinedRooms } = storeToRefs(useRoomStore())
 const { userId: sessionUserId } = storeToRefs(useSessionStore())
+
+onMounted(() => {
+    if (!draft.value) {
+        router.replace({ name: 'home' })
+    }
+})
 
 /*-----------------*\
 |                   |
@@ -101,10 +128,6 @@ const messageTextarea = ref<InstanceType<typeof Textarea>>()
 
 const isInsideSpace = computed<boolean>(() => {
     return !!draft.value?.spaceRoomId
-})
-
-const roomAvatarPreviewObjectUrl = computed<string | undefined>(() => {
-    return draft.value?.groupAvatar
 })
 
 const simulatedJoinedRoom = computed<JoinedRoom>(() => {
@@ -169,6 +192,29 @@ const simulatedJoinedRoom = computed<JoinedRoom>(() => {
     } as JoinedRoom
 })
 
+/*-----------------------*\
+|                         |
+|   Room avatar preview   |
+|                         |
+\*-----------------------*/
+
+const roomAvatarPreviewObjectUrl = ref<string | undefined>()
+watch(() => draft.value?.groupAvatar, (groupAvatar) => {
+    if (roomAvatarPreviewObjectUrl.value) {
+        URL.revokeObjectURL(roomAvatarPreviewObjectUrl.value)
+    }
+    if (groupAvatar) {
+        roomAvatarPreviewObjectUrl.value = URL.createObjectURL(groupAvatar)
+    } else {
+        roomAvatarPreviewObjectUrl.value = undefined
+    }
+}, { immediate: true })
+onUnmounted(() => {
+    if (roomAvatarPreviewObjectUrl.value) {
+        URL.revokeObjectURL(roomAvatarPreviewObjectUrl.value)
+    }
+})
+
 /*-----------------------------*\
 |                               |
 |   Expression / emoji picker   |
@@ -215,14 +261,125 @@ function onKeydownMessageTextarea(event: KeyboardEvent) {
 |                       |
 \*---------------------*/
 
+const isCreatingRoom = ref<boolean>(false)
+
+watch(() => draft.value, () => {
+    isCreatingRoom.value = false
+    message.value = ''
+})
+
 async function onSubmitMessageForm() {
     if (message.value.trim() === '') return
+    isCreatingRoom.value = true
+
+    let createdRoomId: string | undefined = undefined
+    let avatarMxcUri: string | undefined = undefined
+    try {
+        const createRoomRequest: ApiV3RoomCreateRequest = {
+            initial_state: [],
+            is_direct: draft.value?.invited.length === 1,
+            preset: draft.value?.invited.length === 1 ? 'trusted_private_chat' : 'private_chat',
+        }
+
+        if (draft.value?.invited) {
+            createRoomRequest.invite = draft.value.invited
+        }
+        if (draft.value?.groupName) {
+            createRoomRequest.name = draft.value.groupName
+        }
+
+        let avatarUpload: ReturnType<typeof createLazyMediaUpload> | undefined = undefined
+        let mediaInfo: MediaInfo | undefined = undefined
+
+
+        uploadGroupAvatar:
+        if (draft.value?.groupAvatar) {
+            avatarUpload = createLazyMediaUpload()
+
+            mediaInfo = await createMediaInfo(draft.value.groupAvatar)
+            if (mediaInfo.type !== 'image') break uploadGroupAvatar
+
+            avatarMxcUri = await avatarUpload.useBlob(draft.value.groupAvatar)
+
+            createRoomRequest.initial_state?.push({
+                type: 'm.room.avatar',
+                state_key: '',
+                content: {
+                    url: avatarMxcUri,
+                    info: mediaInfo.info,
+                },
+            })
+        }
+
+        ({ roomId: createdRoomId } = await createRoom(createRoomRequest))
+
+        try {
+            // A new MXC URI can be assigned if waited too long to upload.
+            const newAvatarMxcUri = await avatarUpload?.upload()
+            if (newAvatarMxcUri) {
+                await sendMessageEvent<EventRoomAvatarContent>(
+                    createdRoomId, 'm.room.avatar', uuidv4(), {
+                        url: newAvatarMxcUri,
+                        info: mediaInfo?.type === 'image' ? mediaInfo.info : undefined,
+                    }
+                )   
+            }
+        } catch (error) { /* Ignore - user can try again later. */ }
+
+    } catch (error) {
+        toast.add({ severity: 'error', summary: t('createRoom.errorCreatingRoomToast'), life: 5000 })
+    }
+
+    if (createdRoomId) {
+        try {
+            const { body, unredactedBody, formattedBody } = formatMessage(message.value, currentRoomCustomEmojiByCode.value, t)
+
+            const eventContent: EventTextContent = {
+                body,
+                format: formattedBody != body ? 'org.matrix.custom.html' : undefined,
+                formattedBody: formattedBody != body ? formattedBody : undefined,
+                msgtype: 'm.text',
+            }
+
+            if (unredactedBody) {
+                eventContent['invalid.discortix.unredacted_body'] = unredactedBody
+            }
+            
+            await sendMessageEvent<EventTextContent>(
+                createdRoomId, 'm.room.message', uuidv4(), eventContent,
+            )
+        } catch (error) {
+            toast.add({ severity: 'error', summary: t('createRoom.errorSendingFirstMessageToast'), life: 5000 })
+        }
+    }
+
+    message.value = ''
+
+    if (createdRoomId) {
+        await until(() => {
+            return !!joinedRooms.value[createdRoomId]
+        }, 5000)
+
+        router.push({
+            name: 'room',
+            params: { roomId: createdRoomId },
+        })
+    }
+
 }
 
 </script>
 
 <style lang="scss" scoped>
 :deep(.p-scrollpanel-content) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+.p-chattimeline {
     display: flex;
     flex-direction: column;
     align-items: flex-start;

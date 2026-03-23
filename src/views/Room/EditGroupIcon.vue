@@ -41,7 +41,7 @@ const props = defineProps({
 
 const emit = defineEmits<{
     (e: 'update:visible', visible: boolean): void
-    (e: 'iconSelected', imageObjectUrl: string): void
+    (e: 'iconSelected', imageBlob: Blob): void
 }>()
 
 const { t } = useI18n()
@@ -58,8 +58,8 @@ function selectFile() {
     })
 }
 
-function apply(imageObjectUrl: string) {
-    emit('iconSelected', imageObjectUrl)
+function apply(imageBlob: Blob) {
+    emit('iconSelected', imageBlob)
     emit('update:visible', false)
 }
 

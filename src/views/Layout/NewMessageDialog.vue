@@ -164,11 +164,23 @@ const userSearchSelectionIndex = ref<number>(-1)
 const selectedUserIds = ref<string[]>([])
 const orderedContactList = ref<UserProfile[]>([])
 const groupName = ref<string>('')
+const groupAvatarBlob = ref<Blob | undefined>(undefined)
 const groupAvatarObjectUrl = ref<string | undefined>(undefined)
 const editGroupIconDialogVisible = ref<boolean>(false)
 
 const isSearchingForMoreUsers = ref<boolean>(false)
 const isCreatingRoom = ref<boolean>(false)
+
+watch(() => groupAvatarBlob.value, (blob) => {
+    if (groupAvatarObjectUrl.value) {
+        URL.revokeObjectURL(groupAvatarObjectUrl.value)
+    }
+    if (blob) {
+        groupAvatarObjectUrl.value = URL.createObjectURL(blob)
+    } else {
+        groupAvatarObjectUrl.value = undefined
+    }
+})
 
 const remainingSelectionCount = computed(() => {
     return Math.max(0, 9 - selectedUserIds.value.length)
@@ -353,11 +365,8 @@ function pickGroupIcon() {
     editGroupIconDialogVisible.value = true
 }
 
-function onGroupIconSelected(imageObjectUrl: string) {
-    if (groupAvatarObjectUrl.value) {
-        URL.revokeObjectURL(groupAvatarObjectUrl.value)
-    }
-    groupAvatarObjectUrl.value = imageObjectUrl
+function onGroupIconSelected(imageBlob: Blob) {
+    groupAvatarBlob.value = imageBlob
 }
 
 function createRoomConfirm() {
@@ -420,17 +429,14 @@ function createRoomConfirm() {
         return
     }
 
-    if (draftRoom.value?.groupAvatar) {
-        URL.revokeObjectURL(draftRoom.value.groupAvatar)
-    }
     draftRoom.value = {
         invited: Array.from(selectedUserIdSet),
     }
     if (groupName.value) {
         draftRoom.value.groupName = groupName.value
     }
-    if (groupAvatarObjectUrl.value) {
-        draftRoom.value.groupAvatar = groupAvatarObjectUrl.value
+    if (groupAvatarBlob.value) {
+        draftRoom.value.groupAvatar = groupAvatarBlob.value
     }
     router.push({
         name: 'create-room',
@@ -444,7 +450,7 @@ watch(() => props.visible, (visible, wasVisible) => {
         currentlyRunningUserDirectorySearchTerm = ''
         userSearchText.value = ''
         groupName.value = ''
-        groupAvatarObjectUrl.value = undefined
+        groupAvatarBlob.value = undefined
         selectedUserIds.value = []
         populateContactList()
     } else if (!visible && wasVisible) {
@@ -452,7 +458,6 @@ watch(() => props.visible, (visible, wasVisible) => {
         userDirectorySearchAbortController?.abort()
         if (groupAvatarObjectUrl.value) {
             URL.revokeObjectURL(groupAvatarObjectUrl.value)
-            groupAvatarObjectUrl.value = undefined
         }
     }
 }, { immediate: true })

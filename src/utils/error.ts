@@ -65,6 +65,13 @@ export class HttpError extends Error {
         )
     }
 
+    isMatrixUnrecognized() {
+        return (
+            (this.status === 404 || this.status === 405)
+            && this.responseBody?.errcode === 'M_UNRECOGNIZED'
+        )
+    }
+
     isMatrixUserDeactivated() {
         return (
             this.status === 403

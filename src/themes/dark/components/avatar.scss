@@ -16,6 +16,8 @@
     --p-avatar-xl-height: 3rem;
     --p-avatar-xl-font-size: 1rem;
     --p-avatar-xl-icon-size: 1.75rem;
+
+    --p-avatar-group-offset: -0.25rem;
 }
 
 .p-avatar img {
@@ -39,4 +41,9 @@
     --p-avatar-width: 2.5rem;
     --p-avatar-height: 2.5rem;
     opacity: 0.06;
+}
+
+.p-avatar-group .p-avatar {
+    width: 1.25rem;
+    height: 1.25rem;
 }

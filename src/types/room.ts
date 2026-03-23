@@ -84,7 +84,7 @@ export interface RoomEventReactionRender extends RoomEventReaction {
 export interface DraftRoom {
     invited: string[];
     groupName?: string;
-    groupAvatar?: string; // Object URL
+    groupAvatar?: Blob;
     spaceRoomId?: string;
 }
 

@@ -28,6 +28,7 @@ import {
     type ApiV3RoomJoinRequest, type ApiV3RoomJoinResponse, ApiV3RoomJoinResponseSchema,
     type ApiV3RoomLeaveRequest,
     type EventReactionContent,
+    type ApiV3RoomCreateRequest, ApiV3RoomCreateResponseSchema, type ApiV3RoomCreateResponse,
     ApiV3CapabilitiesResponseSchema, type ApiV3CapabilitiesResponse,
 } from '@/types'
 
@@ -177,11 +178,16 @@ export function useRooms() {
         return fetchPromise
     }
 
-    async function createRoom() {
-        const capabilities = await getCapabilities()
-        console.log(capabilities)
-        // serverDiscovery.value.versions = versions.versions
-        // serverDiscovery.value.unstableFeatures = versions.unstableFeatures
+    async function createRoom(request: ApiV3RoomCreateRequest) {
+        return await fetchJson<ApiV3RoomCreateResponse>(
+            `${homeserverBaseUrl.value}/_matrix/client/v3/createRoom`,
+            {
+                method: 'POST',
+                body: JSON.stringify(request),
+                useAuthorization: true,
+                jsonSchema: ApiV3RoomCreateResponseSchema,
+            }
+        )
     }
 
     async function joinRoom(roomId: string, reason?: string) {

@@ -163,3 +163,4 @@ export interface ApiV3RoomCreateRequest {
 export const ApiV3RoomCreateResponseSchema = camelizeSchema(z.object({
     room_id: z.string(),
 }))
+export type ApiV3RoomCreateResponse = z.infer<typeof ApiV3RoomCreateResponseSchema>

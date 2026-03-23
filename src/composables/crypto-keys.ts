@@ -888,8 +888,6 @@ export function useCryptoKeys() {
         //     return (inboundDeviceEncryptedMessages.value[inboundMessageSessionKey]?.length ?? 0) > 0
         // })
 
-        // console.log('HERE!!!', inboundDeviceEncryptedMessages.value[inboundMessageSessionKey])
-
         // const firstEncryptedMessage = inboundDeviceEncryptedMessages.value[inboundMessageSessionKey]![0]!
 
         // let inboundOlmSession = inboundOlmSessions.value[`${otherUserId}:${deviceCurveKey}:${olmAlgorithm}`]
